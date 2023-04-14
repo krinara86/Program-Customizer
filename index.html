@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Self Realization with Radhikaji</title>
+    <style>
+      body {
+  align-items: center;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+}
+
+.form {
+  background-color: #15172b;
+  border-radius: 20px;
+  box-sizing: border-box;
+  height: 2500;
+  padding: 20px;
+  width: 2500px;
+}
+
+.title {
+  color: #eee;
+  font-family: sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  margin-top: 30px;
+}
+
+.subtitle {
+  color: #eee;
+  font-family: sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.input-container {
+  flex-direction: column;
+  height: 50px;
+  position: relative;
+  width: 100%;
+}
+
+.ic1 {
+  margin-top: 30px;
+  width:auto;
+}
+
+.ic2 {
+  margin-top: 30px;
+  width: auto;
+}
+
+.icasana {
+  width: auto;
+}
+
+.icsadhaka {
+  margin-top: 30px;
+  width: auto;
+}
+.input {
+  background-color: #303245;
+  border-radius: 12px;
+  border: 0;
+  box-sizing: border-box;
+  color: #eee;
+  font-size: 18px;
+  height: 100%;
+  outline: 0;
+  padding: 4px 20px 0;
+  width: 100%;
+}
+
+.cut {
+  background-color: #15172b;
+  border-radius: 10px;
+  height: 20px;
+  left: 20px;
+  position: absolute;
+  top: -20px;
+  transform: translateY(0);
+  transition: transform 200ms;
+  width: 76px;
+}
+
+.cut-short {
+  width: 50px;
+}
+
+.input:focus ~ .cut,
+.input:not(:placeholder-shown) ~ .cut {
+  transform: translateY(8px);
+}
+
+.input-row{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: left;
+}
+
+.input-asanas{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: left;
+}
+
+.placeholder {
+  color: #65657b;
+  font-family: sans-serif;
+  left: 20px;
+  line-height: 14px;
+  pointer-events: none;
+  position: absolute;
+  transform-origin: 0 50%;
+  transition: transform 200ms, color 200ms;
+  top: 20px;
+}
+
+.input:focus ~ .placeholder,
+.input:not(:placeholder-shown) ~ .placeholder {
+  transform: translateY(-30px) translateX(10px) scale(0.75);
+}
+
+.input:not(:placeholder-shown) ~ .placeholder {
+  color: #808097;
+}
+
+.input:focus ~ .placeholder {
+  color: #dc2f55;
+}
+
+.submit {
+  background-color: #08d;
+  border-radius: 12px;
+  border: 0;
+  box-sizing: border-box;
+  color: #eee;
+  cursor: pointer;
+  font-size: 18px;
+  height: 50px;
+  margin-top: 38px;
+ 
+    outline: 0;
+  text-align: center;
+  width: auto;
+}
+
+
+.submit-add {
+  background-color: darkgreen;
+  border-radius: 12px;
+  border: 0;
+  box-sizing: border-box;
+  color: #eee;
+  cursor: pointer;
+  font-size: 18px;
+  height: 50px;
+  margin-top: 38px;
+ 
+    outline: 0;
+  text-align: center;
+  width: auto;
+}
+
+.submit-delete {
+  background-color: #dc2f55;
+  border-radius: 12px;
+  border: 0;
+  box-sizing: border-box;
+  color: #eee;
+  cursor: pointer;
+  font-size: 18px;
+  height: 50px;
+  margin-top: 30px;
+ 
+    outline: 0;
+  text-align: center;
+  width: auto;
+}
+.submit:active {
+  background-color: #06b;
+}
+    </style>
+</head>
+<body>
+
+  
+    <div class="form">
+        <div class="title">Self realization with Radhikaji</div>
+        <div class="subtitle">Program customizer</div>
+
+        <div class="input-container ic2">
+            <label for="sadhaka" class="placeholder"></label>
+            <select id="sadhaka" class="input" placeholder=" "></select>
+        </div>
+
+        <div class = "input-asanas"  id="asanaRows" >
+            <div class = "input-row">
+                
+            <div class="input-container ic2">
+                <label for="asana" class="placeholder"></label>
+                <select id="asana" class="input icasana" placeholder=" "></select>
+            </div>
+            <div class="input-container ic2">
+                <input id="lastname" class="input" type="number" step="1" placeholder=" " />
+                <div class="cut"></div>
+                <label for="lastname" class="placeholder">Minutes</label>
+            </div>
+            
+            
+            <div class="input-container ic2">
+                <textarea id="email" class="input" rows="10" cols="50" placeholder=" "></textarea>
+                <div class="cut cut-short"></div>
+                <label for="email" class="placeholder">Additional notes</label>
+            </div>
+            <button  type="text" class="submit-delete"  onclick="deleteRow()">Delete Asana</button>
+            
+
+            </div>
+
+        
+        </div>  
+        <button  type="text" class="submit-add" id="addRowBtn" onclick="addRow()">Add Asana</button>
+        <button type="text" class="submit">Save results</button>
+        <button type="text" class="submit">Generate PDF</button>
+      </div>
+
+    
+    <script>
+// Function to populate dropdown options with a default value
+function populateDropDown(className, options, defaultValue) {
+  var selectElements = document.getElementsByClassName(className);
+
+  for (var j = 0; j < selectElements.length; j++) {
+    var selectElement = selectElements[j];
+    selectElement.innerHTML = '';
+
+    // Add default value as the first option
+    var defaultOptionElement = document.createElement('option');
+    defaultOptionElement.value = defaultValue.value;
+    defaultOptionElement.text = defaultValue.text;
+    selectElement.add(defaultOptionElement);
+
+    for (var i = 0; i < options.length; i++) {
+      var optionElement = document.createElement('option');
+      optionElement.value = options[i].value;
+      optionElement.text = options[i].text;
+      selectElement.add(optionElement);
+    }
+  }
+}
+
+
+function populateDropDownById(selectId, options, defaultValue) {
+  var selectElement = document.getElementById(selectId);
+  selectElement.innerHTML = '';
+  
+  // Add default value as the first option
+  var defaultOptionElement = document.createElement('option');
+  defaultOptionElement.value = defaultValue.value;
+  defaultOptionElement.text = defaultValue.text;
+  selectElement.add(defaultOptionElement);
+
+  for (var i = 0; i < options.length; i++) {
+    var optionElement = document.createElement('option');
+    optionElement.value = options[i].value;
+    optionElement.text = options[i].text;
+    selectElement.add(optionElement);
+  }
+} 
+
+// Call the function with data to populate the dropdown
+var optionsSadhaka = [
+  { value: 'option1', text: 'Sadhaka 1' },
+  { value: 'option2', text: 'Sadhaka 2' },
+  { value: 'option3', text: 'Sadhaka 3' }
+];
+
+
+
+var optionsAsana = [
+  { value: 'option1', text: 'Asana 1' },
+  { value: 'option2', text: 'Asana 2' },
+  { value: 'option3', text: 'Asana 3' }
+];
+
+var defaultValueSadhaka = { value: '', text: 'Select a Sadhaka' };
+
+var defaultValueAsana = { value: '', text: 'Select an Asana' };
+
+populateDropDownById('sadhaka', optionsSadhaka, defaultValueSadhaka);
+populateDropDown('icasana', optionsAsana, defaultValueAsana);
+
+function addRow() {
+  // Create a new row element
+  var newRow = document.createElement("div");
+  newRow.className = "input-row";
+
+  // Add HTML content for the new row
+  newRow.innerHTML = `
+  <div class="input-container ic2">
+                <label for="asana" class="placeholder"></label>
+                <select id="asana" class="input icasana" placeholder=" "></select>
+            </div>
+            <div class="input-container ic2">
+                <input id="lastname" class="input" type="number" step="1" placeholder=" " />
+                <div class="cut"></div>
+                <label for="lastname" class="placeholder">Minutes</label>
+            </div>
+            
+            
+            <div class="input-container ic2">
+                <textarea id="email" class="input" rows="10" cols="50" placeholder=" "></textarea>
+                <div class="cut cut-short"></div>
+                <label for="email" class="placeholder">Additional notes</label>
+            </div>
+            <button class="submit-delete" onclick="deleteRow()">Delete Asana</button>
+            
+
+            </div>`;
+
+  // Append the new row to the parent element
+  document.getElementById("asanaRows").appendChild(newRow);
+  populateDropDown('icasana', optionsAsana, defaultValueAsana);
+}
+
+function deleteRow() {
+    // Get the parent element of the "Delete Asana" button, which is the input-row div
+    var rowToDelete = event.target.parentNode;
+    
+    // Get the parent element of the input-row div, which is the input-asanas div
+    var asanaRows = rowToDelete.parentNode;
+    
+    // Remove the input-row div from the input-asanas div
+    asanaRows.removeChild(rowToDelete);
+}
+
+
+    </script>
+</body>
+</html>
