@@ -208,22 +208,22 @@ function saveDataToJson(data) {
                     })
                     .catch(error => {
                         console.error('Failed to update ref:', error);
-                        alert('Failed to save data.');
+                        alert('Failed to update ref:', error);
                     })
                 )
                 .catch(error => {
                     console.error('Failed to create new commit:', error);
-                    alert('Failed to save data.');
+                    alert('Failed to create new commit:', error);
                 })
             )
             .catch(error => {
                 console.error('Failed to get latest commit:', error);
-                alert('Failed to save data.');
+                alert('Failed to get latest commit:', error);
             })
         )
         .catch(error => {
             console.error('Failed to create blob:', error);
-            alert('Failed to save data.');
+            alert('Failed to create blob:', error);
         });
 }
 
