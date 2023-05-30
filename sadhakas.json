@@ -1,0 +1,49 @@
+{
+    "Sadhaka1": {
+        "asanas": [
+            {
+                "asana": "Asana1",
+                "minutes": "30",
+                "notes": "Practice with care"
+            },
+            {
+                "asana": "Asana2",
+                "minutes": "45",
+                "notes": "Stretch well before starting"
+            }
+        ]
+    },
+    "Sadhaka2": {
+        "asanas": [
+            {
+                "asana": "Asana2",
+                "minutes": "20",
+                "notes": "Don't strain too much"
+            },
+            {
+                "asana": "Asana3",
+                "minutes": "50",
+                "notes": "Cool down after the asana"
+            }
+        ]
+    },
+    "Sadhaka3": {
+        "asanas": [
+            {
+                "asana": "Asana1",
+                "minutes": "25",
+                "notes": "Maintain balance"
+            },
+            {
+                "asana": "Asana2",
+                "minutes": "40",
+                "notes": "Breath control is crucial"
+            },
+            {
+                "asana": "Asana3",
+                "minutes": "35",
+                "notes": "Keep the mind calm"
+            }
+        ]
+    }
+}
