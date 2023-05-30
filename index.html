@@ -1,346 +1,282 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Self Realization with Radhikaji</title>
-    <style>
-      body {
-  align-items: center;
-  background-color: #000;
-  display: flex;
-  justify-content: center;
-  height: 100vh;
-}
+    <title>Asana customizer for Sadhaka</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<style>
+    body {
+        background-color: #1d1d1d;
+        color: #fff;
+    }
 
-.form {
-  background-color: #15172b;
-  border-radius: 20px;
-  box-sizing: border-box;
-  height: 2500;
-  padding: 20px;
-  width: 2500px;
-}
+    .container {
+        margin-top: 50px;
+        border-radius: 15px;
+        padding: 20px;
+        background-color: #2f3136;
+    }
 
-.title {
-  color: #eee;
-  font-family: sans-serif;
-  font-size: 36px;
-  font-weight: 600;
-  margin-top: 30px;
-}
+    .form-control,
+    .btn {
+        border-radius: 0;
+        border: none;
+        color: #fff;
+        background-color: #40444b;
+    }
 
-.subtitle {
-  color: #eee;
-  font-family: sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  margin-top: 10px;
-}
+    .form-control:focus {
+        background-color: #40444b;
+        box-shadow: none;
+        outline: none;
+        color: #fff;
+    }
 
-.input-container {
-  flex-direction: column;
-  height: 50px;
-  position: relative;
-  width: 100%;
-}
+    ::placeholder {
+        /* Chrome, Firefox, Opera, Safari 10.1+ */
+        color: #fff;
+        opacity: 1; /* Firefox */
+    }
 
-.ic1 {
-  margin-top: 30px;
-  width:auto;
-}
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus,
+    select:-webkit-autofill,
+    select:-webkit-autofill:hover,
+    select:-webkit-autofill:focus {
+        border: none;
+        -webkit-text-fill-color: white;
+        -webkit-box-shadow: 0 0 0px 1000px #40444b inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
 
-.ic2 {
-  margin-top: 30px;
-  width: auto;
-}
+    .btn-primary {
+        background-color: #7289da;
+        box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease 0s;
+    }
 
-.icasana {
-  width: auto;
-}
+    .btn-danger {
+        background-color: #d9534f;
+        box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease 0s;
+    }
 
-.icsadhaka {
-  margin-top: 30px;
-  width: auto;
-}
-.input {
-  background-color: #303245;
-  border-radius: 12px;
-  border: 0;
-  box-sizing: border-box;
-  color: #eee;
-  font-size: 18px;
-  height: 100%;
-  outline: 0;
-  padding: 4px 20px 0;
-  width: 100%;
-}
-
-.cut {
-  background-color: #15172b;
-  border-radius: 10px;
-  height: 20px;
-  left: 20px;
-  position: absolute;
-  top: -20px;
-  transform: translateY(0);
-  transition: transform 200ms;
-  width: 76px;
-}
-
-.cut-short {
-  width: 50px;
-}
-
-.input:focus ~ .cut,
-.input:not(:placeholder-shown) ~ .cut {
-  transform: translateY(8px);
-}
-
-.input-row{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: left;
-}
-
-.input-asanas{
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: left;
-}
-
-.placeholder {
-  color: #65657b;
-  font-family: sans-serif;
-  left: 20px;
-  line-height: 14px;
-  pointer-events: none;
-  position: absolute;
-  transform-origin: 0 50%;
-  transition: transform 200ms, color 200ms;
-  top: 20px;
-}
-
-.input:focus ~ .placeholder,
-.input:not(:placeholder-shown) ~ .placeholder {
-  transform: translateY(-30px) translateX(10px) scale(0.75);
-}
-
-.input:not(:placeholder-shown) ~ .placeholder {
-  color: #808097;
-}
-
-.input:focus ~ .placeholder {
-  color: #dc2f55;
-}
-
-.submit {
-  background-color: #08d;
-  border-radius: 12px;
-  border: 0;
-  box-sizing: border-box;
-  color: #eee;
-  cursor: pointer;
-  font-size: 18px;
-  height: 50px;
-  margin-top: 38px;
- 
-    outline: 0;
-  text-align: center;
-  width: auto;
-}
+    .btn-primary:hover,
+    .btn-danger:hover {
+        box-shadow: 0px 15px 20px rgba(0, 0, 0, 0.2);
+        transform: translateY(-7px);
+    }
+</style>
 
 
-.submit-add {
-  background-color: darkgreen;
-  border-radius: 12px;
-  border: 0;
-  box-sizing: border-box;
-  color: #eee;
-  cursor: pointer;
-  font-size: 18px;
-  height: 50px;
-  margin-top: 38px;
- 
-    outline: 0;
-  text-align: center;
-  width: auto;
-}
 
-.submit-delete {
-  background-color: #dc2f55;
-  border-radius: 12px;
-  border: 0;
-  box-sizing: border-box;
-  color: #eee;
-  cursor: pointer;
-  font-size: 18px;
-  height: 50px;
-  margin-top: 30px;
- 
-    outline: 0;
-  text-align: center;
-  width: auto;
-}
-.submit:active {
-  background-color: #06b;
-}
-    </style>
 </head>
 <body>
-
-  
-    <div class="form">
-        <div class="title">Self realization with Radhikaji</div>
-        <div class="subtitle">Program customizer</div>
-
-        <div class="input-container ic2">
-            <label for="sadhaka" class="placeholder"></label>
-            <select id="sadhaka" class="input" placeholder=" "></select>
+    <div class="container">
+        <h2 class="my-4 text-center">Asana customizer for Sadhaka</h2>
+        
+        <div class="form-group">
+            <label for="sadhaka">Sadhaka</label>
+            <select class="form-control" id="sadhaka">
+                <!-- Sadhaka options are added dynamically with JS -->
+            </select>
         </div>
 
-        <div class = "input-asanas"  id="asanaRows" >
-            <div class = "input-row">
-                
-            <div class="input-container ic2">
-                <label for="asana" class="placeholder"></label>
-                <select id="asana" class="input icasana" placeholder=" "></select>
-            </div>
-            <div class="input-container ic2">
-                <input id="lastname" class="input" type="number" step="1" placeholder=" " />
-                <div class="cut"></div>
-                <label for="lastname" class="placeholder">Minutes</label>
-            </div>
-            
-            
-            <div class="input-container ic2">
-                <textarea id="email" class="input" rows="10" cols="50" placeholder=" "></textarea>
-                <div class="cut cut-short"></div>
-                <label for="email" class="placeholder">Additional notes</label>
-            </div>
-            <button  type="text" class="submit-delete"  onclick="deleteRow()">Delete Asana</button>
-            
+        <div id="asanaTable">
+            <!-- Asana rows are added dynamically with JS -->
+        </div>
 
-            </div>
+        <button class="btn btn-primary mt-3" onclick="addAsanaRow()">Add Asana</button>
+        <button id="saveButton" class="btn btn-primary mt-3">Save updated values for <span id="selectedSadhakaName"></span></button>
+    </div>
 
-        
-        </div>  
-        <button  type="text" class="submit-add" id="addRowBtn" onclick="addRow()">Add Asana</button>
-        <button type="text" class="submit">Save results</button>
-        <button type="text" class="submit">Generate PDF</button>
-      </div>
-
-    
     <script>
-// Function to populate dropdown options with a default value
-function populateDropDown(className, options, defaultValue) {
-  var selectElements = document.getElementsByClassName(className);
-
-  for (var j = 0; j < selectElements.length; j++) {
-    var selectElement = selectElements[j];
-    selectElement.innerHTML = '';
-
-    // Add default value as the first option
-    var defaultOptionElement = document.createElement('option');
-    defaultOptionElement.value = defaultValue.value;
-    defaultOptionElement.text = defaultValue.text;
-    selectElement.add(defaultOptionElement);
-
-    for (var i = 0; i < options.length; i++) {
-      var optionElement = document.createElement('option');
-      optionElement.value = options[i].value;
-      optionElement.text = options[i].text;
-      selectElement.add(optionElement);
-    }
-  }
-}
-
-
-function populateDropDownById(selectId, options, defaultValue) {
-  var selectElement = document.getElementById(selectId);
-  selectElement.innerHTML = '';
-  
-  // Add default value as the first option
-  var defaultOptionElement = document.createElement('option');
-  defaultOptionElement.value = defaultValue.value;
-  defaultOptionElement.text = defaultValue.text;
-  selectElement.add(defaultOptionElement);
-
-  for (var i = 0; i < options.length; i++) {
-    var optionElement = document.createElement('option');
-    optionElement.value = options[i].value;
-    optionElement.text = options[i].text;
-    selectElement.add(optionElement);
-  }
-} 
-
-// Call the function with data to populate the dropdown
-var optionsSadhaka = [
-  { value: 'option1', text: 'Sadhaka 1' },
-  { value: 'option2', text: 'Sadhaka 2' },
-  { value: 'option3', text: 'Sadhaka 3' }
-];
-
-
-
-var optionsAsana = [
-  { value: 'option1', text: 'Asana 1' },
-  { value: 'option2', text: 'Asana 2' },
-  { value: 'option3', text: 'Asana 3' }
-];
-
-var defaultValueSadhaka = { value: '', text: 'Select a Sadhaka' };
-
-var defaultValueAsana = { value: '', text: 'Select an Asana' };
-
-populateDropDownById('sadhaka', optionsSadhaka, defaultValueSadhaka);
-populateDropDown('icasana', optionsAsana, defaultValueAsana);
-
-function addRow() {
-  // Create a new row element
-  var newRow = document.createElement("div");
-  newRow.className = "input-row";
-
-  // Add HTML content for the new row
-  newRow.innerHTML = `
-  <div class="input-container ic2">
-                <label for="asana" class="placeholder"></label>
-                <select id="asana" class="input icasana" placeholder=" "></select>
-            </div>
-            <div class="input-container ic2">
-                <input id="lastname" class="input" type="number" step="1" placeholder=" " />
-                <div class="cut"></div>
-                <label for="lastname" class="placeholder">Minutes</label>
-            </div>
-            
-            
-            <div class="input-container ic2">
-                <textarea id="email" class="input" rows="10" cols="50" placeholder=" "></textarea>
-                <div class="cut cut-short"></div>
-                <label for="email" class="placeholder">Additional notes</label>
-            </div>
-            <button class="submit-delete" onclick="deleteRow()">Delete Asana</button>
-            
-
-            </div>`;
-
-  // Append the new row to the parent element
-  document.getElementById("asanaRows").appendChild(newRow);
-  populateDropDown('icasana', optionsAsana, defaultValueAsana);
-}
-
-function deleteRow() {
-    // Get the parent element of the "Delete Asana" button, which is the input-row div
-    var rowToDelete = event.target.parentNode;
+        const asanas = ['Asana1', 'Asana2', 'Asana3'];
     
-    // Get the parent element of the input-row div, which is the input-asanas div
-    var asanaRows = rowToDelete.parentNode;
-    
-    // Remove the input-row div from the input-asanas div
-    asanaRows.removeChild(rowToDelete);
+        window.onload = function() {
+    fetch('https://raw.githubusercontent.com/krinara86/Program-Customizer/main/sadhakas.json')
+        .then(response => response.json())
+        .then(data => {
+            const sadhakas = Object.keys(data);
+            populateSadhakaDropdown(sadhakas);
+            addInitialAsanaRows(data[sadhakas[0]].asanas);
+            // Add event listener to handle sadhaka change
+            document.getElementById('sadhaka').addEventListener('change', function() {
+                const selectedSadhaka = this.value;
+                const asanasData = data[selectedSadhaka].asanas;
+                clearAsanaTable();
+                addInitialAsanaRows(asanasData);
+            });
+            // Add event listener to handle save button click
+            document.getElementById('saveButton').addEventListener('click', function() {
+                const selectedSadhaka = document.getElementById('sadhaka').value;
+                const updatedData = {
+                    ...data,
+                    [selectedSadhaka]: {
+                        asanas: getAsanasFromTable()
+                    }
+                };
+                saveDataToJson(updatedData);
+            });
+        })
+        .catch(error => console.log(error));
+}
+
+function getAsanasFromTable() {
+    const asanaRows = Array.from(document.getElementById('asanaTable').children);
+    const asanas = asanaRows.map(row => {
+        const select = row.querySelector('select');
+        const input = row.querySelector('input[type=number]');
+        const textarea = row.querySelector('textarea');
+        return {
+            asana: select.value,
+            minutes: input.value,
+            notes: textarea.value
+        };
+    });
+    return asanas;
+}
+
+const username = 'krinara86'; // replace with your username
+const repo = 'Program-Customizer'; // replace with your repo name
+const path = 'sadhakas.json'; // replace with your file path
+const branch = 'main'; // replace with your branch name
+const token = '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'; // replace with your personal access token
+
+function githubApiFetch(url, options = {}) {
+    return fetch(`https://api.github.com${url}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `token ${token}`,
+            ...options.headers,
+        },
+    });
 }
 
 
+function createBlob(content) {
+    return githubApiFetch(`/repos/${username}/${repo}/git/blobs`, {
+        method: 'POST',
+        body: JSON.stringify({
+            content: btoa(content),
+            encoding: 'base64',
+        }),
+    }).then(response => response.json());
+}
+
+function getLatestCommit() {
+    return githubApiFetch(`/repos/${username}/${repo}/git/refs/heads/${branch}`).then(response => response.json());
+}
+
+function createNewCommit(baseTreeSha, newBlobSha) {
+    return githubApiFetch(`/repos/${username}/${repo}/git/commits`, {
+        method: 'POST',
+        body: JSON.stringify({
+            parents: [baseTreeSha],
+            message: 'Update sadhakas.json',
+            tree: [{
+                path,
+                mode: '100644',
+                type: 'blob',
+                sha: newBlobSha,
+            }],
+        }),
+    }).then(response => response.json());
+}
+
+function updateRef(newCommitSha) {
+    return githubApiFetch(`/repos/${username}/${repo}/git/refs/heads/${branch}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+            sha: newCommitSha,
+        }),
+    }).then(response => response.json());
+}
+
+function saveDataToJson(data) {
+    const jsonData = JSON.stringify(data, null, 2);
+    createBlob(jsonData)
+        .then(blob => getLatestCommit()
+            .then(latestCommit => createNewCommit(latestCommit.object.sha, blob.sha)
+                .then(newCommit => updateRef(newCommit.sha)
+                    .then(() => {
+                        alert('Data saved successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Failed to update ref:', error);
+                        alert('Failed to save data.');
+                    })
+                )
+                .catch(error => {
+                    console.error('Failed to create new commit:', error);
+                    alert('Failed to save data.');
+                })
+            )
+            .catch(error => {
+                console.error('Failed to get latest commit:', error);
+                alert('Failed to save data.');
+            })
+        )
+        .catch(error => {
+            console.error('Failed to create blob:', error);
+            alert('Failed to save data.');
+        });
+}
+
+
+function clearAsanaTable() {
+    const asanaTable = document.getElementById('asanaTable');
+    asanaTable.innerHTML = '';
+}
+
+    
+        function populateSadhakaDropdown(sadhakas) {
+            const sadhakaDropdown = document.getElementById('sadhaka');
+            sadhakas.forEach(sadhaka => {
+                let option = document.createElement('option');
+                option.text = sadhaka;
+                option.value = sadhaka;
+                sadhakaDropdown.add(option);
+            });
+        }
+    
+        function addInitialAsanaRows(asanasData) {
+            asanasData.forEach(asanaData => {
+                addAsanaRow(asanaData.asana, asanaData.minutes, asanaData.notes);
+            });
+        }
+    
+        function addAsanaRow(asana = '', minutes = '', notes = '') {
+            const asanaRow = document.createElement('div');
+            asanaRow.className = 'row my-2';
+            asanaRow.innerHTML = `
+                <div class="col-md-3">
+                    <select class="form-control">
+                        ${asanas.map(asanaOption => `<option value="${asanaOption}" ${asanaOption === asana ? 'selected' : ''}>${asanaOption}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" placeholder="Minutes" min="0" value="${minutes}">
+                </div>
+                <div class="col-md-3">
+                    <textarea class="form-control" placeholder="Additional notes">${notes}</textarea>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-danger" onclick="deleteAsanaRow(this)">Delete Asana</button>
+                </div>
+            `;
+            document.getElementById('asanaTable').appendChild(asanaRow);
+        }
+    
+        function deleteAsanaRow(btn) {
+            const row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
     </script>
+    
 </body>
 </html>
