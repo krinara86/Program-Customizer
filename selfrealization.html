@@ -90,14 +90,151 @@
         </div>
 
         <button class="btn btn-primary mt-3" onclick="addAsanaRow()">Add Asana</button>
+        <button id="saveButton" class="btn btn-primary mt-3">Save updated values for <span id="selectedSadhakaName"></span></button>
     </div>
 
     <script>
-        const sadhakas = ['Sadhaka1', 'Sadhaka2', 'Sadhaka3'];
         const asanas = ['Asana1', 'Asana2', 'Asana3'];
-
+    
         window.onload = function() {
-            // populate Sadhaka dropdown
+    fetch('https://raw.githubusercontent.com/krinara86/Program-Customizer/main/sadhakas.json')
+        .then(response => response.json())
+        .then(data => {
+            const sadhakas = Object.keys(data);
+            populateSadhakaDropdown(sadhakas);
+            addInitialAsanaRows(data[sadhakas[0]].asanas);
+            // Add event listener to handle sadhaka change
+            document.getElementById('sadhaka').addEventListener('change', function() {
+                const selectedSadhaka = this.value;
+                const asanasData = data[selectedSadhaka].asanas;
+                clearAsanaTable();
+                addInitialAsanaRows(asanasData);
+            });
+            // Add event listener to handle save button click
+            document.getElementById('saveButton').addEventListener('click', function() {
+                const selectedSadhaka = document.getElementById('sadhaka').value;
+                const updatedData = {
+                    ...data,
+                    [selectedSadhaka]: {
+                        asanas: getAsanasFromTable()
+                    }
+                };
+                saveDataToJson(updatedData);
+            });
+        })
+        .catch(error => console.log(error));
+}
+
+function getAsanasFromTable() {
+    const asanaRows = Array.from(document.getElementById('asanaTable').children);
+    const asanas = asanaRows.map(row => {
+        const select = row.querySelector('select');
+        const input = row.querySelector('input[type=number]');
+        const textarea = row.querySelector('textarea');
+        return {
+            asana: select.value,
+            minutes: input.value,
+            notes: textarea.value
+        };
+    });
+    return asanas;
+}
+
+const username = 'krinara86'; // replace with your username
+const repo = 'Program-Customizer'; // replace with your repo name
+const path = 'sadhakas.json'; // replace with your file path
+const branch = 'main'; // replace with your branch name
+const token = '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'; // replace with your personal access token
+
+function githubApiFetch(url, options = {}) {
+    return fetch(`https://api.github.com${url}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `token ${token}`,
+            ...options.headers,
+        },
+    });
+}
+
+
+function createBlob(content) {
+    return githubApiFetch(`/repos/${username}/${repo}/git/blobs`, {
+        method: 'POST',
+        body: JSON.stringify({
+            content: btoa(content),
+            encoding: 'base64',
+        }),
+    }).then(response => response.json());
+}
+
+function getLatestCommit() {
+    return githubApiFetch(`/repos/${username}/${repo}/git/refs/heads/${branch}`).then(response => response.json());
+}
+
+function createNewCommit(baseTreeSha, newBlobSha) {
+    return githubApiFetch(`/repos/${username}/${repo}/git/commits`, {
+        method: 'POST',
+        body: JSON.stringify({
+            parents: [baseTreeSha],
+            message: 'Update sadhakas.json',
+            tree: [{
+                path,
+                mode: '100644',
+                type: 'blob',
+                sha: newBlobSha,
+            }],
+        }),
+    }).then(response => response.json());
+}
+
+function updateRef(newCommitSha) {
+    return githubApiFetch(`/repos/${username}/${repo}/git/refs/heads/${branch}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+            sha: newCommitSha,
+        }),
+    }).then(response => response.json());
+}
+
+function saveDataToJson(data) {
+    const jsonData = JSON.stringify(data, null, 2);
+    createBlob(jsonData)
+        .then(blob => getLatestCommit()
+            .then(latestCommit => createNewCommit(latestCommit.object.sha, blob.sha)
+                .then(newCommit => updateRef(newCommit.sha)
+                    .then(() => {
+                        alert('Data saved successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Failed to update ref:', error);
+                        alert('Failed to save data.');
+                    })
+                )
+                .catch(error => {
+                    console.error('Failed to create new commit:', error);
+                    alert('Failed to save data.');
+                })
+            )
+            .catch(error => {
+                console.error('Failed to get latest commit:', error);
+                alert('Failed to save data.');
+            })
+        )
+        .catch(error => {
+            console.error('Failed to create blob:', error);
+            alert('Failed to save data.');
+        });
+}
+
+
+function clearAsanaTable() {
+    const asanaTable = document.getElementById('asanaTable');
+    asanaTable.innerHTML = '';
+}
+
+    
+        function populateSadhakaDropdown(sadhakas) {
             const sadhakaDropdown = document.getElementById('sadhaka');
             sadhakas.forEach(sadhaka => {
                 let option = document.createElement('option');
@@ -105,24 +242,28 @@
                 option.value = sadhaka;
                 sadhakaDropdown.add(option);
             });
-            // add initial Asana row
-            addAsanaRow();
         }
-
-        function addAsanaRow() {
+    
+        function addInitialAsanaRows(asanasData) {
+            asanasData.forEach(asanaData => {
+                addAsanaRow(asanaData.asana, asanaData.minutes, asanaData.notes);
+            });
+        }
+    
+        function addAsanaRow(asana = '', minutes = '', notes = '') {
             const asanaRow = document.createElement('div');
             asanaRow.className = 'row my-2';
             asanaRow.innerHTML = `
                 <div class="col-md-3">
                     <select class="form-control">
-                        ${asanas.map(asana => `<option value="${asana}">${asana}</option>`).join('')}
+                        ${asanas.map(asanaOption => `<option value="${asanaOption}" ${asanaOption === asana ? 'selected' : ''}>${asanaOption}</option>`).join('')}
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="number" class="form-control" placeholder="Minutes" min="0">
+                    <input type="number" class="form-control" placeholder="Minutes" min="0" value="${minutes}">
                 </div>
                 <div class="col-md-3">
-                    <textarea class="form-control" placeholder="Additional notes"></textarea>
+                    <textarea class="form-control" placeholder="Additional notes">${notes}</textarea>
                 </div>
                 <div class="col-md-3">
                     <button class="btn btn-danger" onclick="deleteAsanaRow(this)">Delete Asana</button>
@@ -130,11 +271,12 @@
             `;
             document.getElementById('asanaTable').appendChild(asanaRow);
         }
-
+    
         function deleteAsanaRow(btn) {
             const row = btn.parentNode.parentNode;
             row.parentNode.removeChild(row);
         }
     </script>
+    
 </body>
 </html>
