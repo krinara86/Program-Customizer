@@ -1,0 +1,24 @@
+{
+    "asanas": [
+        {
+            "name": "Savasana",
+            "description": "Also known as the corpse pose, Savasana is a restorative pose often practiced at the end of a yoga session. The practitioner lies flat on their back with arms and legs spread at about 45 degrees, eyes closed and breath deep."
+        },
+        {
+            "name": "Tadasana",
+            "description": "Also known as Mountain Pose, Tadasana is often the starting position for all the standing poses. It is also the pose of stillness in movement, encouraging us to ground ourselves, and find our center."
+        },
+        {
+            "name": "AdhoMukhaSvanasana",
+            "description": "Also known as Downward-facing Dog Pose, this pose resembles a dog bending forward. It involves the whole body and is often used as a transition pose or a rest pose between sequences."
+        },
+        {
+            "name": "Virabhadrasana",
+            "description": "Named after the mythological Hindu warrior, Virabhadra. There are three variations of Virabhadrasana — I, II, and III. Each of these poses helps to build balance, stability, and strength."
+        },
+        {
+            "name": "Vrikshasana",
+            "description": "Also known as the Tree Pose, Vrikshasana is a balancing asana. It is one of the very few standing poses in medieval hatha yoga, and remains popular in modern yoga as exercise."
+        }
+    ]
+}
