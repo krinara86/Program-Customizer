@@ -1,14 +1,11 @@
 import json
 import os
 import sys
-from PyQt5.QtWidgets import QStyleFactory
-
-import pdfkit
 
 from PyQt5.QtGui import QIntValidator, QPalette, QColor
-from PyQt5.QtWidgets import QScrollArea, QSizePolicy, QSpacerItem, QApplication, QWidget, QVBoxLayout, QPushButton, \
-    QComboBox, QLineEdit, QTextEdit, QLabel, QFormLayout, QGridLayout, QMessageBox, QHBoxLayout, QRadioButton
-
+from PyQt5.QtWidgets import QScrollArea, QApplication, QWidget, QVBoxLayout, QPushButton, \
+    QComboBox, QLineEdit, QTextEdit, QLabel, QGridLayout, QMessageBox, QRadioButton
+from PyQt5.QtWidgets import QStyleFactory
 from fpdf import FPDF
 
 
