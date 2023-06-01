@@ -132,6 +132,9 @@ class SadhakaApp(QWidget):
         self.save_pdf_button = QPushButton("Save to PDF")
         self.save_pdf_button.clicked.connect(self.save_to_pdf)
 
+        self.diet_and_notes_entry = QTextEdit()  # Add a text edit field for diet and additional notes
+        self.diet_and_notes_entry.setMaximumWidth(1000)
+
         # Create a widget for the scroll area
         self.scrollWidget = QWidget()
         self.scrollLayout = QVBoxLayout(self.scrollWidget)
@@ -146,6 +149,10 @@ class SadhakaApp(QWidget):
         layout.addWidget(self.sadhaka_dropdown)
         layout.addWidget(self.scrollArea)  # add scroll area instead of rows directly
         layout.addWidget(self.add_asana_button)
+
+        layout.addWidget(QLabel("Diet and Additional Notes"))  # Label for the text edit field
+        layout.addWidget(self.diet_and_notes_entry)  # Add the text edit field to the layout
+
         layout.addWidget(self.save_button)
         layout.addWidget(self.save_pdf_button)
         self.setLayout(layout)
@@ -163,6 +170,8 @@ class SadhakaApp(QWidget):
                 for day_type, practices in sadhaka['practiceDays'].items():
                     for practice in practices:
                         self.add_asana_row(day_type, practice)
+                if 'dietandadditionalnotes' in sadhaka:
+                    self.diet_and_notes_entry.setText(sadhaka['dietandadditionalnotes'])
 
     def add_asana_row(self, day_type=None, practice=None):
         if day_type is None and practice is None:
@@ -185,6 +194,7 @@ class SadhakaApp(QWidget):
                                                      row.cardio_button.isChecked()]
                 sadhaka['practiceDays']['nonCardio'] = [row.get_values() for row in self.asana_rows if
                                                         row.non_cardio_button.isChecked()]  # Fixed typo
+                sadhaka['dietandadditionalnotes'] = self.diet_and_notes_entry.toPlainText()
             with open(self.sadhakas_file_path, 'w') as f:
                 json.dump({"sadhakas": self.sadhakas}, f)
 
@@ -193,7 +203,6 @@ class SadhakaApp(QWidget):
         for sadhaka in self.sadhakas:
             if sadhaka['name'] == selected_sadhaka:
                 pdf = UnicodePDF(sadhaka['name'])
-
                 pdf.add_page()
                 pdf.set_font("Helvetica", size=10)
                 pdf.cell(0, 10, txt=clean_string(f"Sadhaka: {sadhaka['name']}"), ln=True)
@@ -214,26 +223,25 @@ class SadhakaApp(QWidget):
                         pdf.line(10, pdf.get_y(), 200, pdf.get_y())  # Add separator line
                         pdf.cell(0, 10, txt=clean_string(f"Duration: {practice['duration']} minutes"), ln=True)
                         pdf.line(10, pdf.get_y(), 200, pdf.get_y())  # Add separator line
-                        pdf.cell(0, 10, txt=clean_string(f"Additional Notes: {practice['additionalNotes']}"), ln=True)
+                        pdf.cell(0, 10, txt=clean_string(f"Special instructions: {practice['additionalNotes']}"), ln=True)
+
+                        # Set the X,Y coordinates for the image
+                        image_x = (pdf.w - 40) / 2  # Center the image horizontally
+                        image_y = pdf.get_y() + 10  # Add some space between the image and the text
+                        pdf.image(asana_name + ".png", x=image_x, y=image_y, w=40)
+                        pdf.set_y(image_y + 40)  # Set the new Y coordinate after adding the image
+
                         pdf.cell(0, 10, txt="Description:", ln=True)
                         pdf.set_font("Helvetica", size=8)
-
-                        description_lines = asana_description.count(
-                            '\n') + 1  # counts the number of lines in the description
-                        image_height = (description_lines * 10) + 30  # calculate the height based on line count
-
-                        # Set the X,Y coordinates for the image (e.g., 10, pdf.get_y())
-                        pdf.image("asana.png", x=10, y=pdf.get_y(),
-                                  h=image_height)  # specify width 'w' as per your requirement
-                        # Set the X,Y coordinates for the description (e.g., 100, pdf.get_y())
-                        pdf.set_xy(100, pdf.get_y())  # set the X, Y coordinate for the text
                         pdf.multi_cell(0, 10, txt=clean_string(asana_description), align='L')
 
-                        # adjust the y position
-                        pdf.set_y(max(pdf.get_y(),
-                                      image_height + 100))  # it takes the maximum y value between the end of image and end of the text
+                        pdf.set_y(pdf.h)  # Move to the bottom of the page
 
-                    # pdf.add_page()
+                # Add diet and additional notes to the end of the PDF
+                pdf.set_font("Helvetica", size=10, style='B')
+                pdf.cell(0, 10, txt="Diet and Additional Notes:", ln=True)
+                pdf.set_font("Helvetica", size=10)
+                pdf.multi_cell(0, 10, txt=clean_string(self.diet_and_notes_entry.toPlainText()), align='L')
 
                 pdf.output('sadhaka_report.pdf')
                 QMessageBox.information(self, "Save to PDF", "Sadhaka details saved to PDF successfully!")

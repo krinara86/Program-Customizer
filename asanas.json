@@ -1,24 +1,24 @@
 {
-    "asanas": [
-        {
-            "name": "Savasana",
-            "description": "Also known as the corpse pose, Savasana is a restorative pose often practiced at the end of a yoga session. The practitioner lies flat on their back with arms and legs spread at about 45 degrees, eyes closed and breath deep."
-        },
-        {
-            "name": "Tadasana",
-            "description": "Also known as Mountain Pose, Tadasana is often the starting position for all the standing poses. It is also the pose of stillness in movement, encouraging us to ground ourselves, and find our center."
-        },
-        {
-            "name": "AdhoMukhaSvanasana",
-            "description": "Also known as Downward-facing Dog Pose, this pose resembles a dog bending forward. It involves the whole body and is often used as a transition pose or a rest pose between sequences."
-        },
-        {
-            "name": "Virabhadrasana",
-            "description": "Named after the mythological Hindu warrior, Virabhadra. There are three variations of Virabhadrasana — I, II, and III. Each of these poses helps to build balance, stability, and strength."
-        },
-        {
-            "name": "Vrikshasana",
-            "description": "Also known as the Tree Pose, Vrikshasana is a balancing asana. It is one of the very few standing poses in medieval hatha yoga, and remains popular in modern yoga as exercise."
-        }
-    ]
+  "asanas": [
+    {
+      "name": "Trikonasana",
+      "description": "Stand with the head, neck, and trunk in a straight line, legs three feet apart. Inhaling,\nslowly raise the arms to shoulder level with the palms facing downward.\nTwist the trunk to the right. Exhaling, bring the left hand to the inside of the\nright foot, keeping the arms and the legs straight. The arms remain in line with\neach other, and the right arm extends straight up. Look up and back at the right\nhand.\nBreathe evenly; hold for 20 seconds.\nInhaling, slowly return to a standing position.\nRepeat, bringing the right hand to the inside of the left foot."
+    },
+    {
+      "name": "Tolasana",
+      "description": "Sit in padmasana.\nPlace the palms on the floor, fingers pointing forward.\nRaise the body and balance on the hands. Hold for 2-5 seconds.\nRepeat with the opposite leg on top."
+    },
+    {
+      "name": "Yogamudrasana",
+      "description": "Sit in padmasana (lotus posture).\nBring both arms behind the body and grasp the right wrist with the left hand.\nExhaling, slowly bend forward, stretching from the base of the spine. Rest the\nforehead on the floor.\nBreathe evenly; relax in this posture for 20-30 seconds.\nInhaling, slowly return to a sitting position.\nNOTE: The benefits of this posture depend on the heels pressing against the abdomen\nat the inside of the hip joints."
+    },
+    {
+      "name": "Virasana",
+      "description": "Position 1\nSit in a kneeling position with the knees together and feet beside the body so that\nthe buttocks rest on the floor. Keep the head, neck, and trunk straight.\nBreathe evenly; hold for 30 seconds.\nPosition 2\nKeeping the knees together, turn the feet outward so that the toes point away from\nthe body.\nBreathe evenly; hold for 30 seconds."
+    },
+    {
+      "name": "Vrikshasana",
+      "description": "Stand in the tree posture with the right foot in half lotus.\nReach behind the back with the right hand and grasp the foot.\nExtend the left arm forward keeping it parallel to the floor.\nBreathe evenly ; hold for 30 seconds.\nRepeat on the opposite side."
+    }
+  ]
 }
