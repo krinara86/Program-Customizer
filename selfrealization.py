@@ -104,7 +104,7 @@ class AsanaRow(QWidget):
         return {
             'day_type': 'cardio' if self.cardio_button.isChecked() else 'nonCardio',
             'asana': self.asana_dropdown.currentText(),
-            'duration': self.duration_entry.toPlainText(),
+            'duration': self.duration_entry.text(),
             'additionalNotes': self.notes_entry.toPlainText()
         }
 
