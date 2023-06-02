@@ -2,10 +2,11 @@ import json
 import os
 import sys
 
-from PyQt5.QtGui import QIntValidator, QPalette, QColor
-from PyQt5.QtWidgets import QScrollArea, QApplication, QWidget, QVBoxLayout, QPushButton, \
-    QComboBox, QLineEdit, QTextEdit, QLabel, QGridLayout, QMessageBox, QRadioButton
-from PyQt5.QtWidgets import QStyleFactory
+from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtWidgets import (
+    QScrollArea, QApplication, QWidget, QVBoxLayout, QPushButton, QComboBox, QLineEdit,
+    QTextEdit, QLabel, QGridLayout, QMessageBox, QRadioButton, QStyleFactory
+)
 from fpdf import FPDF
 
 
@@ -59,8 +60,8 @@ class AsanaRow(QWidget):
         self.asana_dropdown.addItems([asana['name'] for asana in asanas])
 
         self.duration_entry = QLineEdit()
-        self.duration_entry.setValidator(QIntValidator(0, 99))  # Only allow positive integers upto 99
-        self.duration_entry.setFixedWidth(40)
+        self.duration_entry.setMaxLength(10)  # Set maximum length to 10 characters
+        self.duration_entry.setMaximumWidth(100)
         self.notes_entry = QTextEdit()
         self.notes_entry.setMaximumWidth(1000)
 
@@ -76,15 +77,15 @@ class AsanaRow(QWidget):
             self.non_cardio_button.setChecked(True)
 
         layout = QGridLayout()
-        layout.addWidget(self.asana_dropdown, 0, 0)  # Changed row index to 0
-        layout.addWidget(self.duration_entry, 0, 1)  # Changed row index to 0
-        layout.addWidget(self.cardio_button, 0, 2)  # Added this line
-        layout.addWidget(self.non_cardio_button, 0, 3)  # Added this line
-        layout.addWidget(self.notes_entry, 1, 0, 1, 4)  # Changed row index to 1 and column span to 4
-        layout.addWidget(self.delete_button, 1, 4)  # Changed row index to 1
+        layout.addWidget(self.asana_dropdown, 0, 0)
+        layout.addWidget(self.duration_entry, 0, 1)
+        layout.addWidget(self.cardio_button, 0, 2)
+        layout.addWidget(self.non_cardio_button, 0, 3)
+        layout.addWidget(self.notes_entry, 1, 0, 1, 4)
+        layout.addWidget(self.delete_button, 1, 4)
 
-        self.delete_button.setText('-')  # Change button text to minus sign
-        self.delete_button.setStyleSheet("QPushButton { color: red }")  # Change button color to red
+        self.delete_button.setText('-')
+        self.delete_button.setStyleSheet("QPushButton { color: red }")
 
         self.setLayout(layout)
 
@@ -92,8 +93,9 @@ class AsanaRow(QWidget):
             index = self.asana_dropdown.findText(practice['asana'])
             if index >= 0:
                 self.asana_dropdown.setCurrentIndex(index)
-            self.duration_entry.setText(str(practice['duration']))
+            self.duration_entry.setText(practice['duration'])
             self.notes_entry.setText(practice['additionalNotes'])
+
 
     def delete(self):
         self.setParent(None)
@@ -102,7 +104,7 @@ class AsanaRow(QWidget):
         return {
             'day_type': 'cardio' if self.cardio_button.isChecked() else 'nonCardio',
             'asana': self.asana_dropdown.currentText(),
-            'duration': int(self.duration_entry.text()),
+            'duration': self.duration_entry.toPlainText(),
             'additionalNotes': self.notes_entry.toPlainText()
         }
 
@@ -126,20 +128,21 @@ class SadhakaApp(QWidget):
         self.add_asana_button = QPushButton("Add New Asana")
         self.add_asana_button.clicked.connect(self.add_asana_row)
 
+        self.add_sadhaka_button = QPushButton("Add Sadhaka")
+        self.add_sadhaka_button.clicked.connect(self.add_sadhaka)
+
         self.save_button = QPushButton("Save Sadhaka")
         self.save_button.clicked.connect(self.save_sadhaka)
 
         self.save_pdf_button = QPushButton("Save to PDF")
         self.save_pdf_button.clicked.connect(self.save_to_pdf)
 
-        self.diet_and_notes_entry = QTextEdit()  # Add a text edit field for diet and additional notes
+        self.diet_and_notes_entry = QTextEdit()
         self.diet_and_notes_entry.setMaximumWidth(1000)
 
-        # Create a widget for the scroll area
         self.scrollWidget = QWidget()
         self.scrollLayout = QVBoxLayout(self.scrollWidget)
 
-        # Create a scroll area and set its widget
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setWidget(self.scrollWidget)
@@ -147,11 +150,11 @@ class SadhakaApp(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Select Sadhaka"))
         layout.addWidget(self.sadhaka_dropdown)
-        layout.addWidget(self.scrollArea)  # add scroll area instead of rows directly
+        layout.addWidget(self.scrollArea)
         layout.addWidget(self.add_asana_button)
-
-        layout.addWidget(QLabel("Diet and Additional Notes"))  # Label for the text edit field
-        layout.addWidget(self.diet_and_notes_entry)  # Add the text edit field to the layout
+        layout.addWidget(self.add_sadhaka_button)
+        layout.addWidget(QLabel("Diet and Additional Notes"))
+        layout.addWidget(self.diet_and_notes_entry)
 
         layout.addWidget(self.save_button)
         layout.addWidget(self.save_pdf_button)
@@ -184,7 +187,13 @@ class SadhakaApp(QWidget):
 
         row = AsanaRow(self.asanas, day_type, practice)
         self.asana_rows.append(row)
-        self.scrollLayout.addWidget(row)  # add row to the scroll layout
+        self.scrollLayout.addWidget(row)
+
+    def add_sadhaka(self):
+        name, ok = QInputDialog.getText(self, 'Add Sadhaka', 'Enter Sadhaka Name:')
+        if ok and name:
+            self.sadhakas.append({'name': name, 'practiceDays': {}, 'dietandadditionalnotes': ''})
+            self.sadhaka_dropdown.addItem(name)
 
     def save_sadhaka(self):
         selected_sadhaka = self.sadhaka_dropdown.currentText()
@@ -193,7 +202,7 @@ class SadhakaApp(QWidget):
                 sadhaka['practiceDays']['cardio'] = [row.get_values() for row in self.asana_rows if
                                                      row.cardio_button.isChecked()]
                 sadhaka['practiceDays']['nonCardio'] = [row.get_values() for row in self.asana_rows if
-                                                        row.non_cardio_button.isChecked()]  # Fixed typo
+                                                        row.non_cardio_button.isChecked()]
                 sadhaka['dietandadditionalnotes'] = self.diet_and_notes_entry.toPlainText()
             with open(self.sadhakas_file_path, 'w') as f:
                 json.dump({"sadhakas": self.sadhakas}, f)
@@ -220,24 +229,22 @@ class SadhakaApp(QWidget):
                                 break
                         pdf.set_font("Helvetica", size=10)
                         pdf.cell(0, 10, txt=clean_string(asana_name), ln=True)
-                        pdf.line(10, pdf.get_y(), 200, pdf.get_y())  # Add separator line
-                        pdf.cell(0, 10, txt=clean_string(f"Duration: {practice['duration']} minutes"), ln=True)
-                        pdf.line(10, pdf.get_y(), 200, pdf.get_y())  # Add separator line
+                        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+                        pdf.cell(0, 10, txt=clean_string(f"Duration: {practice['duration']}"), ln=True)
+                        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
                         pdf.cell(0, 10, txt=clean_string(f"Special instructions: {practice['additionalNotes']}"), ln=True)
 
-                        # Set the X,Y coordinates for the image
-                        image_x = (pdf.w - 40) / 2  # Center the image horizontally
-                        image_y = pdf.get_y() + 10  # Add some space between the image and the text
+                        image_x = (pdf.w - 40) / 2
+                        image_y = pdf.get_y() + 10
                         pdf.image(asana_name + ".png", x=image_x, y=image_y, w=40)
-                        pdf.set_y(image_y + 40)  # Set the new Y coordinate after adding the image
+                        pdf.set_y(image_y + 40)
 
                         pdf.cell(0, 10, txt="Description:", ln=True)
                         pdf.set_font("Helvetica", size=8)
                         pdf.multi_cell(0, 10, txt=clean_string(asana_description), align='L')
 
-                        pdf.set_y(pdf.h)  # Move to the bottom of the page
+                        pdf.set_y(pdf.h)
 
-                # Add diet and additional notes to the end of the PDF
                 pdf.set_font("Helvetica", size=10, style='B')
                 pdf.cell(0, 10, txt="Diet and Additional Notes:", ln=True)
                 pdf.set_font("Helvetica", size=10)
@@ -252,7 +259,6 @@ def main():
     app = QApplication([])
     app.setStyle(QStyleFactory.create('Fusion'))
 
-    # Set up palette for customization
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(242, 242, 242))
     palette.setColor(QPalette.WindowText, QColor(53, 53, 53))
