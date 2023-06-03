@@ -6,6 +6,9 @@
   <!-- Include Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
+
   <style>
     body {
       background-color: #f0f0f0;
@@ -124,7 +127,7 @@
   <h1>Sadhaka Customizer</h1>
   <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)">
   <datalist id="sadhakaNameList"></datalist>
- 
+
 
   <div id="sadhakaDiv">
     <!-- Assigned Asanas will go here -->
@@ -136,6 +139,7 @@
   <textarea id="dietAndAdditionalNotes"></textarea>
 
   <button onclick="saveSadhaka()">Save Sadhaka</button>
+  <button onclick="saveSadhakaReportAsPdf()">Save Sadhaka report as pdf</button>
 
 
   <script>
@@ -157,6 +161,56 @@
     var sadhakaNameInput = document.getElementById('sadhakaName');
     var sadhakaNameList = document.getElementById('sadhakaNameList');
     var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
+
+    function saveSadhakaReportAsPdf() {
+      var pdf = new jsPDF();
+
+      var name = sadhakaNameInput.value;
+      if (!name) {
+        alert('Sadhaka name is required');
+        return;
+      }
+
+      pdf.text('Sadhaka Name: ' + name, 10, 10);
+
+      var sadhakaDiv = document.getElementById('sadhakaDiv');
+      var asanaDivs = Array.from(sadhakaDiv.children);
+
+      var y = 20;  // Start position for asanas
+
+      var assignedAsanas = asanaDivs.map((asanaDiv, index) => {
+        var asanaName = asanaDiv.children[0].value;
+        var repetitions = asanaDiv.children[1].value; // Get repetitions input value
+        var specialNotes = asanaDiv.children[2].value; // Get special notes textarea value
+
+        pdf.text(`Asana ${index + 1}: `, 10, y);
+        pdf.text(`Name: ${asanaName}`, 20, y + 10);
+        pdf.text(`Repetitions: ${repetitions}`, 20, y + 20);
+        pdf.text(`Special Notes: ${specialNotes}`, 20, y + 30);
+
+        y += 40; // increment y for the next asana 
+
+        return {
+          asanaName: asanaName,
+          repetitions: repetitions,
+          specialNotes: specialNotes
+        };
+      });
+
+      var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
+
+      pdf.text('Diet and Additional Notes: ' + dietAndAdditionalNotes, 10, y);
+
+      var sadhaka = {
+        assignedAsanas: assignedAsanas,
+        dietAndAdditionalNotes: dietAndAdditionalNotes
+      };
+
+      // Save the PDF
+      pdf.save('Sadhaka_report.pdf');
+    }
+
+
 
     function loadAsanas() {
       return new Promise((resolve, reject) => {
@@ -247,7 +301,7 @@
     function clearSadhakaDiv() {
       var sadhakaDiv = document.getElementById('sadhakaDiv');
       sadhakaDiv.innerHTML = '';
-      var dietAndAdditionalNotes =   document.getElementById('dietAndAdditionalNotes');
+      var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes');
       dietAndAdditionalNotes.value = '';
     }
 
