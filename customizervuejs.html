@@ -14,6 +14,10 @@
       padding: 20px;
     }
 
+    #repetitionsInput {
+      max-width: 80px;
+    }
+
     h1 {
       margin-bottom: 20px;
       color: #003366;
@@ -34,9 +38,20 @@
       padding: 10px 20px;
       border-radius: 5px;
       border: none;
-      background-color: #4c7d7e;
+      background-color: #c91818;
       color: #ffffff;
       cursor: pointer;
+    }
+
+    button,
+    .asana-button {
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      background-color: #2ecc71;
+      color: #ffffff;
+      cursor: pointer;
+      width: auto;
     }
 
     button:hover,
@@ -63,6 +78,18 @@
       margin-top: 50px;
       margin-bottom: 10px;
     }
+
+    .info-button {
+      font-size: 12px;
+      line-height: 1;
+      padding: 2px 5px;
+      margin-left: 1px;
+      margin-right: 20px;
+      margin-top: auto;
+      margin-bottom: auto;
+      background-color: #2ecc71;
+    }
+
 
     .suggestions {
       position: relative;
@@ -97,13 +124,12 @@
   <h1>Sadhaka Customizer</h1>
   <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)">
   <datalist id="sadhakaNameList"></datalist>
-  <div id="sadhakaNameSuggestions" class="suggestions"></div>
-
+ 
 
   <div id="sadhakaDiv">
     <!-- Assigned Asanas will go here -->
   </div>
-  <button onclick="addAsana()">Add Asana</button>
+  <button onclick="addAsana()" class="asana-button">Add Asana</button>
 
   <div id="asanaDescription" class="asana-description"></div>
 
@@ -190,24 +216,24 @@
     }
 
     function sadhakaNameChanged(name) {
-      var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
-      suggestionsDiv.innerHTML = ''; // clear previous suggestions
-      suggestionsDiv.style.display = 'none';
+      //var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
+      //suggestionsDiv.innerHTML = ''; // clear previous suggestions
+      //suggestionsDiv.style.display = 'none';
 
       var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.startsWith(name));
       if (matchingNames.length > 0) {
-        suggestionsDiv.style.display = 'block';
+        //suggestionsDiv.style.display = 'block';
       }
       matchingNames.forEach(sadhakaName => {
         var suggestionDiv = document.createElement('div');
         suggestionDiv.textContent = sadhakaName;
         suggestionDiv.onclick = function () {
           sadhakaNameInput.value = sadhakaName;
-          suggestionsDiv.innerHTML = ''; // clear suggestions
-          suggestionsDiv.style.display = 'none';
+          //suggestionsDiv.innerHTML = ''; // clear suggestions
+          //suggestionsDiv.style.display = 'none';
           loadSadhaka(sadhakaName);
         };
-        suggestionsDiv.appendChild(suggestionDiv);
+        //suggestionsDiv.appendChild(suggestionDiv);
       });
 
       // load Sadhaka details
@@ -221,8 +247,101 @@
     function clearSadhakaDiv() {
       var sadhakaDiv = document.getElementById('sadhakaDiv');
       sadhakaDiv.innerHTML = '';
+      var dietAndAdditionalNotes =   document.getElementById('dietAndAdditionalNotes');
+      dietAndAdditionalNotes.value = '';
     }
 
+
+    function createAsanaDiv() {
+      var asanaDiv = document.createElement('div');
+      asanaDiv.style.display = 'flex';
+      asanaDiv.style.flexWrap = 'no-wrap';
+      asanaDiv.style.alignItems = 'center'; // This will vertically align items
+      asanaDiv.style.justifyContent = 'space-between';
+      asanaDiv.style.marginBottom = '10px';
+
+      return asanaDiv;
+    }
+
+    function createAsanaSelectDiv() {
+      var asanaSelectDiv = document.createElement('div');
+      asanaSelectDiv.style.display = 'flex';
+      asanaSelectDiv.style.alignItems = 'center';
+      asanaSelectDiv.style.justifyContent = 'space-between';
+      asanaSelectDiv.style.flexGrow = '1';
+      asanaSelectDiv.style.marginRight = '10px';
+
+      return asanaSelectDiv;
+    }
+
+    function createAsanaNameSelect(asanas) {
+      var asanaNameSelect = document.createElement('select');
+      asanaNameSelect.style.padding = '10px';
+      asanaNameSelect.style.borderRadius = '5px';
+      asanaNameSelect.style.border = '1px solid #cccccc';
+      asanaNameSelect.style.backgroundColor = '#ffffff';
+      asanaNameSelect.style.color = '#333333';
+      asanaNameSelect.style.width = 'auto'; // Adjust the width
+
+      // Populate the dropdown options
+      asanas.forEach((asanaOption) => {
+        var option = document.createElement('option');
+        option.value = asanaOption[0]; // Access the name from the tuple
+        option.text = asanaOption[0]; // Access the name from the tuple
+        asanaNameSelect.appendChild(option);
+      });
+
+      return asanaNameSelect;
+    }
+
+    function createInfoButton(asanas, asanaNameSelect) {
+      var infoButton = document.createElement('button');
+      infoButton.textContent = '?';
+      infoButton.className = 'info-button';
+
+      infoButton.addEventListener('click', function (event) {
+        event.stopPropagation(); // Stop the event from bubbling up
+
+        var asanaName = asanaNameSelect.value;
+        var asana = asanas.find(asana => asana[0] === asanaName);
+
+        if (asana) {
+          displayAsanaDescription(asana[1], infoButton);
+        }
+      });
+
+      return infoButton;
+    }
+
+    function createRepetitionsInput(asana) {
+      var repetitionsInput = document.createElement('input');
+      repetitionsInput.id = 'repetitionsInput'; // add this line
+      repetitionsInput.type = 'number';
+      repetitionsInput.value = asana ? asana.repetitions : '';
+      repetitionsInput.style.flex = '1';
+      repetitionsInput.style.width = '20px';
+      return repetitionsInput;
+    }
+
+    function createSpecialNotesTextarea(asana) {
+      var specialNotesTextarea = document.createElement('textarea');
+      specialNotesTextarea.value = asana ? asana.specialNotes : '';
+      specialNotesTextarea.style.flex = '1';
+      specialNotesTextarea.className = 'special-notes';
+
+      return specialNotesTextarea;
+    }
+
+    function createDeleteButton(asanaDiv) {
+      var deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.className = 'delete-button';
+      deleteButton.onclick = function () {
+        asanaDiv.remove();
+      }
+
+      return deleteButton;
+    }
 
     function displaySadhaka(sadhaka) {
       loadAsanas().then((asanas) => {
@@ -230,25 +349,21 @@
         sadhakaDiv.innerHTML = ''; // Clear the div
 
         sadhaka.assignedAsanas.forEach((asana, index) => {
-          var asanaDiv = document.createElement('div');
-          asanaDiv.style.display = 'flex'; // Add this line
-          asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
-          asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
+          var asanaDiv = createAsanaDiv();
+          var asanaSelectDiv = createAsanaSelectDiv();
 
-          var asanaNameSelect = document.createElement('select');
-          asanaNameSelect.style.flexGrow = '1'; // Add this line to allow the select element to take up available space
-          asanaNameSelect.style.marginRight = '10px'; // Add some margin for spacing
+          var asanaNameSelect = createAsanaNameSelect(asanas);
           asanaDiv.appendChild(asanaNameSelect);
 
-          // Populate the dropdown options
-          asanas.forEach((asanaOption) => {
-            var option = document.createElement('option');
-            option.value = asanaOption[0]; // Access the name from the tuple
-            option.text = asanaOption[0]; // Access the name from the tuple
-            asanaNameSelect.appendChild(option);
+          var infoButton = createInfoButton(asanas, asanaNameSelect);
+          asanaDiv.appendChild(infoButton);
+
+          //asanaDiv.appendChild(asanaSelectDiv);
+
+          document.addEventListener('click', function () {
+            hideAsanaDescription();
           });
 
-          // Check if the fetched asana name is present in the asanas list
           var matchingAsana = asanas.find(asanaOption => asanaOption[0].toLowerCase() === asana.asanaName.toLowerCase());
           if (!matchingAsana) {
             asanaNameSelect.style.border = '1px solid red';
@@ -257,26 +372,16 @@
           }
 
           asanaNameSelect.addEventListener('change', function () {
-            validateAsanaName(this.value);
+            validateAsanaName(this.value, asanaNameSelect);
           });
 
-          var repetitionsInput = document.createElement('input');
-          repetitionsInput.type = 'number';
-          repetitionsInput.value = asana.repetitions || '';
-          repetitionsInput.style.width = '80px';
+          var repetitionsInput = createRepetitionsInput(asana);
           asanaDiv.appendChild(repetitionsInput);
 
-          var specialNotesTextarea = document.createElement('textarea');
-          specialNotesTextarea.value = asana.specialNotes || '';
-          specialNotesTextarea.className = 'special-notes'; // Add this line
+          var specialNotesTextarea = createSpecialNotesTextarea(asana);
           asanaDiv.appendChild(specialNotesTextarea);
 
-          var deleteButton = document.createElement('button');
-          deleteButton.textContent = 'Delete';
-          deleteButton.className = 'delete-button';
-          deleteButton.onclick = function () {
-            asanaDiv.remove();
-          }
+          var deleteButton = createDeleteButton(asanaDiv);
           asanaDiv.appendChild(deleteButton);
 
           sadhakaDiv.appendChild(asanaDiv);
@@ -288,43 +393,32 @@
       });
     }
 
-
     function addAsana() {
       loadAsanas().then((asanas) => {
         var sadhakaDiv = document.getElementById('sadhakaDiv');
 
-        var asanaDiv = document.createElement('div');
-        asanaDiv.style.display = 'flex'; // Add this line
-        asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
-        asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
+        var asanaDiv = createAsanaDiv();
+        var asanaSelectDiv = createAsanaSelectDiv();
 
-        var asanaNameSelect = document.createElement('select');
-        asanaNameSelect.style.flexGrow = '1'; // Add this line to allow the select element to take up available space
-        asanaNameSelect.style.marginRight = '10px'; // Add some margin for spacing
+        var asanaNameSelect = createAsanaNameSelect(asanas);
         asanaDiv.appendChild(asanaNameSelect);
 
-        asanas.forEach((asana) => {
-          var option = document.createElement('option');
-          option.value = asana[0]; // Access the name from the tuple
-          option.text = asana[0]; // Access the name from the tuple
-          asanaNameSelect.appendChild(option);
+        var infoButton = createInfoButton(asanas, asanaNameSelect);
+        asanaDiv.appendChild(infoButton);
+
+        //asanaDiv.appendChild(asanaSelectDiv);
+
+        document.addEventListener('click', function () {
+          hideAsanaDescription();
         });
 
-        var repetitionsInput = document.createElement('input');
-        repetitionsInput.type = 'number';
-        repetitionsInput.style.width = '80px';
+        var repetitionsInput = createRepetitionsInput();
         asanaDiv.appendChild(repetitionsInput);
 
-        var specialNotesTextarea = document.createElement('textarea');
-        specialNotesTextarea.className = 'special-notes'; // Add this line
+        var specialNotesTextarea = createSpecialNotesTextarea();
         asanaDiv.appendChild(specialNotesTextarea);
 
-        var deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.className = 'delete-button';
-        deleteButton.onclick = function () {
-          asanaDiv.remove();
-        }
+        var deleteButton = createDeleteButton(asanaDiv);
         asanaDiv.appendChild(deleteButton);
 
         sadhakaDiv.appendChild(asanaDiv);
@@ -333,23 +427,29 @@
       });
     }
 
-    function validateAsanaName(name) {
+
+    function validateAsanaName(name, asanaNameSelect) {
       var matchingAsana = asanas.find(asana => asana[0].toLowerCase() === name.toLowerCase());
       if (matchingAsana) {
-        asanaNameInput.style.border = '1px solid green';
-        // Display the description if needed
-        displayAsanaDescription(matchingAsana[1]);
+        asanaNameSelect.style.border = '1px solid green';
       } else {
-        asanaNameInput.style.border = '1px solid red';
-        // Hide the description if needed
-        hideAsanaDescription();
+        asanaNameSelect.style.border = '1px solid red';
       }
     }
 
-    function displayAsanaDescription(description) {
+    function displayAsanaDescription(description, infoButton) {
       var asanaDescriptionDiv = document.getElementById('asanaDescription');
       asanaDescriptionDiv.textContent = description;
       asanaDescriptionDiv.style.display = 'block';
+
+      // Calculate the position of the infoButton
+      var infoButtonRect = infoButton.getBoundingClientRect();
+      var infoButtonTop = infoButtonRect.top + window.pageYOffset;
+      var infoButtonLeft = infoButtonRect.left + window.pageXOffset;
+
+      // Position the description next to the infoButton
+      asanaDescriptionDiv.style.top = infoButtonTop + 'px';
+      asanaDescriptionDiv.style.left = (infoButtonLeft + infoButton.offsetWidth) + 'px';
     }
 
     function hideAsanaDescription() {
