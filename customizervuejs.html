@@ -8,55 +8,72 @@
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
   <style>
     body {
-      background-color: #1e1e1e;
-      color: #ffffff;
+      background-color: #f0f0f0;
+      color: #333333;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
 
     h1 {
       margin-bottom: 20px;
+      color: #003366;
     }
 
-    input[type="text"],
+    input,
     textarea {
       width: 100%;
       padding: 10px;
       border-radius: 5px;
-      border: none;
-      background-color: #2d2d2d;
-      color: #ffffff;
+      border: 1px solid #cccccc;
+      background-color: #ffffff;
+      color: #333333;
     }
 
-    button {
+    button,
+    .delete-button {
       padding: 10px 20px;
       border-radius: 5px;
       border: none;
-      background-color: #4c4c4c;
+      background-color: #4c7d7e;
       color: #ffffff;
       cursor: pointer;
     }
 
-    button:hover {
-      background-color: #808080;
+    button:hover,
+    .delete-button:hover {
+      background-color: #72b1b2;
     }
 
     #sadhakaDiv {
+      margin-top: 50px;
       margin-bottom: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #cccccc;
+      border-radius: 5px;
+      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24);
+      transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+    }
+
+    #sadhakaDiv:hover {
+      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25), 0px 2px 3px rgba(0, 0, 0, 0.22);
     }
 
     #sadhakaDiv div {
+      margin-top: 50px;
       margin-bottom: 10px;
     }
 
     .suggestions {
-      position: absolute;
-      background-color: #2d2d2d;
-      color: #ffffff;
+      position: relative;
+      background-color: #f0f0f0;
+      color: #333333;
       padding: 10px;
       max-height: 150px;
       overflow-y: auto;
       z-index: 1;
+      display: none;
+      /* Add this line */
     }
 
     .suggestions div {
@@ -114,13 +131,19 @@
 
       sadhaka.assignedAsanas.forEach((asana, index) => {
         var asanaDiv = document.createElement('div');
+        asanaDiv.style.display = 'flex'; // Add this line
+        asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
+        asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
 
         var asanaNameInput = document.createElement('input');
         asanaNameInput.value = asana.asanaName;
+        asanaNameInput.style.flexGrow = '1'; // Add this line to allow the input to take up available space
+        asanaNameInput.style.marginRight = '10px'; // Add some margin for spacing
         asanaDiv.appendChild(asanaNameInput);
 
         var deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
+        deleteButton.className = 'delete-button';
         deleteButton.onclick = function () {
           asanaDiv.remove();
         }
@@ -133,16 +156,23 @@
     }
 
 
+
     function addAsana() {
       var sadhakaDiv = document.getElementById('sadhakaDiv');
 
       var asanaDiv = document.createElement('div');
+      asanaDiv.style.display = 'flex'; // Add this line
+      asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
+      asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
 
       var asanaNameInput = document.createElement('input');
+      asanaNameInput.style.flexGrow = '1'; // Add this line to allow the input to take up available space
+      asanaNameInput.style.marginRight = '10px'; // Add some margin for spacing
       asanaDiv.appendChild(asanaNameInput);
 
       var deleteButton = document.createElement('button');
       deleteButton.textContent = 'Delete';
+      deleteButton.className = 'delete-button';
       deleteButton.onclick = function () {
         asanaDiv.remove();
       }
@@ -150,6 +180,7 @@
 
       sadhakaDiv.appendChild(asanaDiv);
     }
+
 
     var sadhakaNames = [];
 
@@ -164,14 +195,19 @@
     function sadhakaNameChanged(name) {
       var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
       suggestionsDiv.innerHTML = ''; // clear previous suggestions
+      suggestionsDiv.style.display = 'none'; // Add this line
 
       var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.startsWith(name));
+      if (matchingNames.length > 0) { // Add this line
+        suggestionsDiv.style.display = 'block'; // Add this line
+      }
       matchingNames.forEach(sadhakaName => {
         var suggestionDiv = document.createElement('div');
         suggestionDiv.textContent = sadhakaName;
         suggestionDiv.onclick = function () {
           document.getElementById('sadhakaName').value = sadhakaName;
           suggestionsDiv.innerHTML = ''; // clear suggestions
+          suggestionsDiv.style.display = 'none'; // Add this line
         };
         suggestionsDiv.appendChild(suggestionDiv);
       });
@@ -179,6 +215,7 @@
       // load Sadhaka details
       loadSadhaka(name);
     }
+
 
 
     function loadSadhaka(name) {
