@@ -6,17 +6,81 @@
   <!-- Include Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: #2d2d2d;
+      color: #ffffff;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4c4c4c;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #808080;
+    }
+
+    #sadhakaDiv {
+      margin-bottom: 20px;
+    }
+
+    #sadhakaDiv div {
+      margin-bottom: 10px;
+    }
+
+    .suggestions {
+      position: absolute;
+      background-color: #2d2d2d;
+      color: #ffffff;
+      padding: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1;
+    }
+
+    .suggestions div {
+      cursor: pointer;
+      padding: 5px;
+    }
+  </style>
 </head>
 
 <body>
+  <h1>Sadhaka Customizer</h1>
   <input type="text" id="sadhakaName" oninput="sadhakaNameChanged(this.value)">
-  <div id="sadhakaNameSuggestions"></div>
+  <div id="sadhakaNameSuggestions" class="suggestions"></div>
+
+
   <div id="sadhakaDiv">
     <!-- Assigned Asanas will go here -->
   </div>
   <button onclick="addAsana()">Add Asana</button>
+
   <textarea id="dietAndAdditionalNotes"></textarea>
+
   <button onclick="saveSadhaka()">Save Sadhaka</button>
+
 
   <script>
     // Initialize Firebase
