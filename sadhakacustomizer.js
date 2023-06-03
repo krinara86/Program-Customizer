@@ -1,13 +1,12 @@
 // Initialize Firebase
 // TODO: replace with your own Firebase config
 var firebaseConfig = {
-    apiKey: "...",
-    authDomain: "...",
-    databaseURL: "...",
-    projectId: "...",
-    storageBucket: "...",
-    messagingSenderId: "...",
-    appId: "..."
+  apiKey: "AIzaSyD2Qv-8dC9atWBU_IFWXmxsGSp5T-_FOtM",
+  authDomain: "sadhakacustomizer.firebaseapp.com",
+  projectId: "sadhakacustomizer",
+  storageBucket: "sadhakacustomizer.appspot.com",
+  messagingSenderId: "401905258509",
+  appId: "1:401905258509:web:cd9661bbe700b04fa00544"
 };
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();

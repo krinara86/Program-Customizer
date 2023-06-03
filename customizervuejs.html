@@ -1,38 +1,173 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Sadhaka Customizer</title>
-  <!-- Include Vue.js -->
-  <script src="https://unpkg.com/vue@2.6.11/dist/vue.js"></script>
   <!-- Include Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
 </head>
+
 <body>
-  <div id="app">
-    <div>
-      <input v-model="search" placeholder="Search Sadhaka" />
-      <ul>
-        <li v-for="sadhaka in filteredSadhakas" @click="selectSadhaka(sadhaka)">{{sadhaka.name}}</li>
-      </ul>
-    </div>
-    
-    <div v-if="selectedSadhaka">
-      <h2>Selected Sadhaka: {{selectedSadhaka.name}}</h2>
-      <div v-for="(asana, index) in selectedSadhaka.assignedAsanas" :key="index">
-        <input v-model="asana.asanaName" @input="suggestAsana(index)" />
-        <textarea v-model="asana.specialnotes"></textarea>
-        <button @click="deleteAsana(index)">Delete</button>
-      </div>
-      
-      <button @click="addAsana">Add Asana</button>
-
-      <textarea v-model="selectedSadhaka.dietAndAdditionalNotes"></textarea>
-
-      <button @click="saveSadhaka">Save Sadhaka</button>
-    </div>
+  <input type="text" id="sadhakaName" oninput="sadhakaNameChanged(this.value)">
+  <div id="sadhakaNameSuggestions"></div>
+  <div id="sadhakaDiv">
+    <!-- Assigned Asanas will go here -->
   </div>
-  
-  <script src="sadhakaCustomizer.js"></script>
+  <button onclick="addAsana()">Add Asana</button>
+  <textarea id="dietAndAdditionalNotes"></textarea>
+  <button onclick="saveSadhaka()">Save Sadhaka</button>
+
+  <script>
+    // Initialize Firebase
+    // TODO: replace with your own Firebase config
+    var firebaseConfig = {
+      apiKey: "AIzaSyD2Qv-8dC9atWBU_IFWXmxsGSp5T-_FOtM",
+      authDomain: "sadhakacustomizer.firebaseapp.com",
+      projectId: "sadhakacustomizer",
+      storageBucket: "sadhakacustomizer.appspot.com",
+      messagingSenderId: "401905258509",
+      appId: "1:401905258509:web:cd9661bbe700b04fa00544"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+
+    var asanas = [];  // TODO: load Asanas from JSON
+
+    function loadSadhaka() {
+      db.collection('sadhakas').doc('sadhaka1').get().then((doc) => {
+        if (doc.exists) {
+          displaySadhaka(doc.data());
+        }
+      }).catch((error) => {
+        console.log("Error getting document:", error);
+      });
+    }
+
+    function displaySadhaka(sadhaka) {
+      var sadhakaDiv = document.getElementById('sadhakaDiv');
+      sadhakaDiv.innerHTML = ''; // Clear the div
+
+      sadhaka.assignedAsanas.forEach((asana, index) => {
+        var asanaDiv = document.createElement('div');
+
+        var asanaNameInput = document.createElement('input');
+        asanaNameInput.value = asana.asanaName;
+        asanaDiv.appendChild(asanaNameInput);
+
+        var deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = function () {
+          asanaDiv.remove();
+        }
+        asanaDiv.appendChild(deleteButton);
+
+        sadhakaDiv.appendChild(asanaDiv);
+      });
+
+      document.getElementById('dietAndAdditionalNotes').value = sadhaka.dietAndAdditionalNotes;
+    }
+
+
+    function addAsana() {
+      var sadhakaDiv = document.getElementById('sadhakaDiv');
+
+      var asanaDiv = document.createElement('div');
+
+      var asanaNameInput = document.createElement('input');
+      asanaDiv.appendChild(asanaNameInput);
+
+      var deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = function () {
+        asanaDiv.remove();
+      }
+      asanaDiv.appendChild(deleteButton);
+
+      sadhakaDiv.appendChild(asanaDiv);
+    }
+
+    var sadhakaNames = [];
+
+    function loadSadhakaNames() {
+      db.collection('sadhakas').get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          sadhakaNames.push(doc.id);
+        });
+      });
+    }
+
+    function sadhakaNameChanged(name) {
+      var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
+      suggestionsDiv.innerHTML = ''; // clear previous suggestions
+
+      var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.startsWith(name));
+      matchingNames.forEach(sadhakaName => {
+        var suggestionDiv = document.createElement('div');
+        suggestionDiv.textContent = sadhakaName;
+        suggestionDiv.onclick = function () {
+          document.getElementById('sadhakaName').value = sadhakaName;
+          suggestionsDiv.innerHTML = ''; // clear suggestions
+        };
+        suggestionsDiv.appendChild(suggestionDiv);
+      });
+
+      // load Sadhaka details
+      loadSadhaka(name);
+    }
+
+
+    function loadSadhaka(name) {
+      db.collection('sadhakas').doc(name).get().then((doc) => {
+        if (doc.exists) {
+          displaySadhaka(doc.data());
+        } else {
+          displaySadhaka({
+            name: name,
+            assignedAsanas: [],
+            dietAndAdditionalNotes: ''
+          });
+        }
+      }).catch((error) => {
+        console.log("Error getting document:", error);
+      });
+    }
+
+    function saveSadhaka() {
+      var name = document.getElementById('sadhakaName').value;
+      if (!name) {
+        alert('Sadhaka name is required');
+        return;
+      }
+
+      var sadhakaDiv = document.getElementById('sadhakaDiv');
+      var asanaDivs = Array.from(sadhakaDiv.children);
+
+      var assignedAsanas = asanaDivs.map((asanaDiv) => {
+        var asanaName = asanaDiv.children[0].value;
+        return { asanaName: asanaName };
+      });
+
+      var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
+
+      var sadhaka = {
+        assignedAsanas: assignedAsanas,
+        dietAndAdditionalNotes: dietAndAdditionalNotes
+      };
+
+      db.collection('sadhakas').doc(name).set(sadhaka).then(() => {
+        console.log("Document successfully written!");
+        if (!sadhakaNames.includes(name)) {
+          sadhakaNames.push(name);
+        }
+      }).catch((error) => {
+        console.error("Error writing document: ", error);
+      });
+    }
+
+
+    loadSadhaka();
+  </script>
 </body>
+
 </html>
