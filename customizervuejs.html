@@ -80,6 +80,17 @@
       cursor: pointer;
       padding: 5px;
     }
+
+
+    .asana-description {
+      position: absolute;
+      background-color: #f0f0f0;
+      color: #333333;
+      padding: 10px;
+      max-width: 300px;
+      z-index: 2;
+      display: none;
+    }
   </style>
 </head>
 
@@ -93,6 +104,8 @@
     <!-- Assigned Asanas will go here -->
   </div>
   <button onclick="addAsana()">Add Asana</button>
+
+  <div id="asanaDescription" class="asana-description"></div>
 
   <textarea id="dietAndAdditionalNotes"></textarea>
 
@@ -115,40 +128,122 @@
 
     var asanas = [];  // TODO: load Asanas from JSON
 
-    function loadSadhaka() {
-      db.collection('sadhakas').doc('sadhaka1').get().then((doc) => {
-        if (doc.exists) {
-          displaySadhaka(doc.data());
-        }
-      }).catch((error) => {
-        console.log("Error getting document:", error);
+    function loadAsanas() {
+      return new Promise((resolve, reject) => {
+        var returnAsanas = [];
+
+        db.collection('asanas').get().then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            var asana = doc.data();
+            var asanaTuple = [asana.name, asana.description];
+            returnAsanas.push(asanaTuple);
+          });
+
+          console.log("Fetched Asanas:");
+          console.log(returnAsanas);
+
+          resolve(returnAsanas);
+        }).catch((error) => {
+          console.log("Error fetching Asanas:", error);
+          reject(error);
+        });
       });
     }
 
-    function displaySadhaka(sadhaka) {
-      var sadhakaDiv = document.getElementById('sadhakaDiv');
-      sadhakaDiv.innerHTML = ''; // Clear the div
 
-      sadhaka.assignedAsanas.forEach((asana, index) => {
+
+    function displaySadhaka(sadhaka) {
+      loadAsanas().then((asanas) => {
+        var sadhakaDiv = document.getElementById('sadhakaDiv');
+        sadhakaDiv.innerHTML = ''; // Clear the div
+
+        sadhaka.assignedAsanas.forEach((asana, index) => {
+          var asanaDiv = document.createElement('div');
+          asanaDiv.style.display = 'flex'; // Add this line
+          asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
+          asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
+
+          var asanaNameSelect = document.createElement('select');
+          asanaNameSelect.style.flexGrow = '1'; // Add this line to allow the select element to take up available space
+          asanaNameSelect.style.marginRight = '10px'; // Add some margin for spacing
+          asanaDiv.appendChild(asanaNameSelect);
+
+          // Populate the dropdown options
+          asanas.forEach((asanaOption) => {
+            var option = document.createElement('option');
+            option.value = asanaOption[0]; // Access the name from the tuple
+            option.text = asanaOption[0]; // Access the name from the tuple
+            asanaNameSelect.appendChild(option);
+          });
+
+          // Check if the fetched asana name is present in the asanas list
+          var matchingAsana = asanas.find(asanaOption => asanaOption[0].toLowerCase() === asana.asanaName.toLowerCase());
+          if (!matchingAsana) {
+            asanaNameSelect.style.border = '1px solid red';
+          } else {
+            asanaNameSelect.value = matchingAsana[0];
+          }
+
+          asanaNameSelect.addEventListener('change', function () {
+            validateAsanaName(this.value);
+          });
+
+          var repetitionsInput = document.createElement('input');
+          repetitionsInput.type = 'number';
+          repetitionsInput.value = asana.repetitions || '';
+          repetitionsInput.style.width = '80px';
+          asanaDiv.appendChild(repetitionsInput);
+
+          var specialNotesTextarea = document.createElement('textarea');
+          specialNotesTextarea.value = asana.specialNotes || '';
+          specialNotesTextarea.className = 'special-notes'; // Add this line
+          asanaDiv.appendChild(specialNotesTextarea);
+
+          var deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.className = 'delete-button';
+          deleteButton.onclick = function () {
+            asanaDiv.remove();
+          }
+          asanaDiv.appendChild(deleteButton);
+
+          sadhakaDiv.appendChild(asanaDiv);
+        });
+
+        document.getElementById('dietAndAdditionalNotes').value = sadhaka.dietAndAdditionalNotes;
+      }).catch((error) => {
+        console.log("Error loading asanas:", error);
+      });
+    }
+
+
+    function addAsana() {
+      loadAsanas().then((asanas) => {
+        var sadhakaDiv = document.getElementById('sadhakaDiv');
+
         var asanaDiv = document.createElement('div');
         asanaDiv.style.display = 'flex'; // Add this line
         asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
         asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
 
-        var asanaNameInput = document.createElement('input');
-        asanaNameInput.value = asana.asanaName;
-        asanaNameInput.style.flexGrow = '1'; // Add this line to allow the input to take up available space
-        asanaNameInput.style.marginRight = '10px'; // Add some margin for spacing
-        asanaDiv.appendChild(asanaNameInput);
+        var asanaNameSelect = document.createElement('select');
+        asanaNameSelect.style.flexGrow = '1'; // Add this line to allow the select element to take up available space
+        asanaNameSelect.style.marginRight = '10px'; // Add some margin for spacing
+        asanaDiv.appendChild(asanaNameSelect);
+
+        asanas.forEach((asana) => {
+          var option = document.createElement('option');
+          option.value = asana[0]; // Access the name from the tuple
+          option.text = asana[0]; // Access the name from the tuple
+          asanaNameSelect.appendChild(option);
+        });
 
         var repetitionsInput = document.createElement('input');
         repetitionsInput.type = 'number';
-        repetitionsInput.value = asana.repetitions || '';
         repetitionsInput.style.width = '80px';
         asanaDiv.appendChild(repetitionsInput);
 
         var specialNotesTextarea = document.createElement('textarea');
-        specialNotesTextarea.value = asana.specialNotes || '';
         specialNotesTextarea.className = 'special-notes'; // Add this line
         asanaDiv.appendChild(specialNotesTextarea);
 
@@ -161,42 +256,9 @@
         asanaDiv.appendChild(deleteButton);
 
         sadhakaDiv.appendChild(asanaDiv);
+      }).catch((error) => {
+        console.log("Error loading asanas:", error);
       });
-
-      document.getElementById('dietAndAdditionalNotes').value = sadhaka.dietAndAdditionalNotes;
-    }
-
-    function addAsana() {
-      var sadhakaDiv = document.getElementById('sadhakaDiv');
-
-      var asanaDiv = document.createElement('div');
-      asanaDiv.style.display = 'flex'; // Add this line
-      asanaDiv.style.justifyContent = 'space-between'; // Add this line to space the elements
-      asanaDiv.style.marginBottom = '10px'; // Add some margin for spacing
-
-      var asanaNameInput = document.createElement('input');
-      asanaNameInput.style.flexGrow = '1'; // Add this line to allow the input to take up available space
-      asanaNameInput.style.marginRight = '10px'; // Add some margin for spacing
-      asanaDiv.appendChild(asanaNameInput);
-
-      var repetitionsInput = document.createElement('input');
-      repetitionsInput.type = 'number';
-      repetitionsInput.style.width = '80px';
-      asanaDiv.appendChild(repetitionsInput);
-
-      var specialNotesTextarea = document.createElement('textarea');
-      specialNotesTextarea.className = 'special-notes'; // Add this line
-      asanaDiv.appendChild(specialNotesTextarea);
-
-      var deleteButton = document.createElement('button');
-      deleteButton.textContent = 'Delete';
-      deleteButton.className = 'delete-button';
-      deleteButton.onclick = function () {
-        asanaDiv.remove();
-      }
-      asanaDiv.appendChild(deleteButton);
-
-      sadhakaDiv.appendChild(asanaDiv);
     }
 
     var sadhakaNames = [];
@@ -231,6 +293,19 @@
 
       // load Sadhaka details
       loadSadhaka(name);
+    }
+
+    function validateAsanaName(name) {
+      var matchingAsana = asanas.find(asana => asana.name.toLowerCase() === name.toLowerCase());
+      if (matchingAsana) {
+        asanaNameInput.style.border = '1px solid green';
+        // Display the description if needed
+        displayAsanaDescription(matchingAsana.description);
+      } else {
+        asanaNameInput.style.border = '1px solid red';
+        // Hide the description if needed
+        hideAsanaDescription();
+      }
     }
 
     function loadSadhaka(name) {
@@ -288,7 +363,7 @@
       });
     }
 
-    loadSadhaka();
+    //loadSadhaka();
   </script>
 </body>
 
