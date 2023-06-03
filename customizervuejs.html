@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sadhaka Customizer</title>
+  <!-- Include Vue.js -->
+  <script src="https://unpkg.com/vue@2.6.11/dist/vue.js"></script>
+  <!-- Include Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div>
+      <input v-model="search" placeholder="Search Sadhaka" />
+      <ul>
+        <li v-for="sadhaka in filteredSadhakas" @click="selectSadhaka(sadhaka)">{{sadhaka.name}}</li>
+      </ul>
+    </div>
+    
+    <div v-if="selectedSadhaka">
+      <h2>Selected Sadhaka: {{selectedSadhaka.name}}</h2>
+      <div v-for="(asana, index) in selectedSadhaka.assignedAsanas" :key="index">
+        <input v-model="asana.asanaName" @input="suggestAsana(index)" />
+        <textarea v-model="asana.specialnotes"></textarea>
+        <button @click="deleteAsana(index)">Delete</button>
+      </div>
+      
+      <button @click="addAsana">Add Asana</button>
+
+      <textarea v-model="selectedSadhaka.dietAndAdditionalNotes"></textarea>
+
+      <button @click="saveSadhaka">Save Sadhaka</button>
+    </div>
+  </div>
+  
+  <script src="sadhakaCustomizer.js"></script>
+</body>
+</html>
