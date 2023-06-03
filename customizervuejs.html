@@ -73,7 +73,6 @@
       overflow-y: auto;
       z-index: 1;
       display: none;
-      /* Add this line */
     }
 
     .suggestions div {
@@ -96,7 +95,8 @@
 
 <body>
   <h1>Sadhaka Customizer</h1>
-  <input type="text" id="sadhakaName" oninput="sadhakaNameChanged(this.value)">
+  <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)">
+  <datalist id="sadhakaNameList"></datalist>
   <div id="sadhakaNameSuggestions" class="suggestions"></div>
 
 
@@ -127,6 +127,10 @@
     var db = firebase.firestore();
 
     var asanas = [];  // TODO: load Asanas from JSON
+    var sadhakaNames = [];
+    var sadhakaNameInput = document.getElementById('sadhakaName');
+    var sadhakaNameList = document.getElementById('sadhakaNameList');
+    var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
     function loadAsanas() {
       return new Promise((resolve, reject) => {
@@ -150,6 +154,74 @@
       });
     }
 
+    function loadSadhakaNames() {
+      return new Promise((resolve, reject) => {
+        db.collection('sadhakas').get().then((querySnapshot) => {
+          var names = [];
+          querySnapshot.forEach((doc) => {
+            names.push(doc.id);
+          });
+          resolve(names);
+        }).catch((error) => {
+          console.log("Error fetching Sadhaka names:", error);
+          reject(error);
+        });
+      });
+    }
+
+    function initialize() {
+      Promise.all([loadAsanas(), loadSadhakaNames()]).then((results) => {
+        asanas = results[0];
+        sadhakaNames = results[1];
+        populateSadhakaNameList();
+      }).catch((error) => {
+        console.log("Error initializing:", error);
+      });
+    }
+
+    function populateSadhakaNameList() {
+      sadhakaNameList.innerHTML = ''; // Clear previous options
+
+      sadhakaNames.forEach((name) => {
+        var option = document.createElement('option');
+        option.value = name;
+        sadhakaNameList.appendChild(option);
+      });
+    }
+
+    function sadhakaNameChanged(name) {
+      var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
+      suggestionsDiv.innerHTML = ''; // clear previous suggestions
+      suggestionsDiv.style.display = 'none';
+
+      var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.startsWith(name));
+      if (matchingNames.length > 0) {
+        suggestionsDiv.style.display = 'block';
+      }
+      matchingNames.forEach(sadhakaName => {
+        var suggestionDiv = document.createElement('div');
+        suggestionDiv.textContent = sadhakaName;
+        suggestionDiv.onclick = function () {
+          sadhakaNameInput.value = sadhakaName;
+          suggestionsDiv.innerHTML = ''; // clear suggestions
+          suggestionsDiv.style.display = 'none';
+          loadSadhaka(sadhakaName);
+        };
+        suggestionsDiv.appendChild(suggestionDiv);
+      });
+
+      // load Sadhaka details
+      if (!sadhakaNames.includes(name)) {
+        clearSadhakaDiv(); // Clear the div if the entered name is not found
+      } else {
+        loadSadhaka(name);
+      }
+    }
+
+    function clearSadhakaDiv() {
+      var sadhakaDiv = document.getElementById('sadhakaDiv');
+      sadhakaDiv.innerHTML = '';
+    }
 
 
     function displaySadhaka(sadhaka) {
@@ -261,51 +333,28 @@
       });
     }
 
-    var sadhakaNames = [];
-
-    function loadSadhakaNames() {
-      db.collection('sadhakas').get().then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          sadhakaNames.push(doc.id);
-        });
-      });
-    }
-
-    function sadhakaNameChanged(name) {
-      var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
-      suggestionsDiv.innerHTML = ''; // clear previous suggestions
-      suggestionsDiv.style.display = 'none'; // Add this line
-
-      var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.startsWith(name));
-      if (matchingNames.length > 0) { // Add this line
-        suggestionsDiv.style.display = 'block'; // Add this line
-      }
-      matchingNames.forEach(sadhakaName => {
-        var suggestionDiv = document.createElement('div');
-        suggestionDiv.textContent = sadhakaName;
-        suggestionDiv.onclick = function () {
-          document.getElementById('sadhakaName').value = sadhakaName;
-          suggestionsDiv.innerHTML = ''; // clear suggestions
-          suggestionsDiv.style.display = 'none'; // Add this line
-        };
-        suggestionsDiv.appendChild(suggestionDiv);
-      });
-
-      // load Sadhaka details
-      loadSadhaka(name);
-    }
-
     function validateAsanaName(name) {
-      var matchingAsana = asanas.find(asana => asana.name.toLowerCase() === name.toLowerCase());
+      var matchingAsana = asanas.find(asana => asana[0].toLowerCase() === name.toLowerCase());
       if (matchingAsana) {
         asanaNameInput.style.border = '1px solid green';
         // Display the description if needed
-        displayAsanaDescription(matchingAsana.description);
+        displayAsanaDescription(matchingAsana[1]);
       } else {
         asanaNameInput.style.border = '1px solid red';
         // Hide the description if needed
         hideAsanaDescription();
       }
+    }
+
+    function displayAsanaDescription(description) {
+      var asanaDescriptionDiv = document.getElementById('asanaDescription');
+      asanaDescriptionDiv.textContent = description;
+      asanaDescriptionDiv.style.display = 'block';
+    }
+
+    function hideAsanaDescription() {
+      var asanaDescriptionDiv = document.getElementById('asanaDescription');
+      asanaDescriptionDiv.style.display = 'none';
     }
 
     function loadSadhaka(name) {
@@ -325,7 +374,7 @@
     }
 
     function saveSadhaka() {
-      var name = document.getElementById('sadhakaName').value;
+      var name = sadhakaNameInput.value;
       if (!name) {
         alert('Sadhaka name is required');
         return;
@@ -357,13 +406,14 @@
         console.log("Document successfully written!");
         if (!sadhakaNames.includes(name)) {
           sadhakaNames.push(name);
+          populateSadhakaNameList();
         }
       }).catch((error) => {
         console.error("Error writing document: ", error);
       });
     }
 
-    //loadSadhaka();
+    initialize();
   </script>
 </body>
 
