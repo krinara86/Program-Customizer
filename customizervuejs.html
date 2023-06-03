@@ -141,6 +141,17 @@
         asanaNameInput.style.marginRight = '10px'; // Add some margin for spacing
         asanaDiv.appendChild(asanaNameInput);
 
+        var repetitionsInput = document.createElement('input');
+        repetitionsInput.type = 'number';
+        repetitionsInput.value = asana.repetitions || '';
+        repetitionsInput.style.width = '80px';
+        asanaDiv.appendChild(repetitionsInput);
+
+        var specialNotesTextarea = document.createElement('textarea');
+        specialNotesTextarea.value = asana.specialNotes || '';
+        specialNotesTextarea.className = 'special-notes'; // Add this line
+        asanaDiv.appendChild(specialNotesTextarea);
+
         var deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.className = 'delete-button';
@@ -155,8 +166,6 @@
       document.getElementById('dietAndAdditionalNotes').value = sadhaka.dietAndAdditionalNotes;
     }
 
-
-
     function addAsana() {
       var sadhakaDiv = document.getElementById('sadhakaDiv');
 
@@ -170,6 +179,15 @@
       asanaNameInput.style.marginRight = '10px'; // Add some margin for spacing
       asanaDiv.appendChild(asanaNameInput);
 
+      var repetitionsInput = document.createElement('input');
+      repetitionsInput.type = 'number';
+      repetitionsInput.style.width = '80px';
+      asanaDiv.appendChild(repetitionsInput);
+
+      var specialNotesTextarea = document.createElement('textarea');
+      specialNotesTextarea.className = 'special-notes'; // Add this line
+      asanaDiv.appendChild(specialNotesTextarea);
+
       var deleteButton = document.createElement('button');
       deleteButton.textContent = 'Delete';
       deleteButton.className = 'delete-button';
@@ -180,7 +198,6 @@
 
       sadhakaDiv.appendChild(asanaDiv);
     }
-
 
     var sadhakaNames = [];
 
@@ -216,8 +233,6 @@
       loadSadhaka(name);
     }
 
-
-
     function loadSadhaka(name) {
       db.collection('sadhakas').doc(name).get().then((doc) => {
         if (doc.exists) {
@@ -246,7 +261,14 @@
 
       var assignedAsanas = asanaDivs.map((asanaDiv) => {
         var asanaName = asanaDiv.children[0].value;
-        return { asanaName: asanaName };
+        var repetitions = asanaDiv.children[1].value; // Get repetitions input value
+        var specialNotes = asanaDiv.children[2].value; // Get special notes textarea value
+
+        return {
+          asanaName: asanaName,
+          repetitions: repetitions,
+          specialNotes: specialNotes
+        };
       });
 
       var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
@@ -265,7 +287,6 @@
         console.error("Error writing document: ", error);
       });
     }
-
 
     loadSadhaka();
   </script>
