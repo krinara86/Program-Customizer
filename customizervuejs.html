@@ -184,7 +184,7 @@
       y += 10;
 
 
-      function addAsanaToPdf(asanaDiv) {
+      async function addAsanaToPdf(asanaDiv) {
         var asanaNameSelect = asanaDiv.children[0];
         var repetitionsInput = asanaDiv.children[2];
         var specialNotesTextarea = asanaDiv.children[3];
@@ -196,7 +196,7 @@
         y += 8;
 
         // Image
-        urlToDataUri('./asana.png')
+        urlToDataUri('asana.png')
           .then(dataUri => {
             pdf.addImage(dataUri, 'PNG', 10, y, 40, 40);
             y += 45;
