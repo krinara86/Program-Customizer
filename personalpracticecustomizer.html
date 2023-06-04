@@ -519,6 +519,7 @@
         asanaNameSelect.appendChild(option);
       });
 
+      asanaNameSelect.id = 'asanaNameSelect'; // add this line
       return asanaNameSelect;
     }
 
@@ -545,7 +546,7 @@
     function createRepetitionsInput(asana) {
       var repetitionsInput = document.createElement('input');
       repetitionsInput.id = 'repetitionsInput'; // add this line
-      repetitionsInput.type = 'number';
+      //repetitionsInput.type = 'number';
       repetitionsInput.value = asana ? asana.repetitions : '';
       repetitionsInput.style.flex = '1';
       repetitionsInput.style.width = '20px';
@@ -554,6 +555,7 @@
 
     function createSpecialNotesTextarea(asana) {
       var specialNotesTextarea = document.createElement('textarea');
+      specialNotesTextarea.id = 'specialNotesTextarea'; // add this line
       specialNotesTextarea.value = asana ? asana.specialNotes : '';
       specialNotesTextarea.style.flex = '1';
       specialNotesTextarea.className = 'special-notes';
@@ -688,46 +690,6 @@
       });
     }
 
-    function saveSadhaka() {
-      var name = sadhakaNameInput.value;
-      if (!name) {
-        alert('Sadhaka name is required');
-        return;
-      }
-
-      var sadhakaDiv = document.getElementById('sadhakaDiv');
-      var asanaDivs = Array.from(sadhakaDiv.children);
-
-      var assignedAsanas = asanaDivs.map((asanaDiv) => {
-        var asanaName = asanaDiv.children[0].value;
-        var repetitions = asanaDiv.children[1].value; // Get repetitions input value
-        var specialNotes = asanaDiv.children[2].value; // Get special notes textarea value
-
-        return {
-          asanaName: asanaName,
-          repetitions: repetitions,
-          specialNotes: specialNotes
-        };
-      });
-
-      var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
-
-      var sadhaka = {
-        assignedAsanas: assignedAsanas,
-        dietAndAdditionalNotes: dietAndAdditionalNotes
-      };
-
-      db.collection('sadhakas').doc(name).set(sadhaka).then(() => {
-        console.log("Document successfully written!");
-        if (!sadhakaNames.includes(name)) {
-          sadhakaNames.push(name);
-          populateSadhakaNameList();
-        }
-      }).catch((error) => {
-        console.error("Error writing document: ", error);
-      });
-    }
-
     function saveSadhakaWithCategory() {
       var sadhakaName = sadhakaNameInput.value;
       var cardioDiv = document.getElementById('cardioDiv');
@@ -783,9 +745,11 @@
 
 
     function getAsanaFromDiv(div) {
-      var asanaNameSelect = div.children[0];
-      var repetitionsInput = div.children[2];
-      var specialNotesTextarea = div.children[3];
+      //var div = document.getElementById(div.id);
+      var asanaNameSelect = div.querySelector('#asanaNameSelect');
+      var repetitionsInput = div.querySelector('#repetitionsInput');
+      var specialNotesTextarea = div.querySelector('#specialNotesTextarea');
+
 
       return {
         asanaName: asanaNameSelect.value,
