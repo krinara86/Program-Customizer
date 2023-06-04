@@ -8,6 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
 
   <style>
     body {
@@ -167,8 +168,16 @@
     var sadhakaNameList = document.getElementById('sadhakaNameList');
     var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
-    async function saveSadhakaReportAsPdf() {
+    async function addContent(content, contentHeight) {
+      if (y + contentHeight > 280) {
+        pdf.addPage();
+        y = 20; // reset y to top of the new page
+      }
+      pdf.text(content, 10, y);
+      y += contentHeight;
+    }
 
+    async function saveSadhakaReportAsPdf() {
       const asanasMap = await loadAsanasForPdf();
       var pdf = new jsPDF();
       var sadhakaName = document.getElementById('sadhakaName').value;
@@ -177,12 +186,20 @@
       var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
       var y = 20;
 
+      // Helper function to add content
+      async function addContent(content, contentHeight) {
+        if (y + contentHeight > 280) {
+          pdf.addPage();
+          y = 20; // reset y to top of the new page
+        }
+        pdf.text(content, 10, y);
+        y += contentHeight;
+      }
+
       // Title
       pdf.setFontSize(16);
       pdf.setFontStyle("bold");
-      pdf.text(`Sadhaka report for ${sadhakaName}`, 10, y);
-      y += 10;
-
+      await addContent(`Sadhaka report for ${sadhakaName}`, 10);
 
       async function addAsanaToPdf(asanaDiv) {
         var asanaNameSelect = asanaDiv.children[0];
@@ -192,85 +209,98 @@
         // Asana name
         pdf.setFontSize(12);
         pdf.setFontStyle("bold");
-        pdf.text(`Asana: ${asanaNameSelect.value}`, 10, y);
-        y += 8;
+        await addContent(`Asana: ${asanaNameSelect.value}`, 8);
 
         // Image
-        urlToDataUri('asana.png')
-          .then(dataUri => {
-            pdf.addImage(dataUri, 'PNG', 10, y, 40, 40);
-            y += 45;
-          })
-          .catch(error => {
-            console.error('Error converting image to Data URI:', error);
+        let imageUrl = 'https://raw.githubusercontent.com/krinara86/Program-Customizer/main/' + asanaNameSelect.value + '.png';
+
+        let response = await fetch(imageUrl);
+        let blob = await response.blob();
+
+        return new Promise((resolve, reject) => {
+          let reader = new FileReader();
+          reader.onloadend = function () {
+            let base64data = reader.result;
+            // Adjusting width and height of image
+            let imgWidth = 50;
+            let imgHeight = 50;
+
+            // Add new page if image would overflow
+            var potentialHeight = y + imgHeight;
+            var pdfHeight = pdf.internal.pageSize.getHeight;
+            if (potentialHeight > 280) {
+              pdf.addPage();
+              y = 20; // reset y to top of the new page
+            }
+
+            pdf.addImage(base64data, 'PNG', 15, y, imgWidth, imgHeight);  // Adding image to pdf
+            // Adjust y to position the next text after the image
+            y += imgHeight +10;  // added 10 as buffer space
+            resolve();
+          }
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        })
+          .then(async () => {
+            // Description
+            pdf.setFontSize(12);
+            pdf.setFontStyle("normal");
+            // Now we use the asana name to get the description from the map.
+            var asanaDescription = asanasMap.get(asanaNameSelect.value);
+            var splitDescription = pdf.splitTextToSize(`Description: ${asanaDescription}`, 180); // adjust the width as per your needs
+            await addContent(splitDescription, splitDescription.length * 8);
+
+            // Repetitions
+            pdf.setFontSize(12);
+            pdf.setFontStyle("normal");
+            await addContent(`Repetitions: ${repetitionsInput.value}`, 8);
+
+            // Special notes
+            pdf.setFontSize(12);
+            pdf.setFontStyle("normal");
+            var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
+            var splitNotes = pdf.splitTextToSize(specialNotesText, 180); // adjust the width as per your needs
+            await addContent(splitNotes, splitNotes.length * 8);
+
+            y += 15;
           });
-
-        // Description
-        pdf.setFontSize(12);
-        pdf.setFontStyle("normal");
-
-        // Now we use the asana name to get the description from the map.
-        var asanaDescription = asanasMap.get(asanaNameSelect.value);
-        var splitDescription = pdf.splitTextToSize(`Description: ${asanaDescription}`, 180); // adjust the width as per your needs
-        pdf.text(splitDescription, 10, y);
-        y += (splitDescription.length * 8); // assuming line height of 8
-
-        // Repetitions
-        pdf.setFontSize(12);
-        pdf.setFontStyle("normal");
-        pdf.text(`Repetitions: ${repetitionsInput.value}`, 10, y);
-        y += 8;
-
-        // Special notes
-        pdf.setFontSize(12);
-        pdf.setFontStyle("normal");
-        var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
-        var splitNotes = pdf.splitTextToSize(specialNotesText, 180); // adjust the width as per your needs
-        pdf.text(splitNotes, 10, y);
-        y += (splitNotes.length * 8);
-
-        y += 15;
       }
+
+
+
 
       // Cardio day asanas
       pdf.setFontSize(14);
       pdf.setFontStyle("bold");
-      pdf.text("Cardio day asanas", 10, y);
-      y += 10;
+      await addContent("Cardio day asanas", 10);
 
       for (let i = 0; i < cardioDiv.children.length; i++) {
-        addAsanaToPdf(cardioDiv.children[i]);
+        await addAsanaToPdf(cardioDiv.children[i]);
       }
 
       // Non cardio day asanas
       pdf.setFontSize(14);
       pdf.setFontStyle("bold");
-      pdf.text("Non cardio day asanas", 10, y);
-      y += 10;
+      await addContent("Non cardio day asanas", 10);
 
       for (let i = 0; i < nonCardioDiv.children.length; i++) {
-        addAsanaToPdf(nonCardioDiv.children[i]);
+        await addAsanaToPdf(nonCardioDiv.children[i]);
       }
 
-      if (y > 280) {
-        pdf.addPage();
-        y = 20; // reset y to top of the new page
-      }
-
+      pdf.addPage();
       // Diets and additional notes
       pdf.setFontSize(14);
       pdf.setFontStyle("bold");
-      pdf.text("Diets and additional notes", 10, y);
-      y += 10;
+      await addContent("Diets and additional notes", 10);
 
       pdf.setFontSize(12);
       pdf.setFontStyle("normal");
       var splitDietNotes = pdf.splitTextToSize(dietAndAdditionalNotes, 180);
-      pdf.text(splitDietNotes, 10, y);
-      y += (splitDietNotes.length * 8);
+      await addContent(splitDietNotes, splitDietNotes.length * 8);
 
       pdf.save('Sadhaka_report.pdf');
     }
+
 
     function urlToDataUri(url) {
       return fetch(url)
