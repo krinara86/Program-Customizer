@@ -9,6 +9,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <!-- Select2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
+
+  <!-- Select2 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+
 
   <style>
     body {
@@ -95,6 +103,12 @@
     }
 
 
+    #sadhakaName {
+      width: 200px;
+      /* Or whatever width you prefer */
+      box-sizing: border-box;
+    }
+
     .suggestions {
       position: relative;
       background-color: #f0f0f0;
@@ -142,7 +156,7 @@
 
   <div id="asanaDescription" class="asana-description"></div>
 
-  <textarea id="dietAndAdditionalNotes"></textarea>
+  <textarea id="dietAndAdditionalNotes" rows="20"></textarea>
 
   <button onclick="saveSadhakaWithCategory()">Save Sadhaka</button>
   <button onclick="saveSadhakaReportAsPdf()">Save Sadhaka report as pdf</button>
@@ -235,7 +249,7 @@
 
             pdf.addImage(base64data, 'PNG', 15, y, imgWidth, imgHeight);  // Adding image to pdf
             // Adjust y to position the next text after the image
-            y += imgHeight +10;  // added 10 as buffer space
+            y += imgHeight + 10;  // added 10 as buffer space
             resolve();
           }
           reader.onerror = reject;
@@ -443,6 +457,9 @@
 
       var asanaNameSelect = createAsanaNameSelect(asanas);
       asanaDiv.appendChild(asanaNameSelect);
+      $(asanaNameSelect).select2({
+        width: '10%' // Adjust the percentage as needed
+      });
 
       var infoButton = createInfoButton(asanas, asanaNameSelect);
       asanaDiv.appendChild(infoButton);
@@ -455,7 +472,7 @@
       if (!matchingAsana) {
         asanaNameSelect.style.border = '1px solid red';
       } else {
-        asanaNameSelect.value = matchingAsana[0];
+        $(asanaNameSelect).val(matchingAsana[0]).trigger('change');
       }
 
       asanaNameSelect.addEventListener('change', function () {
@@ -504,6 +521,7 @@
 
       return asanaNameSelect;
     }
+
 
     function createInfoButton(asanas, asanaNameSelect) {
       var infoButton = document.createElement('button');
@@ -593,10 +611,14 @@
         var categoryDiv = document.getElementById(category);
 
         var asanaDiv = createAsanaDiv();
-        var asanaSelectDiv = createAsanaSelectDiv();
+        //var asanaSelectDiv = createAsanaSelectDiv();
 
         var asanaNameSelect = createAsanaNameSelect(asanas);
         asanaDiv.appendChild(asanaNameSelect);
+
+        $(asanaNameSelect).select2({
+          width: '10%' // Adjust the width as needed
+        });
 
         var infoButton = createInfoButton(asanas, asanaNameSelect);
         asanaDiv.appendChild(infoButton);
