@@ -55,8 +55,43 @@
       cursor: pointer;
     }
 
+
+    ::placeholder {
+      /* Chrome, Firefox, Opera, Safari 10.1+ */
+      color: grey;
+      opacity: 1;
+      /* Firefox */
+    }
+
+    :-ms-input-placeholder {
+      /* Internet Explorer 10-11 */
+      color: grey;
+    }
+
+    ::-ms-input-placeholder {
+      /* Microsoft Edge */
+      color: grey;
+    }
+
+    .asana-div {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid transparent;
+      /* Invisible at start */
+      transition: border 0.3s ease;
+      /* Smooth transition */
+      padding: 10px;
+      /* Add padding inside the divs */
+    }
+
+    .asana-div:not(:empty) {
+      border-color: black;
+      /* Border becomes visible when div is not empty */
+    }
+
     button,
     .asana-button {
+      margin: 20px 0;
       padding: 10px 20px;
       border-radius: 5px;
       border: none;
@@ -143,7 +178,6 @@
   <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)">
   <datalist id="sadhakaNameList"></datalist>
 
-
   <div id="cardioDiv" class="asana-div sadhakaDiv">
     <!-- Cardio Day Asanas will go here -->
   </div>
@@ -156,11 +190,10 @@
 
   <div id="asanaDescription" class="asana-description"></div>
 
-  <textarea id="dietAndAdditionalNotes" rows="20"></textarea>
+  <textarea id="dietAndAdditionalNotes" placeholder="Diet and Additional notes" rows="20"></textarea>
 
   <button onclick="saveSadhakaWithCategory()">Save Sadhaka</button>
   <button onclick="saveSadhakaReportAsPdf()">Save Sadhaka report as pdf</button>
-
 
   <script>
     // Initialize Firebase
@@ -548,6 +581,7 @@
       repetitionsInput.id = 'repetitionsInput'; // add this line
       //repetitionsInput.type = 'number';
       repetitionsInput.value = asana ? asana.repetitions : '';
+      repetitionsInput.placeholder = 'Repetitions';
       repetitionsInput.style.flex = '1';
       repetitionsInput.style.width = '20px';
       return repetitionsInput;
@@ -558,6 +592,7 @@
       specialNotesTextarea.id = 'specialNotesTextarea'; // add this line
       specialNotesTextarea.value = asana ? asana.specialNotes : '';
       specialNotesTextarea.style.flex = '1';
+      specialNotesTextarea.placeholder = 'Special notes';
       specialNotesTextarea.className = 'special-notes';
 
       return specialNotesTextarea;
