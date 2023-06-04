@@ -491,7 +491,8 @@
       var asanaNameSelect = createAsanaNameSelect(asanas);
       asanaDiv.appendChild(asanaNameSelect);
       $(asanaNameSelect).select2({
-        width: '10%' // Adjust the percentage as needed
+        width: '10%', // Adjust the percentage as needed
+        minimumResultsForSearch: 1 
       });
 
       var infoButton = createInfoButton(asanas, asanaNameSelect);
@@ -524,17 +525,6 @@
       return asanaDiv;
     }
 
-    function createAsanaSelectDiv() {
-      var asanaSelectDiv = document.createElement('div');
-      asanaSelectDiv.style.display = 'flex';
-      asanaSelectDiv.style.alignItems = 'center';
-      asanaSelectDiv.style.justifyContent = 'space-between';
-      asanaSelectDiv.style.flexGrow = '1';
-      asanaSelectDiv.style.marginRight = '10px';
-
-      return asanaSelectDiv;
-    }
-
     function createAsanaNameSelect(asanas) {
       var asanaNameSelect = document.createElement('select');
       asanaNameSelect.style.padding = '10px';
@@ -552,7 +542,8 @@
         asanaNameSelect.appendChild(option);
       });
 
-      asanaNameSelect.id = 'asanaNameSelect'; // add this line
+      //asanaNameSelect.id = 'asanaNameSelect'; // add this line
+      asanaNameSelect.classList.add('asanaNameSelect');
       return asanaNameSelect;
     }
 
@@ -648,13 +639,13 @@
         var categoryDiv = document.getElementById(category);
 
         var asanaDiv = createAsanaDiv();
-        //var asanaSelectDiv = createAsanaSelectDiv();
 
         var asanaNameSelect = createAsanaNameSelect(asanas);
         asanaDiv.appendChild(asanaNameSelect);
 
         $(asanaNameSelect).select2({
-          width: '10%' // Adjust the width as needed
+          width: '10%', // Adjust the width as needed
+          minimumResultsForSearch: 1 // Remove the search box
         });
 
         var infoButton = createInfoButton(asanas, asanaNameSelect);
@@ -781,7 +772,7 @@
 
     function getAsanaFromDiv(div) {
       //var div = document.getElementById(div.id);
-      var asanaNameSelect = div.querySelector('#asanaNameSelect');
+      var asanaNameSelect = div.querySelector('.asanaNameSelect');
       var repetitionsInput = div.querySelector('#repetitionsInput');
       var specialNotesTextarea = div.querySelector('#specialNotesTextarea');
 
