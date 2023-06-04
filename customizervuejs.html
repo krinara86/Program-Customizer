@@ -169,11 +169,150 @@
 
     function saveSadhakaReportAsPdf() {
       var pdf = new jsPDF();
+      var sadhakaName = document.getElementById('sadhakaName').value;
 
-      pdf.text('Diet and Additional Notes: ', 10, y);
+      var cardioDiv = document.getElementById('cardioDiv');
+      var nonCardioDiv = document.getElementById('nonCardioDiv');
+      var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
+
+      var y = 20;
+
+      // Title
+      pdf.setFontSize(16);
+      pdf.setFontStyle("bold");
+      pdf.text(`Sadhaka report for ${sadhakaName}`, 10, y);
+      y += 10;
+
+      // Cardio day asanas
+      pdf.setFontSize(14);
+      pdf.setFontStyle("bold");
+      pdf.text("Cardio day asanas", 10, y);
+      y += 10;
+
+      for (let i = 0; i < cardioDiv.children.length; i++) {
+        let asanaDiv = cardioDiv.children[i];
+        let asanaNameSelect = asanaDiv.children[0];
+        let repetitionsInput = asanaDiv.children[2];
+        let specialNotesTextarea = asanaDiv.children[3];
+
+        // Asana name
+        pdf.setFontSize(12);
+        pdf.setFontStyle("bold");
+        pdf.text(`Asana: ${asanaNameSelect.value}`, 10, y);
+        y += 8;
+
+        // Image
+        urlToDataUri('./asana.png')
+          .then(dataUri => {
+            pdf.addImage(dataUri, 'PNG', 10, y, 40, 40);
+            y += 45;
+            // Continue with the rest of your code here
+            // ...
+          })
+          .catch(error => {
+            console.error('Error converting image to Data URI:', error);
+          });
+
+        // Description
+        pdf.setFontSize(12);
+        pdf.setFontStyle("normal");
+        pdf.text(`Description: Asana Description`, 10, y);
+        y += 8;
+
+        // Repetitions
+        pdf.setFontSize(12);
+        pdf.setFontStyle("normal");
+        pdf.text(`Repetitions: ${repetitionsInput.value}`, 10, y);
+        y += 8;
+
+        // Special notes
+        pdf.setFontSize(12);
+        pdf.setFontStyle("normal");
+        var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
+        pdf.text(`Special notes: ${specialNotesTextarea.value}`, 10, y);
+        var specialNotesHeight = pdf.getTextDimensions(specialNotesText, { maxWidth: 180 }).h;
+        pdf.text(specialNotesText, 10, y, { maxWidth: 180 });
+        y += specialNotesHeight + 15;
+      }
+
+      // Non cardio day asanas
+      pdf.setFontSize(14);
+      pdf.setFontStyle("bold");
+      pdf.text("Non cardio day asanas", 10, y);
+      y += 10;
+
+      for (let i = 0; i < nonCardioDiv.children.length; i++) {
+        let asanaDiv = nonCardioDiv.children[i];
+        let asanaNameSelect = asanaDiv.children[0];
+        let repetitionsInput = asanaDiv.children[2];
+        let specialNotesTextarea = asanaDiv.children[3];
+
+        // Asana name
+        pdf.setFontSize(12);
+        pdf.setFontStyle("bold");
+        pdf.text(`Asana: ${asanaNameSelect.value}`, 10, y);
+        y += 8;
+
+        // Image
+        urlToDataUri('./asana.png')
+          .then(dataUri => {
+            pdf.addImage(dataUri, 'PNG', 10, y, 40, 40);
+            y += 45;
+            // Continue with the rest of your code here
+            // ...
+          })
+          .catch(error => {
+            console.error('Error converting image to Data URI:', error);
+          });
+
+        // Description
+        pdf.setFontSize(12);
+        pdf.setFontStyle("normal");
+        pdf.text(`Description: Asana Description`, 10, y);
+        y += 8;
+
+        // Repetitions
+        pdf.setFontSize(12);
+        pdf.setFontStyle("normal");
+        pdf.text(`Repetitions: ${repetitionsInput.value}`, 10, y);
+        y += 8;
+
+        // Special notes
+        pdf.setFontSize(12);
+        pdf.setFontStyle("normal");
+        var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
+        pdf.text(`Special notes: ${specialNotesTextarea.value}`, 10, y);
+        var specialNotesHeight = pdf.getTextDimensions(specialNotesText, { maxWidth: 180 }).h;
+        pdf.text(specialNotesText, 10, y, { maxWidth: 180 });
+        y += specialNotesHeight + 15;
+      }
+
+      // Diets and additional notes
+      pdf.setFontSize(14);
+      pdf.setFontStyle("bold");
+      pdf.text("Diets and additional notes", 10, y);
+      y += 10;
+
+      pdf.setFontSize(12);
+      pdf.setFontStyle("normal");
+      pdf.text(dietAndAdditionalNotes, 10, y);
 
       pdf.save('Sadhaka_report.pdf');
     }
+
+    function urlToDataUri(url) {
+      return fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        });
+    }
+
 
 
 
