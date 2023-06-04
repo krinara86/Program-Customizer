@@ -129,16 +129,21 @@
   <datalist id="sadhakaNameList"></datalist>
 
 
-  <div id="sadhakaDiv">
-    <!-- Assigned Asanas will go here -->
+  <div id="cardioDiv" class="asana-div sadhakaDiv">
+    <!-- Cardio Day Asanas will go here -->
   </div>
-  <button onclick="addAsana()" class="asana-button">Add Asana</button>
+  <button onclick="addAsana('cardioDiv')" class="asana-button">Add Cardio Day Asana</button>
+
+  <div id="nonCardioDiv" class="asana-div sadhakaDiv">
+    <!-- Non-Cardio Day Asanas will go here -->
+  </div>
+  <button onclick="addAsana('nonCardioDiv')" class="asana-button">Add Non-Cardio Day Asana</button>
 
   <div id="asanaDescription" class="asana-description"></div>
 
   <textarea id="dietAndAdditionalNotes"></textarea>
 
-  <button onclick="saveSadhaka()">Save Sadhaka</button>
+  <button onclick="saveSadhakaWithCategory()">Save Sadhaka</button>
   <button onclick="saveSadhakaReportAsPdf()">Save Sadhaka report as pdf</button>
 
 
@@ -165,48 +170,8 @@
     function saveSadhakaReportAsPdf() {
       var pdf = new jsPDF();
 
-      var name = sadhakaNameInput.value;
-      if (!name) {
-        alert('Sadhaka name is required');
-        return;
-      }
+      pdf.text('Diet and Additional Notes: ', 10, y);
 
-      pdf.text('Sadhaka Name: ' + name, 10, 10);
-
-      var sadhakaDiv = document.getElementById('sadhakaDiv');
-      var asanaDivs = Array.from(sadhakaDiv.children);
-
-      var y = 20;  // Start position for asanas
-
-      var assignedAsanas = asanaDivs.map((asanaDiv, index) => {
-        var asanaName = asanaDiv.children[0].value;
-        var repetitions = asanaDiv.children[1].value; // Get repetitions input value
-        var specialNotes = asanaDiv.children[2].value; // Get special notes textarea value
-
-        pdf.text(`Asana ${index + 1}: `, 10, y);
-        pdf.text(`Name: ${asanaName}`, 20, y + 10);
-        pdf.text(`Repetitions: ${repetitions}`, 20, y + 20);
-        pdf.text(`Special Notes: ${specialNotes}`, 20, y + 30);
-
-        y += 40; // increment y for the next asana 
-
-        return {
-          asanaName: asanaName,
-          repetitions: repetitions,
-          specialNotes: specialNotes
-        };
-      });
-
-      var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
-
-      pdf.text('Diet and Additional Notes: ' + dietAndAdditionalNotes, 10, y);
-
-      var sadhaka = {
-        assignedAsanas: assignedAsanas,
-        dietAndAdditionalNotes: dietAndAdditionalNotes
-      };
-
-      // Save the PDF
       pdf.save('Sadhaka_report.pdf');
     }
 
@@ -299,20 +264,52 @@
     }
 
     function clearSadhakaDiv() {
-      var sadhakaDiv = document.getElementById('sadhakaDiv');
-      sadhakaDiv.innerHTML = '';
+      var cardiosadhakaDiv = document.getElementById('cardioDiv');
+      cardiosadhakaDiv.innerHTML = '';
+      var noncardiosadhakaDiv = document.getElementById('nonCardioDiv');
+      noncardiosadhakaDiv.innerHTML = '';
       var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes');
       dietAndAdditionalNotes.value = '';
     }
 
 
-    function createAsanaDiv() {
+    function createAsanaDivWithCategory(asanas, asana) {
       var asanaDiv = document.createElement('div');
       asanaDiv.style.display = 'flex';
       asanaDiv.style.flexWrap = 'no-wrap';
       asanaDiv.style.alignItems = 'center'; // This will vertically align items
       asanaDiv.style.justifyContent = 'space-between';
       asanaDiv.style.marginBottom = '10px';
+
+      var asanaNameSelect = createAsanaNameSelect(asanas);
+      asanaDiv.appendChild(asanaNameSelect);
+
+      var infoButton = createInfoButton(asanas, asanaNameSelect);
+      asanaDiv.appendChild(infoButton);
+
+      document.addEventListener('click', function () {
+        hideAsanaDescription();
+      });
+
+      var matchingAsana = asanas.find(asanaOption => asanaOption[0].toLowerCase() === asana.asanaName.toLowerCase());
+      if (!matchingAsana) {
+        asanaNameSelect.style.border = '1px solid red';
+      } else {
+        asanaNameSelect.value = matchingAsana[0];
+      }
+
+      asanaNameSelect.addEventListener('change', function () {
+        validateAsanaName(this.value, asanaNameSelect);
+      });
+
+      var repetitionsInput = createRepetitionsInput(asana);
+      asanaDiv.appendChild(repetitionsInput);
+
+      var specialNotesTextarea = createSpecialNotesTextarea(asana);
+      asanaDiv.appendChild(specialNotesTextarea);
+
+      var deleteButton = createDeleteButton(asanaDiv);
+      asanaDiv.appendChild(deleteButton);
 
       return asanaDiv;
     }
@@ -399,46 +396,19 @@
 
     function displaySadhaka(sadhaka) {
       loadAsanas().then((asanas) => {
-        var sadhakaDiv = document.getElementById('sadhakaDiv');
-        sadhakaDiv.innerHTML = ''; // Clear the div
+        var cardioDiv = document.getElementById('cardioDiv');
+        var nonCardioDiv = document.getElementById('nonCardioDiv');
+        cardioDiv.innerHTML = ''; // Clear the div
+        nonCardioDiv.innerHTML = ''; // Clear the div
 
-        sadhaka.assignedAsanas.forEach((asana, index) => {
-          var asanaDiv = createAsanaDiv();
-          var asanaSelectDiv = createAsanaSelectDiv();
+        sadhaka.cardioAsanas.forEach((asana, index) => {
+          var asanaDiv = createAsanaDivWithCategory(asanas, asana);
+          cardioDiv.appendChild(asanaDiv);
+        });
 
-          var asanaNameSelect = createAsanaNameSelect(asanas);
-          asanaDiv.appendChild(asanaNameSelect);
-
-          var infoButton = createInfoButton(asanas, asanaNameSelect);
-          asanaDiv.appendChild(infoButton);
-
-          //asanaDiv.appendChild(asanaSelectDiv);
-
-          document.addEventListener('click', function () {
-            hideAsanaDescription();
-          });
-
-          var matchingAsana = asanas.find(asanaOption => asanaOption[0].toLowerCase() === asana.asanaName.toLowerCase());
-          if (!matchingAsana) {
-            asanaNameSelect.style.border = '1px solid red';
-          } else {
-            asanaNameSelect.value = matchingAsana[0];
-          }
-
-          asanaNameSelect.addEventListener('change', function () {
-            validateAsanaName(this.value, asanaNameSelect);
-          });
-
-          var repetitionsInput = createRepetitionsInput(asana);
-          asanaDiv.appendChild(repetitionsInput);
-
-          var specialNotesTextarea = createSpecialNotesTextarea(asana);
-          asanaDiv.appendChild(specialNotesTextarea);
-
-          var deleteButton = createDeleteButton(asanaDiv);
-          asanaDiv.appendChild(deleteButton);
-
-          sadhakaDiv.appendChild(asanaDiv);
+        sadhaka.nonCardioAsanas.forEach((asana, index) => {
+          var asanaDiv = createAsanaDivWithCategory(asanas, asana);
+          nonCardioDiv.appendChild(asanaDiv);
         });
 
         document.getElementById('dietAndAdditionalNotes').value = sadhaka.dietAndAdditionalNotes;
@@ -447,9 +417,20 @@
       });
     }
 
-    function addAsana() {
+    function createAsanaDiv() {
+      var asanaDiv = document.createElement('div');
+      asanaDiv.style.display = 'flex';
+      asanaDiv.style.flexWrap = 'no-wrap';
+      asanaDiv.style.alignItems = 'center'; // This will vertically align items
+      asanaDiv.style.justifyContent = 'space-between';
+      asanaDiv.style.marginBottom = '10px';
+
+      return asanaDiv;
+    }
+
+    function addAsana(category) {
       loadAsanas().then((asanas) => {
-        var sadhakaDiv = document.getElementById('sadhakaDiv');
+        var categoryDiv = document.getElementById(category);
 
         var asanaDiv = createAsanaDiv();
         var asanaSelectDiv = createAsanaSelectDiv();
@@ -459,8 +440,6 @@
 
         var infoButton = createInfoButton(asanas, asanaNameSelect);
         asanaDiv.appendChild(infoButton);
-
-        //asanaDiv.appendChild(asanaSelectDiv);
 
         document.addEventListener('click', function () {
           hideAsanaDescription();
@@ -475,12 +454,11 @@
         var deleteButton = createDeleteButton(asanaDiv);
         asanaDiv.appendChild(deleteButton);
 
-        sadhakaDiv.appendChild(asanaDiv);
+        categoryDiv.appendChild(asanaDiv);
       }).catch((error) => {
         console.log("Error loading asanas:", error);
       });
     }
-
 
     function validateAsanaName(name, asanaNameSelect) {
       var matchingAsana = asanas.find(asana => asana[0].toLowerCase() === name.toLowerCase());
@@ -518,7 +496,8 @@
         } else {
           displaySadhaka({
             name: name,
-            assignedAsanas: [],
+            cardioAsanas: [],
+            noncardiosadhakaDiv: [],
             dietAndAdditionalNotes: ''
           });
         }
@@ -567,8 +546,76 @@
       });
     }
 
+    function saveSadhakaWithCategory() {
+      var sadhakaName = sadhakaNameInput.value;
+      var cardioDiv = document.getElementById('cardioDiv');
+      var nonCardioDiv = document.getElementById('nonCardioDiv');
+
+      var sadhaka = {
+        name: sadhakaName,
+        cardioAsanas: [],
+        nonCardioAsanas: [],
+        dietAndAdditionalNotes: document.getElementById('dietAndAdditionalNotes').value
+      };
+
+      for (let i = 0; i < cardioDiv.children.length; i++) {
+        let asana = getAsanaFromDiv(cardioDiv.children[i]);
+        sadhaka.cardioAsanas.push(asana);
+      }
+
+      for (let i = 0; i < nonCardioDiv.children.length; i++) {
+        let asana = getAsanaFromDiv(nonCardioDiv.children[i]);
+        sadhaka.nonCardioAsanas.push(asana);
+      }
+
+      saveSadhakaToDB(sadhaka).then(() => {
+        alert('Saved successfully!');
+      }).catch((error) => {
+        console.log("Error saving sadhaka:", error);
+      });
+    }
+
+    async function saveSadhakaToDB(sadhaka) {
+      // Import the firebase firestore module
+      const db = firebase.firestore();
+
+      // Ensure that sadhaka.name is defined and not an empty string
+      if (!sadhaka.name) {
+        console.error('Error: sadhaka.name is not defined or is an empty string.');
+        return;
+      }
+
+      try {
+        // Use set with { merge: true } to upsert
+        await db.collection('sadhakas').doc(sadhaka.name).set({
+          cardioAsanas: sadhaka.cardioAsanas,
+          nonCardioAsanas: sadhaka.nonCardioAsanas,
+          dietAndAdditionalNotes: sadhaka.dietAndAdditionalNotes
+        }, { merge: true });
+
+        console.log('Sadhaka data has been saved with ID: ', sadhaka.name);
+      } catch (error) {
+        console.error('Error saving sadhaka: ', error);
+      }
+    }
+
+
+    function getAsanaFromDiv(div) {
+      var asanaNameSelect = div.children[0];
+      var repetitionsInput = div.children[2];
+      var specialNotesTextarea = div.children[3];
+
+      return {
+        asanaName: asanaNameSelect.value,
+        repetitions: repetitionsInput.value,
+        specialNotes: specialNotesTextarea.value
+      };
+    }
+
     initialize();
   </script>
+
+
 </body>
 
 </html>
