@@ -249,9 +249,10 @@
       await addContent(`Sadhaka report for ${sadhakaName}`, 10);
 
       async function addAsanaToPdf(asanaDiv) {
-        var asanaNameSelect = asanaDiv.children[0];
-        var repetitionsInput = asanaDiv.children[2];
-        var specialNotesTextarea = asanaDiv.children[3];
+        var asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
+        var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
+        var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+
 
         // Asana name
         pdf.setFontSize(12);
@@ -492,7 +493,7 @@
       asanaDiv.appendChild(asanaNameSelect);
       $(asanaNameSelect).select2({
         width: '10%', // Adjust the percentage as needed
-        minimumResultsForSearch: 1 
+        minimumResultsForSearch: 1
       });
 
       var infoButton = createInfoButton(asanas, asanaNameSelect);
