@@ -17,8 +17,8 @@
 
   <style>
     body {
-      background-color: #f0f0f0;
-      color: #333333;
+      background-color: #BBC9D2;
+      color: #000000;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
@@ -108,7 +108,7 @@
       padding: 10px 20px;
       border-radius: 5px;
       border: none;
-      background-color: #2ecc71;
+      background-color: #000000;
       color: #ffffff;
       cursor: pointer;
       width: auto;
@@ -116,7 +116,7 @@
 
     button:hover,
     .delete-button:hover {
-      background-color: #72b1b2;
+      background-color: #252829;
     }
 
     #sadhakaDiv {
@@ -147,7 +147,7 @@
       margin-right: 20px;
       margin-top: auto;
       margin-bottom: auto;
-      background-color: #2ecc71;
+      background-color: #706962;
     }
 
     #sadhakaName {
@@ -192,7 +192,7 @@
     <h1>Self realization with Radhikaji - Sadhaka personal practice customizer</h1>
   </div>
 
-  <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)">
+  <input type="text" id="sadhakaName" list="sadhakaNameList" style="margin-bottom: 10px;" oninput="sadhakaNameChanged(this.value)">
   <datalist id="sadhakaNameList"></datalist>
 
   <div id="cardioDiv" class="asana-div sadhakaDiv">
@@ -591,36 +591,38 @@
 
   function createRepetitionsInput(asana) {
     var repetitionsInput = document.createElement('input');
-    repetitionsInput.id = 'repetitionsInput'; // add this line
-    //repetitionsInput.type = 'number';
+    repetitionsInput.id = 'repetitionsInput';
     repetitionsInput.value = asana ? asana.repetitions : '';
     repetitionsInput.placeholder = 'Repetitions';
-    repetitionsInput.style.flex = '1';
-    repetitionsInput.style.width = '20px';
+    repetitionsInput.style.flex = '2'; // Increased from 1 to 1.2
+    repetitionsInput.style.margin = '0 10px'; // Added margins to leave gaps
     return repetitionsInput;
   }
 
   function createSpecialNotesTextarea(asana) {
     var specialNotesTextarea = document.createElement('textarea');
-    specialNotesTextarea.id = 'specialNotesTextarea'; // add this line
+    specialNotesTextarea.id = 'specialNotesTextarea';
     specialNotesTextarea.value = asana ? asana.specialNotes : '';
-    specialNotesTextarea.style.flex = '1';
+    specialNotesTextarea.style.flex = '0.8'; // Decreased from 1 to 0.8
     specialNotesTextarea.placeholder = 'Special notes';
     specialNotesTextarea.className = 'special-notes';
+    specialNotesTextarea.style.margin = '0 10px'; // Added margins to leave gaps
 
     return specialNotesTextarea;
   }
 
   function createDeleteButton(asanaDiv) {
     var deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete';
+    deleteButton.textContent = '-';
     deleteButton.className = 'delete-button';
     deleteButton.onclick = function () {
       asanaDiv.remove();
     }
+    deleteButton.style.margin = '0 10px'; // Added margins to leave gaps
 
     return deleteButton;
   }
+
 
   function displaySadhaka(sadhaka) {
     loadAsanas().then((asanas) => {
@@ -685,6 +687,8 @@
 
       var deleteButton = createDeleteButton(asanaDiv);
       asanaDiv.appendChild(deleteButton);
+
+      //asanaDiv.style.display = 'flex'; 
 
       categoryDiv.appendChild(asanaDiv);
     }).catch((error) => {
