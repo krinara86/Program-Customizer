@@ -97,6 +97,8 @@
         let invert = true;
         let blurAmount = 0;
         let size = 500;
+        let dilation = 1; // initial value
+
 
 
         function previewImage(event) {
@@ -104,10 +106,17 @@
             reader.onload = function () {
                 loadImage(reader.result, function (loadedImage) {
                     original = loadedImage;
+                    resizeCanvas(size, size); // add this line
                     sketchImage();
                 });
             };
             reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function updateSize(event) {
+            size = parseInt(event.target.value);
+            resizeCanvas(size, size); // add this line
+            sketchImage();
         }
 
         // Add an event handler for the dilation slider
@@ -146,6 +155,7 @@
         }
 
         function sketchImage() {
+            
             if (original) {
                 img = original.get();
                 img.filter(GRAY);
