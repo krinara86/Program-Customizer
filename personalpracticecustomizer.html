@@ -181,10 +181,69 @@
       z-index: 2;
       display: none;
     }
+
+    .login-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 1000;
+      /* Ensures it's on top of the overlay */
+    }
+
+    .login-container h2 {
+      margin-bottom: 10px;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      /* Black with 50% opacity */
+      display: none;
+      z-index: 999;
+      /* Ensures it's on top of other page elements */
+    }
   </style>
 </head>
 
 <body>
+  <div id="overlay"></div>
+
+  <!-- Login Window -->
+  <div class="login-container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
   <div class="logo-title-container">
     <img
       src="https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png"
@@ -192,7 +251,8 @@
     <h1>Self realization with Radhikaji - Sadhaka personal practice customizer</h1>
   </div>
 
-  <input type="text" id="sadhakaName" list="sadhakaNameList" style="margin-bottom: 10px;" oninput="sadhakaNameChanged(this.value)">
+  <input type="text" id="sadhakaName" list="sadhakaNameList" style="margin-bottom: 10px;"
+    oninput="sadhakaNameChanged(this.value)">
   <datalist id="sadhakaNameList"></datalist>
 
   <div id="cardioDiv" class="asana-div sadhakaDiv">
@@ -444,6 +504,8 @@
   }
 
   function initialize() {
+    document.querySelector('.login-container').style.display = 'block';
+    document.querySelector('#overlay').style.display = 'block';
     Promise.all([loadAsanas(), loadSadhakaNames()]).then((results) => {
       asanas = results[0];
       sadhakaNames = results[1];
@@ -809,6 +871,48 @@
       specialNotes: specialNotesTextarea.value
     };
   }
+
+  // Function to perform login
+  function login() {
+    // Get the input values from the login form
+    const usernameInput = document.getElementById('username').value;
+    const passwordInput = document.getElementById('password').value;
+
+    // Fetch the login credentials from Firestore
+    const db = firebase.firestore();
+    db.collection("login").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const loginData = doc.data();
+        const hardcodedUsername = loginData.id;
+        const hardcodedPassword = loginData.password;
+
+        // Check if the input matches the fetched credentials
+        if (usernameInput === hardcodedUsername && passwordInput === hardcodedPassword) {
+          alert("Login successful!");
+
+          // Hide the login container and the overlay
+          const loginContainer = document.querySelector('.login-container');
+          const overlay = document.querySelector('#overlay');
+          loginContainer.style.visibility = 'hidden';
+          overlay.style.visibility = 'hidden';
+
+          // Remove the 'blocked' class from the body to enable interaction
+          document.body.classList.remove('blocked');
+
+          // Load the main content after successful login
+          initialize();
+        } else {
+          // Show a popup or modal for incorrect credentials (optional)
+          alert("Invalid username or password. Please try again.");
+        }
+      });
+    }).catch((error) => {
+      console.log("Error fetching login credentials:", error);
+    });
+  }
+
+
+
 
   initialize();
 </script>
