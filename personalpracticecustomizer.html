@@ -231,6 +231,47 @@
       z-index: 999;
       /* Ensures it's on top of other page elements */
     }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 10%;
+      left: 20%;
+      width: 60%;
+      max-height: 70%;
+      /* This is new: set the maximum height relative to viewport */
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+      overflow-y: auto;
+      /* This is new: enable vertical scrolling if needed */
+    }
+
+    /* This will be for the list container to make it scrollable */
+    #asanaCheckboxList {
+      max-height: calc(60% - 60px);
+      /* assuming 60px is the combined height of the search input and the button */
+      overflow-y: scroll;
+      /* enable vertical scroll */
+      border: 1px solid #e0e0e0;
+      /* optional: adds a border to see the boundaries of the list */
+      padding: 10px;
+      /* optional: spacing for better appearance */
+    }
+
+    .close {
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -259,11 +300,13 @@
     <!-- Cardio Day Asanas will go here -->
   </div>
   <button onclick="addAsana('cardioDiv')" class="asana-button">Add Cardio Day Asana</button>
+  <button onclick="showMultiAsanaModal('cardioDiv')" class="asana-button">Add Multiple Cardio Day Asanas</button>
 
   <div id="nonCardioDiv" class="asana-div sadhakaDiv">
     <!-- Non-Cardio Day Asanas will go here -->
   </div>
   <button onclick="addAsana('nonCardioDiv')" class="asana-button">Add Non-Cardio Day Asana</button>
+  <button onclick="showMultiAsanaModal('nonCardioDiv')" class="asana-button">Add Multiple Non-Cardio Day Asanas</button>
 
   <div id="asanaDescription" class="asana-description"></div>
 
@@ -271,6 +314,17 @@
 
   <button onclick="saveSadhakaWithCategory()">Save Sadhaka</button>
   <button onclick="saveSadhakaReportAsPdf()">Save Sadhaka report as pdf</button>
+
+  <!-- Multi-Asana Modal -->
+  <div id="multiAsanaModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeMultiAsanaModal()">&times;</span>
+      <input type="text" id="asanaSearch" placeholder="Search Asana" oninput="filterAsanas()">
+      <div id="asanaCheckboxList"></div>
+      <button onclick="addMultipleAsanas()">Add Selected Asanas</button>
+    </div>
+  </div>
+
 </body>
 
 
@@ -912,6 +966,85 @@
   }
 
 
+
+  function showMultiAsanaModal(category) {
+    var modal = document.getElementById('multiAsanaModal');
+    modal.style.display = "block";
+    modal.setAttribute('data-category', category);
+    populateAsanaCheckboxList(asanas);  // This assumes your asanas are globally available
+  }
+
+  function closeMultiAsanaModal() {
+    var modal = document.getElementById('multiAsanaModal');
+    modal.style.display = "none";
+  }
+
+  function populateAsanaCheckboxList(asanas) {
+    var list = document.getElementById('asanaCheckboxList');
+    list.innerHTML = '';  // clear previous
+
+    asanas.forEach(asana => {
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = asana[0];
+      checkbox.id = "asana_" + asana[0];
+
+      var label = document.createElement('label');
+      label.htmlFor = "asana_" + asana[0];
+      label.textContent = asana[0];
+
+      list.appendChild(checkbox);
+      list.appendChild(label);
+      list.appendChild(document.createElement('br'));  // new line
+    });
+  }
+
+  function addMultipleAsanas() {
+    var modal = document.getElementById('multiAsanaModal');
+    var category = modal.getAttribute('data-category');
+    var checkboxes = document.querySelectorAll('#asanaCheckboxList input[type="checkbox"]:checked');
+
+    checkboxes.forEach(checkbox => {
+      var asana = { asanaName: checkbox.value, repetitions: '', specialNotes: '' }; // modify as per your needs
+      addAsanaToCategory(asana, category);
+    });
+
+    closeMultiAsanaModal();
+  }
+
+  function addAsanaToCategory(asana, category) {
+    loadAsanas().then((asanas) => {
+      var categoryDiv = document.getElementById(category);
+      var asanaDiv = createAsanaDivWithCategory(asanas, asana);
+      categoryDiv.appendChild(asanaDiv);
+    }).catch((error) => {
+      console.log("Error loading asanas:", error);
+    });
+  }
+
+  function filterAsanas() {
+    var searchValue = document.getElementById('asanaSearch').value.toLowerCase();
+    var checkboxes = document.querySelectorAll('#asanaCheckboxList input[type="checkbox"]');
+    var labels = document.querySelectorAll('#asanaCheckboxList label');
+
+    checkboxes.forEach((checkbox, index) => {
+      if (checkbox.value.toLowerCase().includes(searchValue)) {
+        checkbox.style.display = "inline";
+        labels[index].style.display = "inline";
+      } else {
+        checkbox.style.display = "none";
+        labels[index].style.display = "none";
+      }
+    });
+  }
+
+  // When the user clicks outside of the modal, close it
+  window.onclick = function (event) {
+    var modal = document.getElementById('multiAsanaModal');
+    if (event.target == modal) {
+      closeMultiAsanaModal();
+    }
+  }
 
 
   initialize();
