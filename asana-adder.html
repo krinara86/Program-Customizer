@@ -262,7 +262,7 @@
 
         if (!existingAsana.empty) {
             // Existing asana found
-            const confirmation = confirm("Asana already exists. Update description?");
+            const confirmation = confirm(name  + " already exists. Update description?");
             if (confirmation) {
                 existingAsana.docs[0].ref.update({
                     description: description
