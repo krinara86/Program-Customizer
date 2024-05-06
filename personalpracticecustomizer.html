@@ -388,14 +388,16 @@
       var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
       var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
 
+      // Fetch the asana details including the imageURL from Firestore
+      const asanaDoc = await db.collection('asanas').where("name", "==", asanaNameSelect.value).get();
+      if (asanaDoc.empty) {
+        console.log("No such asana found!");
+        return; // Exit if the asana isn't found
+      }
+      const asanaData = asanaDoc.docs[0].data(); // Assuming there is only one doc per asana name
 
-      // Asana name
-      pdf.setFontSize(12);
-      pdf.setFontStyle("bold");
-      await addContent(`Asana: ${asanaNameSelect.value}`, 8);
-
-      // Image
-      let imageUrl = 'https://raw.githubusercontent.com/krinara86/Program-Customizer/main/' + asanaNameSelect.value + '.png';
+      // Use imageURL from Firestore
+      let imageUrl = asanaData.imageUrl;
 
       let response = await fetch(imageUrl);
       let blob = await response.blob();
@@ -448,6 +450,7 @@
           y += 15;
         });
     }
+
 
 
 
