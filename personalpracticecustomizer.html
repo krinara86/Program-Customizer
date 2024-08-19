@@ -16,6 +16,18 @@
 
 
   <style>
+    .display-name-label {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 5px;
+    }
+
+    .no-display-name {
+      color: #999;
+      font-style: italic;
+    }
+
     body {
       background-color: #BBC9D2;
       color: #000000;
@@ -320,7 +332,20 @@
     <div class="modal-content">
       <span class="close" onclick="closeMultiAsanaModal()">&times;</span>
       <input type="text" id="asanaSearch" placeholder="Search Asana" oninput="filterAsanas()">
-      <div id="asanaCheckboxList"></div>
+      <div id="asanaCheckboxList">
+        <table>
+          <thead>
+            <tr>
+              <th>Select</th>
+              <th>Asana Name</th>
+              <th>Asana Key(for internal use only)</th>
+            </tr>
+          </thead>
+          <tbody id="asanaCheckboxTableBody">
+            <!-- Asana rows will be inserted here -->
+          </tbody>
+        </table>
+      </div>
       <button onclick="addMultipleAsanas()">Add Selected Asanas</button>
     </div>
   </div>
@@ -530,7 +555,7 @@
       db.collection('asanas').get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           var asana = doc.data();
-          var asanaTuple = [asana.name, asana.description];
+          var asanaTuple = [asana.name, asana.description, asana.displayName];
           returnAsanas.push(asanaTuple);
         });
 
@@ -974,7 +999,7 @@
     var modal = document.getElementById('multiAsanaModal');
     modal.style.display = "block";
     modal.setAttribute('data-category', category);
-    populateAsanaCheckboxList(asanas);  // This assumes your asanas are globally available
+    populateAsanaCheckboxList();  // This assumes your asanas are globally available
   }
 
   function closeMultiAsanaModal() {
@@ -982,34 +1007,55 @@
     modal.style.display = "none";
   }
 
-  function populateAsanaCheckboxList(asanas) {
-    var list = document.getElementById('asanaCheckboxList');
-    list.innerHTML = '';  // clear previous
+  function populateAsanaCheckboxList() {
+    var tableBody = document.getElementById('asanaCheckboxTableBody');
+    tableBody.innerHTML = '';  // clear previous
 
     asanas.forEach(asana => {
+      var row = tableBody.insertRow();
+
+      // Checkbox cell
+      var checkboxCell = row.insertCell(0);
       var checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.value = asana[0];
       checkbox.id = "asana_" + asana[0];
+      checkboxCell.appendChild(checkbox);
 
-      var label = document.createElement('label');
-      label.htmlFor = "asana_" + asana[0];
-      label.textContent = asana[0];
+      // Asana name cell
+      var nameCell = row.insertCell(1);
+      var nameLabel = document.createElement('label');
+      nameLabel.htmlFor = "asana_" + asana[0];
+      nameLabel.textContent = asana[0];
+      nameCell.appendChild(nameLabel);
 
-      list.appendChild(checkbox);
-      list.appendChild(label);
-      list.appendChild(document.createElement('br'));  // new line
+      // Display name cell
+      var displayNameCell = row.insertCell(1);
+      var displayNameInput = document.createElement('label');
+      displayNameInput.htmlFor = "asana_" + asana[0];
+      displayNameInput.textContent = asana[2];
+      displayNameCell.appendChild(displayNameInput);
     });
   }
 
   function addMultipleAsanas() {
     var modal = document.getElementById('multiAsanaModal');
     var category = modal.getAttribute('data-category');
-    var checkboxes = document.querySelectorAll('#asanaCheckboxList input[type="checkbox"]:checked');
+    var rows = document.querySelectorAll('#asanaCheckboxTableBody tr');
 
-    checkboxes.forEach(checkbox => {
-      var asana = { asanaName: checkbox.value, repetitions: '', specialNotes: '' }; // modify as per your needs
-      addAsanaToCategory(asana, category);
+    rows.forEach(row => {
+      var checkbox = row.querySelector('input[type="checkbox"]');
+      if (checkbox.checked) {
+        var asanaName = checkbox.value;
+        var displayName = row.querySelector('.display-name-input').value;
+        var asana = {
+          asanaName: asanaName,
+          displayName: displayName,
+          repetitions: '',
+          specialNotes: ''
+        };
+        addAsanaToCategory(asana, category);
+      }
     });
 
     closeMultiAsanaModal();
@@ -1027,16 +1073,15 @@
 
   function filterAsanas() {
     var searchValue = document.getElementById('asanaSearch').value.toLowerCase();
-    var checkboxes = document.querySelectorAll('#asanaCheckboxList input[type="checkbox"]');
-    var labels = document.querySelectorAll('#asanaCheckboxList label');
+    var rows = document.querySelectorAll('#asanaCheckboxTableBody tr');
 
-    checkboxes.forEach((checkbox, index) => {
-      if (checkbox.value.toLowerCase().includes(searchValue)) {
-        checkbox.style.display = "inline";
-        labels[index].style.display = "inline";
+    rows.forEach(row => {
+      var asanaName = row.querySelector('label').textContent.toLowerCase();
+      var displayName = row.querySelector('.display-name-input').value.toLowerCase();
+      if (asanaName.includes(searchValue) || displayName.includes(searchValue)) {
+        row.style.display = "";
       } else {
-        checkbox.style.display = "none";
-        labels[index].style.display = "none";
+        row.style.display = "none";
       }
     });
   }
