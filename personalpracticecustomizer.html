@@ -336,9 +336,8 @@
         <table>
           <thead>
             <tr>
-              <th>Select</th>
-              <th>Asana Name</th>
-              <th>Asana Key(for internal use only)</th>
+              <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="asanaCheckboxTableBody">
@@ -1028,13 +1027,6 @@
       nameLabel.htmlFor = "asana_" + asana[0];
       nameLabel.textContent = asana[0];
       nameCell.appendChild(nameLabel);
-
-      // Display name cell
-      var displayNameCell = row.insertCell(1);
-      var displayNameInput = document.createElement('label');
-      displayNameInput.htmlFor = "asana_" + asana[0];
-      displayNameInput.textContent = asana[2];
-      displayNameCell.appendChild(displayNameInput);
     });
   }
 
