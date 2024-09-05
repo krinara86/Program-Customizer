@@ -265,26 +265,30 @@
   </div>
   <button id="saveButton">Save</button>
   <button id="updateButton" onclick="updateAsanasWithNormalizedNames()">Normalize Asana Names (Run Once)</button>
-  <button id="openDisplayNameEditor">Edit Display Names</button>
+  <button id="openDisplayNameEditor">Edit Display Name and Category</button>
 
   <div id="displayNameModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h2>Edit Display Names</h2>
+      <h2>Edit Display Names and Categories</h2>
       <table id="displayNameTable">
         <thead>
           <tr>
             <th>Asana Name</th>
             <th>Display Name</th>
+            <th>Category</th>
           </tr>
         </thead>
         <tbody id="displayNameTableBody">
         </tbody>
       </table>
-      <button id="saveDisplayNames">Save Display Names</button>
+      <button id="saveDisplayNames">Save Changes</button>
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
   <script>
     // Your Firebase config
     const firebaseConfig = {
@@ -451,7 +455,7 @@
       alert("Asanas updated with normalized names. You can now remove this button.");
     }
 
-    // Display Name Editor Functions
+    // Display Name and Category Editor Functions
     openModalBtn.onclick = async function () {
       modal.style.display = "block";
       await populateDisplayNameTable();
@@ -477,37 +481,66 @@
         const row = displayNameTableBody.insertRow();
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
+        const cell3 = row.insertCell(2);
+
+        row.style.padding = "5px";
 
         cell1.textContent = asanaData.name;
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = asanaData.displayName || "";
-        input.dataset.docId = doc.id;
-        cell2.appendChild(input);
+
+        const displayNameInput = document.createElement("input");
+        displayNameInput.type = "text";
+        displayNameInput.value = asanaData.displayName || "";
+        displayNameInput.dataset.docId = doc.id;
+        displayNameInput.style.marginRight = "1px";
+        cell2.appendChild(displayNameInput);
+
+        const categorySelect = document.createElement("select");
+        categorySelect.dataset.docId = doc.id;
+        categorySelect.style.marginLeft = "25px";
+        const categories = ["Prayer", "Joints and Glands", "Meditative Asana", "Breathing", "Pranayana", "Meditation", "Physical Asana"];
+        categories.forEach(category => {
+          const option = document.createElement("option");
+          option.value = category;
+          option.textContent = category;
+          categorySelect.appendChild(option);
+        });
+        categorySelect.value = asanaData.category || "";
+        cell3.appendChild(categorySelect);
       });
     }
 
     saveDisplayNamesBtn.onclick = async function () {
-      const inputs = displayNameTableBody.querySelectorAll("input");
+      const displayNameInputs = displayNameTableBody.querySelectorAll("input");
+      const categorySelects = displayNameTableBody.querySelectorAll("select");
       const batch = db.batch();
 
-      inputs.forEach(input => {
+      displayNameInputs.forEach((input, index) => {
         const docRef = db.collection("asanas").doc(input.dataset.docId);
+        const category = categorySelects[index].value;
+
+        const updateData = {};
         if (input.value.trim()) {
-          batch.update(docRef, { displayName: input.value.trim() });
+          updateData.displayName = input.value.trim();
         } else {
-          // If the field doesn't exist, FieldValue.delete() won't cause an error
-          batch.update(docRef, { displayName: firebase.firestore.FieldValue.delete() });
+          updateData.displayName = firebase.firestore.FieldValue.delete();
         }
+
+        if (category) {
+          updateData.category = category;
+        } else {
+          updateData.category = firebase.firestore.FieldValue.delete();
+        }
+
+        batch.update(docRef, updateData);
       });
 
       try {
         await batch.commit();
-        alert("Display names saved successfully!");
+        alert("Display names and categories saved successfully!");
         modal.style.display = "none";
       } catch (error) {
-        console.error("Error saving display names:", error);
-        alert("An error occurred while saving display names. Please try again.");
+        console.error("Error saving display names and categories:", error);
+        alert("An error occurred while saving. Please try again.");
       }
     }
   </script>
