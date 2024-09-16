@@ -353,6 +353,14 @@
       Day Asanas</button>
   </div>
 
+  <div id="relaxationSection" class="section">
+    <h2>Relaxation Asanas</h2>
+    <div id="relaxationDiv" class="asana-div sadhakaDiv"></div>
+    <button onclick="addAsana('relaxationDiv', 'Relaxation')" class="asana-button">Add Relaxation Asana</button>
+    <button onclick="showMultiAsanaModal('relaxationDiv', 'Relaxation')" class="asana-button">Add Multiple Relaxation
+      Asanas</button>
+  </div>
+
   <div id="asanaDescription" class="asana-description"></div>
 
   <textarea id="dietAndAdditionalNotes" placeholder="Diet and Additional notes" rows="20"></textarea>
@@ -407,6 +415,16 @@
   var sadhakaNameList = document.getElementById('sadhakaNameList');
   var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
+  var categories = [
+    { id: 'prayerText', title: 'Prayer', type: 'text' },
+    { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas', category: 'Joints and Glands' },
+    { id: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation' },
+    { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
+    { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
+    { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
+  ];
+
+
   async function addContent(content, contentHeight) {
     if (y + contentHeight > 280) {
       pdf.addPage();
@@ -420,30 +438,20 @@
     const asanasMap = await loadAsanasForPdf();
     var pdf = new jsPDF();
     var sadhakaName = document.getElementById('sadhakaName').value;
-    var state = { y: 20 }; // Create an object to hold the y position
+    var state = { y: 20 };
 
-    // Helper function to add content
     async function addContent(content, contentHeight) {
       if (state.y + contentHeight > 280) {
         pdf.addPage();
-        state.y = 20; // reset y to top of the new page
+        state.y = 20;
       }
       pdf.text(content, 10, state.y);
       state.y += contentHeight;
     }
 
-    // Title
     pdf.setFontSize(16);
     pdf.setFontStyle("bold");
     await addContent(`Sadhaka report for ${sadhakaName}`, 10);
-
-    var categories = [
-      { id: 'prayerText', title: 'Prayer', type: 'text' },
-      { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas' },
-      { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas' },
-      { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas' },
-      { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
-    ];
 
     for (let category of categories) {
       pdf.setFontSize(14);
@@ -464,7 +472,7 @@
         }
       }
 
-      state.y += 10; // Add some space between categories
+      state.y += 10;
     }
 
     pdf.save('Sadhaka_report.pdf');
@@ -798,14 +806,6 @@
   function displaySadhaka(sadhaka) {
     console.log("Displaying sadhaka:", sadhaka);
 
-    var categories = [
-      { id: 'prayerText', type: 'text' },
-      { id: 'jointsAndGlandsDiv', type: 'asanas', category: 'Joints and Glands' },
-      { id: 'cardioDiv', type: 'asanas', category: 'Physical Asana' },
-      { id: 'nonCardioDiv', type: 'asanas', category: 'Physical Asana' },
-      { id: 'dietAndAdditionalNotes', type: 'text' }
-    ];
-
     categories.forEach(category => {
       if (category.type === 'text') {
         document.getElementById(category.id).value = sadhaka[category.id] || '';
@@ -939,14 +939,17 @@
           displaySadhaka(doc.data());
         } else {
           console.log("No sadhaka found with name:", name);
-          displaySadhaka({
+          var newSadhaka = {
             name: name,
             prayerText: '',
-            jointsAndGlandsDiv: [],
-            cardioDiv: [],
-            nonCardioDiv: [],
             dietAndAdditionalNotes: ''
+          };
+          categories.forEach(category => {
+            if (category.type === 'asanas') {
+              newSadhaka[category.id] = [];
+            }
           });
+          displaySadhaka(newSadhaka);
         }
       })
       .catch((error) => {
@@ -954,17 +957,10 @@
       });
   }
 
+
   // Modified saveSadhakaWithCategory function
   function saveSadhakaWithCategory() {
     var sadhakaName = sadhakaNameInput.value;
-    var categories = [
-      { id: 'prayerText', type: 'text' },
-      { id: 'jointsAndGlandsDiv', type: 'asanas', category: 'Joints and Glands' },
-      { id: 'cardioDiv', type: 'asanas', category: 'Physical Asana' },
-      { id: 'nonCardioDiv', type: 'asanas', category: 'Physical Asana' },
-      { id: 'dietAndAdditionalNotes', type: 'text' }
-    ];
-
     var sadhaka = {
       name: sadhakaName
     };
@@ -983,7 +979,6 @@
       console.log("Error saving sadhaka:", error);
     });
   }
-
 
   function getAsanasFromDiv(div) {
     var asanas = [];
