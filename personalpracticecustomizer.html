@@ -420,19 +420,16 @@
     const asanasMap = await loadAsanasForPdf();
     var pdf = new jsPDF();
     var sadhakaName = document.getElementById('sadhakaName').value;
-    var cardioDiv = document.getElementById('cardioDiv');
-    var nonCardioDiv = document.getElementById('nonCardioDiv');
-    var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes').value;
-    var y = 20;
+    var state = { y: 20 }; // Create an object to hold the y position
 
     // Helper function to add content
     async function addContent(content, contentHeight) {
-      if (y + contentHeight > 280) {
+      if (state.y + contentHeight > 280) {
         pdf.addPage();
-        y = 20; // reset y to top of the new page
+        state.y = 20; // reset y to top of the new page
       }
-      pdf.text(content, 10, y);
-      y += contentHeight;
+      pdf.text(content, 10, state.y);
+      state.y += contentHeight;
     }
 
     // Title
@@ -440,110 +437,104 @@
     pdf.setFontStyle("bold");
     await addContent(`Sadhaka report for ${sadhakaName}`, 10);
 
-    async function addAsanaToPdf(asanaDiv) {
-      var asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
-      var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
-      var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+    var categories = [
+      { id: 'prayerText', title: 'Prayer', type: 'text' },
+      { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas' },
+      { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas' },
+      { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas' },
+      { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
+    ];
 
-      // Fetch the asana details including the imageURL from Firestore
-      const asanaDoc = await db.collection('asanas').where("name", "==", asanaNameSelect.value).get();
-      if (asanaDoc.empty) {
-        console.log("No such asana found!");
-        return; // Exit if the asana isn't found
-      }
-      const asanaData = asanaDoc.docs[0].data(); // Assuming there is only one doc per asana name
+    for (let category of categories) {
+      pdf.setFontSize(14);
+      pdf.setFontStyle("bold");
+      await addContent(category.title, 10);
 
-      // Use imageURL from Firestore
-      let imageUrl = asanaData.imageUrl;
+      pdf.setFontSize(12);
+      pdf.setFontStyle("normal");
 
-      let response = await fetch(imageUrl);
-      let blob = await response.blob();
-
-      return new Promise((resolve, reject) => {
-        let reader = new FileReader();
-        reader.onloadend = function () {
-          let base64data = reader.result;
-          // Adjusting width and height of image
-          let imgWidth = 50;
-          let imgHeight = 50;
-
-          // Add new page if image would overflow
-          var potentialHeight = y + imgHeight;
-          var pdfHeight = pdf.internal.pageSize.getHeight;
-          if (potentialHeight > 280) {
-            pdf.addPage();
-            y = 20; // reset y to top of the new page
-          }
-
-          pdf.addImage(base64data, 'PNG', 15, y, imgWidth, imgHeight);  // Adding image to pdf
-          // Adjust y to position the next text after the image
-          y += imgHeight + 10;  // added 10 as buffer space
-          resolve();
+      if (category.type === 'text') {
+        var content = document.getElementById(category.id).value;
+        var splitContent = pdf.splitTextToSize(content, 180);
+        await addContent(splitContent, splitContent.length * 8);
+      } else if (category.type === 'asanas') {
+        var containerDiv = document.getElementById(category.id);
+        for (let i = 0; i < containerDiv.children.length; i++) {
+          await addAsanaToPdf(containerDiv.children[i], asanasMap, pdf, state);
         }
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      })
-        .then(async () => {
-          // Description
-          pdf.setFontSize(12);
-          pdf.setFontStyle("normal");
-          // Now we use the asana name to get the description from the map.
-          var asanaDescription = asanasMap.get(asanaNameSelect.value);
-          var splitDescription = pdf.splitTextToSize(`Description: ${asanaDescription}`, 180); // adjust the width as per your needs
-          await addContent(splitDescription, splitDescription.length * 8);
+      }
 
-          // Repetitions
-          pdf.setFontSize(12);
-          pdf.setFontStyle("normal");
-          await addContent(`Repetitions: ${repetitionsInput.value}`, 8);
-
-          // Special notes
-          pdf.setFontSize(12);
-          pdf.setFontStyle("normal");
-          var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
-          var splitNotes = pdf.splitTextToSize(specialNotesText, 180); // adjust the width as per your needs
-          await addContent(splitNotes, splitNotes.length * 8);
-
-          y += 15;
-        });
+      state.y += 10; // Add some space between categories
     }
-
-
-
-
-
-    // Cardio day asanas
-    pdf.setFontSize(14);
-    pdf.setFontStyle("bold");
-    await addContent("Cardio day asanas", 10);
-
-    for (let i = 0; i < cardioDiv.children.length; i++) {
-      await addAsanaToPdf(cardioDiv.children[i]);
-    }
-
-    // Non cardio day asanas
-    pdf.setFontSize(14);
-    pdf.setFontStyle("bold");
-    await addContent("Non cardio day asanas", 10);
-
-    for (let i = 0; i < nonCardioDiv.children.length; i++) {
-      await addAsanaToPdf(nonCardioDiv.children[i]);
-    }
-
-    pdf.addPage();
-    // Diets and additional notes
-    pdf.setFontSize(14);
-    pdf.setFontStyle("bold");
-    await addContent("Diets and additional notes", 10);
-
-    pdf.setFontSize(12);
-    pdf.setFontStyle("normal");
-    var splitDietNotes = pdf.splitTextToSize(dietAndAdditionalNotes, 180);
-    await addContent(splitDietNotes, splitDietNotes.length * 8);
 
     pdf.save('Sadhaka_report.pdf');
   }
 
+  async function addAsanaToPdf(asanaDiv, asanasMap, pdf, state) {
+    var asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
+    var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
+    var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+
+    // Fetch the asana details including the imageURL from Firestore
+    const asanaDoc = await db.collection('asanas').where("name", "==", asanaNameSelect.value).get();
+    if (asanaDoc.empty) {
+      console.log("No such asana found!");
+      return; // Exit if the asana isn't found
+    }
+    const asanaData = asanaDoc.docs[0].data();
+
+    // Use imageURL from Firestore
+    let imageUrl = asanaData.imageUrl;
+
+    let response = await fetch(imageUrl);
+    let blob = await response.blob();
+
+    return new Promise((resolve, reject) => {
+      let reader = new FileReader();
+      reader.onloadend = function () {
+        let base64data = reader.result;
+        let imgWidth = 50;
+        let imgHeight = 50;
+
+        if (state.y + imgHeight > 280) {
+          pdf.addPage();
+          state.y = 20;
+        }
+
+        pdf.addImage(base64data, 'PNG', 15, state.y, imgWidth, imgHeight);
+        state.y += imgHeight + 10;
+        resolve();
+      }
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    })
+      .then(async () => {
+        // Helper function to add content
+        async function addContent(content, contentHeight) {
+          if (state.y + contentHeight > 280) {
+            pdf.addPage();
+            state.y = 20; // reset y to top of the new page
+          }
+          pdf.text(content, 10, state.y);
+          state.y += contentHeight;
+        }
+
+        // Description
+        var asanaDescription = asanasMap.get(asanaNameSelect.value);
+        var splitDescription = pdf.splitTextToSize(`Description: ${asanaDescription}`, 180);
+        await addContent(splitDescription, splitDescription.length * 8);
+
+        // Repetitions
+        await addContent(`Repetitions: ${repetitionsInput.value}`, 8);
+
+        // Special notes
+        var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
+        var splitNotes = pdf.splitTextToSize(specialNotesText, 180);
+        await addContent(splitNotes, splitNotes.length * 8);
+
+        state.y += 15;
+      });
+  }
 
   function urlToDataUri(url) {
     return fetch(url)
@@ -806,21 +797,29 @@
 
   function displaySadhaka(sadhaka) {
     console.log("Displaying sadhaka:", sadhaka);
-    document.getElementById('prayerText').value = sadhaka.prayer || '';
 
-    var jointsAndGlandsDiv = document.getElementById('jointsAndGlandsDiv');
-    var cardioDiv = document.getElementById('cardioDiv');
-    var nonCardioDiv = document.getElementById('nonCardioDiv');
+    var categories = [
+      { id: 'prayerText', type: 'text' },
+      { id: 'jointsAndGlandsDiv', type: 'asanas', category: 'Joints and Glands' },
+      { id: 'cardioDiv', type: 'asanas', category: 'Physical Asana' },
+      { id: 'nonCardioDiv', type: 'asanas', category: 'Physical Asana' },
+      { id: 'dietAndAdditionalNotes', type: 'text' }
+    ];
 
-    jointsAndGlandsDiv.innerHTML = '';
-    cardioDiv.innerHTML = '';
-    nonCardioDiv.innerHTML = '';
-
-    displayAsanasForCategory(sadhaka.jointsAndGlandsAsanas, jointsAndGlandsDiv, 'Joints and Glands');
-    displayAsanasForCategory(sadhaka.cardioAsanas, cardioDiv, 'Physical Asana');
-    displayAsanasForCategory(sadhaka.nonCardioAsanas, nonCardioDiv, 'Physical Asana');
-
-    document.getElementById('dietAndAdditionalNotes').value = sadhaka.dietAndAdditionalNotes || '';
+    categories.forEach(category => {
+      if (category.type === 'text') {
+        document.getElementById(category.id).value = sadhaka[category.id] || '';
+      } else if (category.type === 'asanas') {
+        var containerDiv = document.getElementById(category.id);
+        containerDiv.innerHTML = '';
+        if (Array.isArray(sadhaka[category.id])) {
+          sadhaka[category.id].forEach(asana => {
+            var asanaDiv = createAsanaDivWithCategory(asana, category.category);
+            containerDiv.appendChild(asanaDiv);
+          });
+        }
+      }
+    });
   }
 
   function displayAsanasForCategory(asanaList, containerDiv, category) {
@@ -942,10 +941,10 @@
           console.log("No sadhaka found with name:", name);
           displaySadhaka({
             name: name,
-            prayer: '',
-            jointsAndGlandsAsanas: [],
-            cardioAsanas: [],
-            nonCardioAsanas: [],
+            prayerText: '',
+            jointsAndGlandsDiv: [],
+            cardioDiv: [],
+            nonCardioDiv: [],
             dietAndAdditionalNotes: ''
           });
         }
@@ -958,22 +957,25 @@
   // Modified saveSadhakaWithCategory function
   function saveSadhakaWithCategory() {
     var sadhakaName = sadhakaNameInput.value;
-    var jointsAndGlandsDiv = document.getElementById('jointsAndGlandsDiv');
-    var cardioDiv = document.getElementById('cardioDiv');
-    var nonCardioDiv = document.getElementById('nonCardioDiv');
+    var categories = [
+      { id: 'prayerText', type: 'text' },
+      { id: 'jointsAndGlandsDiv', type: 'asanas', category: 'Joints and Glands' },
+      { id: 'cardioDiv', type: 'asanas', category: 'Physical Asana' },
+      { id: 'nonCardioDiv', type: 'asanas', category: 'Physical Asana' },
+      { id: 'dietAndAdditionalNotes', type: 'text' }
+    ];
 
     var sadhaka = {
-      name: sadhakaName,
-      prayer: document.getElementById('prayerText').value,
-      jointsAndGlandsAsanas: [],
-      cardioAsanas: [],
-      nonCardioAsanas: [],
-      dietAndAdditionalNotes: document.getElementById('dietAndAdditionalNotes').value
+      name: sadhakaName
     };
 
-    sadhaka.jointsAndGlandsAsanas = getAsanasFromDiv(jointsAndGlandsDiv);
-    sadhaka.cardioAsanas = getAsanasFromDiv(cardioDiv);
-    sadhaka.nonCardioAsanas = getAsanasFromDiv(nonCardioDiv);
+    categories.forEach(category => {
+      if (category.type === 'text') {
+        sadhaka[category.id] = document.getElementById(category.id).value;
+      } else if (category.type === 'asanas') {
+        sadhaka[category.id] = getAsanasFromDiv(document.getElementById(category.id));
+      }
+    });
 
     saveSadhakaToDB(sadhaka).then(() => {
       alert('Saved successfully!');
@@ -981,6 +983,7 @@
       console.log("Error saving sadhaka:", error);
     });
   }
+
 
   function getAsanasFromDiv(div) {
     var asanas = [];
@@ -992,23 +995,13 @@
   }
 
   async function saveSadhakaToDB(sadhaka) {
-    // Import the firebase firestore module
-    const db = firebase.firestore();
-
-    // Ensure that sadhaka.name is defined and not an empty string
     if (!sadhaka.name) {
       console.error('Error: sadhaka.name is not defined or is an empty string.');
       return;
     }
 
     try {
-      // Use set with { merge: true } to upsert
-      await db.collection('sadhakas').doc(sadhaka.name).set({
-        cardioAsanas: sadhaka.cardioAsanas,
-        nonCardioAsanas: sadhaka.nonCardioAsanas,
-        dietAndAdditionalNotes: sadhaka.dietAndAdditionalNotes
-      }, { merge: true });
-
+      await db.collection('sadhakas').doc(sadhaka.name).set(sadhaka, { merge: true });
       console.log('Sadhaka data has been saved with ID: ', sadhaka.name);
     } catch (error) {
       console.error('Error saving sadhaka: ', error);
