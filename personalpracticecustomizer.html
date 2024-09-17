@@ -493,6 +493,8 @@
 
     // Use imageURL from Firestore
     let imageUrl = asanaData.imageUrl;
+    // Use displayName from Firestore, fallback to name if not available
+    let displayName = asanaData.displayName || asanaData.name;
 
     let response = await fetch(imageUrl);
     let blob = await response.blob();
@@ -504,13 +506,29 @@
         let imgWidth = 50;
         let imgHeight = 50;
 
-        if (state.y + imgHeight > 280) {
+        if (state.y + imgHeight + 20 > 280) { // Add extra space for the name
           pdf.addPage();
           state.y = 20;
         }
 
+        // Add asana display name in bold and underlined
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(displayName, 15, state.y);
+        pdf.setLineWidth(0.5);
+        var underlineWidth = pdf.getStringUnitWidth(displayName) * 14 / pdf.internal.scaleFactor;
+        pdf.line(15, state.y + 1, 15 + underlineWidth, state.y + 1);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(12);
+
+        // Move down after adding the name
+        state.y += 10;
+
+        // Add the image below the name
         pdf.addImage(base64data, 'PNG', 15, state.y, imgWidth, imgHeight);
         state.y += imgHeight + 10;
+
         resolve();
       }
       reader.onerror = reject;
