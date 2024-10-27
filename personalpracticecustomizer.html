@@ -361,6 +361,44 @@
       Asanas</button>
   </div>
 
+  <div id="meditativeSection" class="section">
+    <h2>Meditative Asanas</h2>
+    <div id="meditativeDiv" class="asana-div sadhakaDiv"></div>
+    <button onclick="addAsana('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Meditative Asana</button>
+    <button onclick="showMultiAsanaModal('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Multiple Meditative Asanas</button>
+  </div>
+
+  <div id="breathingSection" class="section">
+    <h2>Breathing Asanas</h2>
+    <div id="breathingDiv" class="asana-div sadhakaDiv"></div>
+    <button onclick="addAsana('breathingDiv', 'Breathing')" class="asana-button">Add Breathing Asana</button>
+    <button onclick="showMultiAsanaModal('breathingDiv', 'Breathing')" class="asana-button">Add Multiple Breathing Asanas</button>
+  </div>
+  
+  <div id="pranayamaSection" class="section">
+    <h2>Pranayama</h2>
+    <div id="pranayamaDiv" class="asana-div sadhakaDiv"></div>
+    <button onclick="addAsana('pranayamaDiv', 'Pranayana')" class="asana-button">Add Pranayama</button>
+    <button onclick="showMultiAsanaModal('pranayamaDiv', 'Pranayana')" class="asana-button">Add Multiple Pranayama</button>
+  </div>
+  
+  <div id="meditationSection" class="section">
+    <h2>Meditation</h2>
+    <div id="meditationDiv" class="asana-div sadhakaDiv"></div>
+    <button onclick="addAsana('meditationDiv', 'Meditation')" class="asana-button">Add Meditation</button>
+    <button onclick="showMultiAsanaModal('meditationDiv', 'Meditation')" class="asana-button">Add Multiple Meditation</button>
+  </div>
+
+  <div id="routineSection" class="section">
+    <h2>Routine</h2>
+    <textarea id="routineText" placeholder="Routine" rows="20"></textarea>
+  </div>
+  
+  <div id="advisorySection" class="section">
+    <h2>Advisory</h2>
+    <textarea id="advisoryText" placeholder="Advisory" rows="20"></textarea>
+  </div>
+
   <div id="asanaDescription" class="asana-description"></div>
 
   <textarea id="dietAndAdditionalNotes" placeholder="Diet and Additional notes" rows="20"></textarea>
@@ -396,6 +434,71 @@
 
 
 <script>
+
+const defaultDietText = `Do not eat raw foods like salad early in the morning or in the evening. 
+Keep a gap of 2-3 hours between meals. Always eat warm meals. As far as possible eat organic foods.
+
+Always eat a warm porridge with dried fruit and nuts for breakfast. You can also grate sweet apples into the porridge and cook it. You can make porridge out of oats, amaranth, quinoa and bulgur. You can add bananas on top. Berries are excellent, if you cook them along with the porridge.
+
+Avoid mushrooms, paprika, garlic, onions, heavy lentils, eggs, fried foods, cold food, frozen foods, industrialized food like ready made breads, alcohol, white refined sugar, refined breads, refined oils as these are tamasic or rajasic.
+
+Drink 2-3 liters of plain water everyday without gas. Do not drink water 30 minutes before and after meals. If you have digestive problems such as gases, acidity or constipation always drink warm water.
+
+Drink mild herbal teas like mixed herbs, fennel/anis/cumin, fasting teas, alkaline teas, chamomile tea, tulsi tea. Avoid teas with added sugar, colors and flavoring agents.
+
+Avoid coffee and black tea . Alternatives: moringa leaves, tulsi, rooi busch,
+
+Lunch is the most important meal of the day between 11 am and 2 pm. During lunch if you wish, you can have a little raw salad since the digestive fire is the strongest at this time of the day. If you want to have something sweet, this is the time you can have a small dessert, candy, biscuit or mithai. Dairy products such as yoghurt, lassi, cheese are best consumed at this time.
+
+Dinner is a good time for simple one pot meals like khichidi. You can always have rice, vegetables and lentils if you prefer. Do not have bread, salad, dairy products or any cold food or drinks in the evening. Best for you is light food, steamed or lightly sautéed in little oil or ghee.
+
+A variety of grains is preferred. Make sure you do not only have wheat products. Also enjoy oats, parboiled rice, spelt, amaranth, bulgur, quinoa, couscous, barley, maize and millet. 
+There is a huge variety of vegetables. Eat at least 25 different plants in a week: Pumpkin, beetroot, carrots, sweet potatoes, potatoes, zucchini, spinach, tomatoes, avocado, Many Indian vegetables are highly nutrient dense and therefore extremely healthy like drumsticks (moringa).
+Herbs: fenugreek leaves, fresh coriander and other herbs
+Lentils: red lentils, moong lentils, moong beans 
+Fruit: sweet fruit like bananas, coconut, apples, figs, dates, grapes, mangoes, papaya, berries (cooked)
+Seeds and Nuts: sunflower, pumpkin, almonds
+
+Milk products: ghee, paneer, cow's milk (warm with cardamom) Butter, sheep or goat cheese like feta. Yoghurt only in afternoon. Avoid yoghurt in the morning or evening.
+Sweetners: Jaggery, (light colored) honey, maple syrup, agave 
+Oils and fat: Ghee, olive oil, coconut oil, butter
+Spices: coriander, cumin, cardamom, turmeric, fennel, oregano, rosemary, anise, thyme, ginger`;
+
+const defaultRoutineText = `A structured routine is very important for you:
+Go to bed by 10:00 pm
+Wake up by 6 am
+
+Morning Routine on waking up:
+- Wash face, splash cold water on eyes
+- Brush teeth first
+- Then do Oil pulling with coconut oil for 5-10 minutes, spit out in garbage (not in washbasin)
+- Tongue cleaning with metal tongue cleaner
+- Drink at least 2 glasses of warm water 
+- Wash yourself. Daily shower is not necessary. 
+- Do yoga sadhana
+- Go for at least 3 kms brisk walk
+- Drink warm lemon with salt and honey before breakfast`;
+
+async function loadDefaultTexts() {
+  try {
+    // Set the default texts to the textareas if they're empty
+    const dietTextArea = document.getElementById('dietAndAdditionalNotes');
+    const routineTextArea = document.getElementById('routineText');
+    
+    if (!dietTextArea.value || dietTextArea.value.trim() === '') {
+      dietTextArea.value = defaultDietText;
+    }
+    if (!routineTextArea.value || routineTextArea.value.trim() === '') {
+      routineTextArea.value = defaultRoutineText;
+    }
+    
+    console.log('Default texts loaded successfully');
+  } catch (error) {
+    console.error('Error setting default texts:', error);
+  }
+}
+
+
   // Initialize Firebase
   // TODO: replace with your own Firebase config
   var firebaseConfig = {
@@ -415,15 +518,18 @@
   var sadhakaNameList = document.getElementById('sadhakaNameList');
   var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
-  var categories = [
-    { id: 'prayerText', title: 'Prayer', type: 'text' },
-    { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas', category: 'Joints and Glands' },
-    { id: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation' },
-    { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
-    { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
-    { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
-  ];
-
+ var categories = [
+  { id: 'prayerText', title: 'Prayer', type: 'text' },
+  { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas', category: 'Joints and Glands' },
+  { id: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation' },
+  { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
+  { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
+  { id: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative' },
+  { id: 'breathingDiv', title: 'Breathing Asanas', type: 'asanas', category: 'Breathing' },
+  { id: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana' },
+  { id: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation' },
+  { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
+];
 
   async function addContent(content, contentHeight) {
     if (y + contentHeight > 280) {
@@ -634,7 +740,7 @@
   function initialize() {
     document.querySelector('.login-container').style.display = 'block';
     document.querySelector('#overlay').style.display = 'block';
-    Promise.all([loadAsanas(), loadSadhakaNames()])
+    Promise.all([loadAsanas(), loadSadhakaNames(), loadDefaultTexts])
       .then(([fetchedAsanas, fetchedNames]) => {
         asanas = fetchedAsanas;  // Assign fetched asanas to global asanas array
         sadhakaNames = fetchedNames;
@@ -684,14 +790,27 @@
     }
   }
 
-  function clearSadhakaDiv() {
-    var cardiosadhakaDiv = document.getElementById('cardioDiv');
-    cardiosadhakaDiv.innerHTML = '';
-    var noncardiosadhakaDiv = document.getElementById('nonCardioDiv');
-    noncardiosadhakaDiv.innerHTML = '';
-    var dietAndAdditionalNotes = document.getElementById('dietAndAdditionalNotes');
-    dietAndAdditionalNotes.value = '';
-  }
+// Modify the clearSadhakaDiv function to include new sections
+function clearSadhakaDiv() {
+  var cardiosadhakaDiv = document.getElementById('cardioDiv');
+  cardiosadhakaDiv.innerHTML = '';
+  var noncardiosadhakaDiv = document.getElementById('nonCardioDiv');
+  noncardiosadhakaDiv.innerHTML = '';
+  var meditativeDiv = document.getElementById('meditativeDiv');
+  meditativeDiv.innerHTML = '';
+  var breathingDiv = document.getElementById('breathingDiv');
+  breathingDiv.innerHTML = '';
+  var pranayamaDiv = document.getElementById('pranayamaDiv');
+  pranayamaDiv.innerHTML = '';
+  var meditationDiv = document.getElementById('meditationDiv');
+  meditationDiv.innerHTML = '';
+  
+  // Set default texts for diet and routine
+  document.getElementById('dietAndAdditionalNotes').value = defaultDietText;
+  document.getElementById('routineText').value = defaultRoutineText;
+  document.getElementById('advisoryText').value = '';
+}
+
 
 
   function createAsanaDivWithCategory(asana, category) {
@@ -822,23 +941,30 @@
 
 
   function displaySadhaka(sadhaka) {
-    console.log("Displaying sadhaka:", sadhaka);
+  console.log("Displaying sadhaka:", sadhaka);
 
-    categories.forEach(category => {
-      if (category.type === 'text') {
-        document.getElementById(category.id).value = sadhaka[category.id] || '';
-      } else if (category.type === 'asanas') {
-        var containerDiv = document.getElementById(category.id);
-        containerDiv.innerHTML = '';
-        if (Array.isArray(sadhaka[category.id])) {
-          sadhaka[category.id].forEach(asana => {
-            var asanaDiv = createAsanaDivWithCategory(asana, category.category);
-            containerDiv.appendChild(asanaDiv);
-          });
-        }
+  categories.forEach(category => {
+    if (category.type === 'text') {
+      const element = document.getElementById(category.id);
+      if (category.id === 'dietAndAdditionalNotes' && (!sadhaka[category.id] || sadhaka[category.id].trim() === '')) {
+        element.value = defaultDietText;
+      } else if (category.id === 'routineText' && (!sadhaka[category.id] || sadhaka[category.id].trim() === '')) {
+        element.value = defaultRoutineText;
+      } else {
+        element.value = sadhaka[category.id] || '';
       }
-    });
-  }
+    } else if (category.type === 'asanas') {
+      var containerDiv = document.getElementById(category.id);
+      containerDiv.innerHTML = '';
+      if (Array.isArray(sadhaka[category.id])) {
+        sadhaka[category.id].forEach(asana => {
+          var asanaDiv = createAsanaDivWithCategory(asana, category.category);
+          containerDiv.appendChild(asanaDiv);
+        });
+      }
+    }
+  });
+}
 
   function displayAsanasForCategory(asanaList, containerDiv, category) {
     if (Array.isArray(asanaList)) {
