@@ -1,4 +1,23 @@
 
+const LIABILITY_STATEMENT = `This document has not been created by a medical doctor or healing practitioner. Therefore, please perform all practices mentioned in this document at your own discretion. 
+
+If you have or have had an injury or acute illness, or if you have doubts about whether yoga practices are appropriate for you, you are responsible for contacting your physician as needed to inquire about your fitness level.
+
+The instructions and advice given in yoga sessions are no substitute for professional medical or psychological care. The instructions and advice given in the following document is not a substitute for professional medical or psychological care. 
+
+If you are pregnant or experiencing menopausal transition, you are responsible for taking special care of yourself and consulting your doctor as needed.
+
+If you are menstruating, do not exceed your comfort levels.
+
+In order for yoga practice to be beneficial for you and your all-round health, please let us know if you are suffering from physical illness or have any other health restrictions that would prevent you from participating in yoga practice or in individual yoga exercises. 
+
+In case of severe health issues or chronic illness(es) please check with your doctor whether you are allowed to participate in the yoga related activities. Participation is at your own risk.
+
+The use of any suggested devices or equipment such as the indoor bike, resistance bands, chairs, pillows or any other props is at the yoga participant's own risk.
+
+Any cardio training suggested is to be practiced at your own discretion.`;
+
+
 
 const defaultDietText = `Do not eat raw foods like salad early in the morning or in the evening. 
 Keep a gap of 2-3 hours between meals. Always eat warm meals. As far as possible eat organic foods.
@@ -289,6 +308,30 @@ async function loadDefaultTexts() {
     pdf.setTextColor(128, 128, 128);
     const date = new Date().toLocaleDateString();
     pdf.text(`Generated on ${date}`, 10, pdfConfig.pageHeight - 10);
+  
+    // Add a new page for liability statement
+    pdf.addPage();
+    pdfConfig.y = 20;
+  
+    // Add Liability Statement header
+    helpers.applyStyle(pdfConfig.styles.sectionHeader);
+    await helpers.addContent("Liability Statement", 8, pdfConfig.styles.sectionHeader);
+    helpers.drawSeparator();
+  
+    // Add liability text with special styling
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(10);
+    pdf.setTextColor(51, 51, 51);
+    
+    const splitLiability = pdf.splitTextToSize(LIABILITY_STATEMENT, pdfConfig.pageWidth - 20);
+    pdf.text(splitLiability, 10, pdfConfig.y);
+    
+    // Add footer after liability
+    pdfConfig.y = pdfConfig.pageHeight - 10;
+    pdf.setFont("helvetica", "italic");
+    pdf.setFontSize(10);
+    pdf.setTextColor(128, 128, 128);
+    pdf.text(`Generated on ${date}`, 10, pdfConfig.y);
   
     pdf.save('Sadhaka_report.pdf');
   }
