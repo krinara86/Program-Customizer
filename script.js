@@ -83,154 +83,214 @@ async function loadDefaultTexts() {
   var sadhakaNameList = document.getElementById('sadhakaNameList');
   var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
- var categories = [
-  { id: 'prayerText', title: 'Prayer', type: 'text' },
-  { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas', category: 'Joints and Glands' },
-  { id: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation' },
-  { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
-  { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
-  { id: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative' },
-  { id: 'breathingDiv', title: 'Breathing Asanas', type: 'asanas', category: 'Breathing' },
-  { id: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana' },
-  { id: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation' },
-  { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
-];
-
-  async function addContent(content, contentHeight) {
-    if (y + contentHeight > 280) {
-      pdf.addPage();
-      y = 20; // reset y to top of the new page
-    }
-    pdf.text(content, 10, y);
-    y += contentHeight;
-  }
+  var categories = [
+    { id: 'prayerText', title: 'Prayer', type: 'text' },
+    { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas', category: 'Joints and Glands' },
+    { id: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation' },
+    { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
+    { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
+    { id: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana' },
+    { id: 'breathingDiv', title: 'Breathing Asanas', type: 'asanas', category: 'Breathing' },
+    { id: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana' },
+    { id: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation' },
+    { id: 'routineText', title: 'Routine', type: 'text' },
+    { id: 'advisoryText', title: 'Advisory', type: 'text' },
+    { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
+  ];
 
   async function saveSadhakaReportAsPdf() {
     const asanasMap = await loadAsanasForPdf();
     var pdf = new jsPDF();
     var sadhakaName = document.getElementById('sadhakaName').value;
-    var state = { y: 20 };
-
-    async function addContent(content, contentHeight) {
-      if (state.y + contentHeight > 280) {
-        pdf.addPage();
-        state.y = 20;
-      }
-      pdf.text(content, 10, state.y);
-      state.y += contentHeight;
-    }
-
-    pdf.setFontSize(16);
-    pdf.setFontStyle("bold");
-    await addContent(`Sadhaka report for ${sadhakaName}`, 10);
-
-    for (let category of categories) {
-      pdf.setFontSize(14);
-      pdf.setFontStyle("bold");
-      await addContent(category.title, 10);
-
-      pdf.setFontSize(12);
-      pdf.setFontStyle("normal");
-
-      if (category.type === 'text') {
-        var content = document.getElementById(category.id).value;
-        var splitContent = pdf.splitTextToSize(content, 180);
-        await addContent(splitContent, splitContent.length * 8);
-      } else if (category.type === 'asanas') {
-        var containerDiv = document.getElementById(category.id);
-        for (let i = 0; i < containerDiv.children.length; i++) {
-          await addAsanaToPdf(containerDiv.children[i], asanasMap, pdf, state);
+    
+    const pdfConfig = {
+      y: 20,
+      pageWidth: pdf.internal.pageSize.width,
+      pageHeight: pdf.internal.pageSize.height,
+      styles: {
+        title: {
+          fontSize: 24,
+          fontStyle: 'bold',
+          textColor: [41, 128, 185],
+          marginBottom: 15
+        },
+        sectionHeader: {
+          fontSize: 16,
+          fontStyle: 'bold',
+          textColor: [52, 73, 94],
+          marginTop: 10,
+          marginBottom: 8
+        },
+        normal: {
+          fontSize: 12,
+          fontStyle: 'normal',
+          textColor: [0, 0, 0],
+          marginBottom: 5
+        },
+        asanaName: {
+          fontSize: 14,
+          fontStyle: 'bold',
+          textColor: [41, 128, 185],
+          marginBottom: 6
         }
       }
-
-      state.y += 10;
-    }
-
-    pdf.save('Sadhaka_report.pdf');
-  }
-
-  async function addAsanaToPdf(asanaDiv, asanasMap, pdf, state) {
-    var asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
-    var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
-    var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
-
-    // Fetch the asana details including the imageURL from Firestore
-    const asanaDoc = await db.collection('asanas').where("name", "==", asanaNameSelect.value).get();
-    if (asanaDoc.empty) {
-      console.log("No such asana found!");
-      return; // Exit if the asana isn't found
-    }
-    const asanaData = asanaDoc.docs[0].data();
-
-    // Use imageURL from Firestore
-    let imageUrl = asanaData.imageUrl;
-    // Use displayName from Firestore, fallback to name if not available
-    let displayName = asanaData.displayName || asanaData.name;
-
-    let response = await fetch(imageUrl);
-    let blob = await response.blob();
-
-    return new Promise((resolve, reject) => {
-      let reader = new FileReader();
-      reader.onloadend = function () {
-        let base64data = reader.result;
-        let imgWidth = 50;
-        let imgHeight = 50;
-
-        if (state.y + imgHeight + 20 > 280) { // Add extra space for the name
-          pdf.addPage();
-          state.y = 20;
-        }
-
-        // Add asana display name in bold and underlined
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(14);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(displayName, 15, state.y);
+    };
+  
+    const helpers = {
+      applyStyle: function(style) {
+        pdf.setFontSize(style.fontSize);
+        pdf.setFont("helvetica", style.fontStyle);
+        pdf.setTextColor(...style.textColor);
+      },
+  
+      drawSeparator: function() {
+        pdf.setDrawColor(189, 195, 199);
         pdf.setLineWidth(0.5);
-        var underlineWidth = pdf.getStringUnitWidth(displayName) * 14 / pdf.internal.scaleFactor;
-        pdf.line(15, state.y + 1, 15 + underlineWidth, state.y + 1);
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(12);
-
-        // Move down after adding the name
-        state.y += 10;
-
-        // Add the image below the name
-        pdf.addImage(base64data, 'PNG', 15, state.y, imgWidth, imgHeight);
-        state.y += imgHeight + 10;
-
-        resolve();
-      }
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    })
-      .then(async () => {
-        // Helper function to add content
-        async function addContent(content, contentHeight) {
-          if (state.y + contentHeight > 280) {
-            pdf.addPage();
-            state.y = 20; // reset y to top of the new page
-          }
-          pdf.text(content, 10, state.y);
-          state.y += contentHeight;
+        pdf.line(10, pdfConfig.y, pdfConfig.pageWidth - 10, pdfConfig.y);
+        pdfConfig.y += 5;
+      },
+  
+      addContent: async function(content, height, style) {
+        if (pdfConfig.y + height > pdfConfig.pageHeight - 20) {
+          pdf.addPage();
+          pdfConfig.y = 20;
         }
-
-        // Description
-        var asanaDescription = asanasMap.get(asanaNameSelect.value);
-        var splitDescription = pdf.splitTextToSize(`Description: ${asanaDescription}`, 180);
-        await addContent(splitDescription, splitDescription.length * 8);
-
-        // Repetitions
-        await addContent(`Repetitions: ${repetitionsInput.value}`, 8);
-
-        // Special notes
-        var specialNotesText = `Special notes: ${specialNotesTextarea.value}`;
-        var splitNotes = pdf.splitTextToSize(specialNotesText, 180);
-        await addContent(splitNotes, splitNotes.length * 8);
-
-        state.y += 15;
-      });
+        this.applyStyle(style);
+        pdf.text(content, 10, pdfConfig.y);
+        pdfConfig.y += height + (style.marginBottom || 0);
+      },
+  
+      addAsanaToPdfInternal: async function(asanaDiv, asanasMap) {
+        var asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
+        if (!asanaNameSelect || !asanaNameSelect.value) {
+          console.log("No asana name found, skipping...");
+          return;
+        }
+  
+        var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
+        var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+  
+        const asanaDoc = await db.collection('asanas')
+          .where("name", "==", asanaNameSelect.value)
+          .get();
+          
+        if (asanaDoc.empty) {
+          console.log("No such asana found:", asanaNameSelect.value);
+          return;
+        }
+        
+        const asanaData = asanaDoc.docs[0].data();
+        let imageUrl = asanaData.imageUrl;
+        let displayName = asanaData.displayName || asanaData.name;
+  
+        try {
+          let response = await fetch(imageUrl);
+          let blob = await response.blob();
+  
+          return new Promise((resolve, reject) => {
+            let reader = new FileReader();
+            reader.onloadend = () => {
+              let base64data = reader.result;
+              let imgWidth = 45;
+              let imgHeight = 45;
+  
+              if (pdfConfig.y + imgHeight + 40 > pdfConfig.pageHeight) {
+                pdf.addPage();
+                pdfConfig.y = 20;
+              }
+  
+              // Add asana name with styling
+              this.applyStyle(pdfConfig.styles.asanaName);
+              pdf.text(displayName, 15, pdfConfig.y);
+              pdfConfig.y += 8;
+  
+              // Add image with a border
+              pdf.setDrawColor(189, 195, 199);
+              pdf.setLineWidth(0.3);
+              pdf.rect(15, pdfConfig.y, imgWidth, imgHeight);
+              pdf.addImage(base64data, 'PNG', 15, pdfConfig.y, imgWidth, imgHeight);
+              pdfConfig.y += imgHeight + 5;
+  
+              // Add description and details with proper styling
+              this.applyStyle(pdfConfig.styles.normal);
+              let description = asanasMap.get(asanaNameSelect.value);
+              if (description) {
+                let splitDescription = pdf.splitTextToSize(`Description: ${description}`, pdfConfig.pageWidth - 30);
+                pdf.text(splitDescription, 15, pdfConfig.y);
+                pdfConfig.y += splitDescription.length * 7 + 3;
+              }
+  
+              // Add repetitions and notes with subtle highlighting
+              if (repetitionsInput && repetitionsInput.value) {
+                pdf.setFillColor(247, 247, 247);
+                pdf.rect(15, pdfConfig.y - 4, pdfConfig.pageWidth - 30, 12, 'F');
+                pdf.text(`Repetitions: ${repetitionsInput.value}`, 15, pdfConfig.y);
+                pdfConfig.y += 8;
+              }
+  
+              if (specialNotesTextarea && specialNotesTextarea.value) {
+                let notesText = `Special notes: ${specialNotesTextarea.value}`;
+                let splitNotes = pdf.splitTextToSize(notesText, pdfConfig.pageWidth - 30);
+                pdf.text(splitNotes, 15, pdfConfig.y);
+                pdfConfig.y += splitNotes.length * 7 + 10;
+              }
+  
+              resolve();
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.error("Error processing asana:", error);
+          return Promise.resolve();
+        }
+      }
+    };
+  
+    // Add title
+    await helpers.addContent(`Sadhaka Report - ${sadhakaName}`, 10, pdfConfig.styles.title);
+    helpers.drawSeparator();
+  
+    // Process each category
+    for (let category of categories) {
+      // Add section header
+      await helpers.addContent(category.title, 8, pdfConfig.styles.sectionHeader);
+  
+      if (category.type === 'text') {
+        // Handle text content
+        var content = document.getElementById(category.id).value;
+        if (content && content.trim() !== '') {
+          var splitContent = pdf.splitTextToSize(content, pdfConfig.pageWidth - 20);
+          helpers.applyStyle(pdfConfig.styles.normal);
+          await helpers.addContent(splitContent, splitContent.length * 7, pdfConfig.styles.normal);
+        }
+        helpers.drawSeparator();
+      } 
+      else if (category.type === 'asanas') {
+        var containerDiv = document.getElementById(category.id);
+        if (containerDiv && containerDiv.children.length > 0) {
+          for (let i = 0; i < containerDiv.children.length; i++) {
+            await helpers.addAsanaToPdfInternal(containerDiv.children[i], asanasMap);
+            if (i < containerDiv.children.length - 1) {
+              pdf.setDrawColor(224, 224, 224);
+              pdf.setLineWidth(0.3);
+              pdf.line(20, pdfConfig.y, pdfConfig.pageWidth - 20, pdfConfig.y);
+              pdfConfig.y += 3;
+            }
+          }
+        }
+        helpers.drawSeparator();
+      }
+    }
+  
+    // Add footer
+    pdf.setFont("helvetica", "italic");
+    pdf.setFontSize(10);
+    pdf.setTextColor(128, 128, 128);
+    const date = new Date().toLocaleDateString();
+    pdf.text(`Generated on ${date}`, 10, pdfConfig.pageHeight - 10);
+  
+    pdf.save('Sadhaka_report.pdf');
   }
 
   function urlToDataUri(url) {
@@ -324,6 +384,40 @@ async function loadDefaultTexts() {
       option.value = name;
       sadhakaNameList.appendChild(option);
     });
+  }
+
+  
+  async function saveSadhakaToDB(sadhaka) {
+    if (!sadhaka.name) {
+      console.error('Error: sadhaka.name is not defined or is an empty string.');
+      return;
+    }
+  
+    try {
+      await db.collection('sadhakas').doc(sadhaka.name).set(sadhaka, { merge: true });
+      console.log('Sadhaka data has been saved with ID: ', sadhaka.name);
+    } catch (error) {
+      console.error('Error saving sadhaka: ', error);
+      throw error; // Re-throw to be caught by the calling function
+    }
+  }
+
+  function getAsanasFromDiv(div) {
+    var asanas = [];
+    if (!div) return asanas;
+  
+    for (let i = 0; i < div.children.length; i++) {
+      let asanaDiv = div.children[i];
+      let asana = {
+        asanaName: asanaDiv.querySelector('.asanaNameSelect')?.value || '',
+        repetitions: asanaDiv.querySelector('#repetitionsInput')?.value || '',
+        specialNotes: asanaDiv.querySelector('#specialNotesTextarea')?.value || ''
+      };
+      if (asana.asanaName) {
+        asanas.push(asana);
+      }
+    }
+    return asanas;
   }
 
   function sadhakaNameChanged(name) {
@@ -667,13 +761,12 @@ function clearSadhakaDiv() {
   }
 
 
-  // Modified saveSadhakaWithCategory function
-  function saveSadhakaWithCategory() {
+  async function saveSadhakaWithCategory() {
     var sadhakaName = sadhakaNameInput.value;
     var sadhaka = {
       name: sadhakaName
     };
-
+  
     categories.forEach(category => {
       if (category.type === 'text') {
         sadhaka[category.id] = document.getElementById(category.id).value;
@@ -681,51 +774,15 @@ function clearSadhakaDiv() {
         sadhaka[category.id] = getAsanasFromDiv(document.getElementById(category.id));
       }
     });
-
+  
     saveSadhakaToDB(sadhaka).then(() => {
       alert('Saved successfully!');
     }).catch((error) => {
       console.log("Error saving sadhaka:", error);
     });
   }
+  
 
-  function getAsanasFromDiv(div) {
-    var asanas = [];
-    for (let i = 0; i < div.children.length; i++) {
-      let asana = getAsanaFromDiv(div.children[i]);
-      asanas.push(asana);
-    }
-    return asanas;
-  }
-
-  async function saveSadhakaToDB(sadhaka) {
-    if (!sadhaka.name) {
-      console.error('Error: sadhaka.name is not defined or is an empty string.');
-      return;
-    }
-
-    try {
-      await db.collection('sadhakas').doc(sadhaka.name).set(sadhaka, { merge: true });
-      console.log('Sadhaka data has been saved with ID: ', sadhaka.name);
-    } catch (error) {
-      console.error('Error saving sadhaka: ', error);
-    }
-  }
-
-
-  function getAsanaFromDiv(div) {
-    //var div = document.getElementById(div.id);
-    var asanaNameSelect = div.querySelector('.asanaNameSelect');
-    var repetitionsInput = div.querySelector('#repetitionsInput');
-    var specialNotesTextarea = div.querySelector('#specialNotesTextarea');
-
-
-    return {
-      asanaName: asanaNameSelect.value,
-      repetitions: repetitionsInput.value,
-      specialNotes: specialNotesTextarea.value
-    };
-  }
 
   // Function to perform login
   function login() {
