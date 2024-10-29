@@ -740,7 +740,7 @@ async function loadDefaultTexts() {
   function initialize() {
     document.querySelector('.login-container').style.display = 'block';
     document.querySelector('#overlay').style.display = 'block';
-    Promise.all([loadAsanas(), loadSadhakaNames(), loadDefaultTexts])
+    Promise.all([loadAsanas(), loadSadhakaNames(), loadDefaultTexts()])
       .then(([fetchedAsanas, fetchedNames]) => {
         asanas = fetchedAsanas;  // Assign fetched asanas to global asanas array
         sadhakaNames = fetchedNames;
