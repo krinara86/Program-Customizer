@@ -109,7 +109,7 @@ async function loadDefaultTexts() {
     { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
     { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
     { id: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana' },
-    { id: 'breathingDiv', title: 'Breathing Asanas', type: 'asanas', category: 'Breathing' },
+    { id: 'breathingDiv', title: 'Breathing Exercises', type: 'asanas', category: 'Breathing' },
     { id: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana' },
     { id: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation' },
     { id: 'routineText', title: 'Routine', type: 'text' },
