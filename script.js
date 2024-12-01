@@ -117,224 +117,330 @@ async function loadDefaultTexts() {
     { id: 'dietAndAdditionalNotes', title: 'Diet and Additional Notes', type: 'text' }
   ];
 
-  async function saveSadhakaReportAsPdf() {
-    const asanasMap = await loadAsanasForPdf();
-    var pdf = new jsPDF();
-    var sadhakaName = document.getElementById('sadhakaName').value;
-    
-    const pdfConfig = {
-      y: 20,
-      pageWidth: pdf.internal.pageSize.width,
-      pageHeight: pdf.internal.pageSize.height,
-      styles: {
-        title: {
-          fontSize: 24,
-          fontStyle: 'bold',
-          textColor: [41, 128, 185],
-          marginBottom: 15
-        },
-        sectionHeader: {
-          fontSize: 16,
-          fontStyle: 'bold',
-          textColor: [52, 73, 94],
-          marginTop: 10,
-          marginBottom: 8
-        },
-        normal: {
-          fontSize: 12,
-          fontStyle: 'normal',
-          textColor: [0, 0, 0],
-          marginBottom: 5
-        },
-        asanaName: {
-          fontSize: 14,
-          fontStyle: 'bold',
-          textColor: [41, 128, 185],
-          marginBottom: 6
-        }
-      }
-    };
-  
-    const helpers = {
-      applyStyle: function(style) {
-        pdf.setFontSize(style.fontSize);
-        pdf.setFont("helvetica", style.fontStyle);
-        pdf.setTextColor(...style.textColor);
-      },
-  
-      drawSeparator: function() {
-        pdf.setDrawColor(189, 195, 199);
-        pdf.setLineWidth(0.5);
-        pdf.line(10, pdfConfig.y, pdfConfig.pageWidth - 10, pdfConfig.y);
-        pdfConfig.y += 5;
-      },
-  
-      addContent: async function(content, height, style) {
-        if (pdfConfig.y + height > pdfConfig.pageHeight - 20) {
-          pdf.addPage();
-          pdfConfig.y = 20;
-        }
-        this.applyStyle(style);
-        pdf.text(content, 10, pdfConfig.y);
-        pdfConfig.y += height + (style.marginBottom || 0);
-      },
-  
-      addAsanaToPdfInternal: async function(asanaDiv, asanasMap) {
-        var asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
-        if (!asanaNameSelect || !asanaNameSelect.value) {
-          console.log("No asana name found, skipping...");
-          return;
-        }
-  
-        var repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
-        var specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
-  
+  async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap) {
+    const asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
+    if (!asanaNameSelect || !asanaNameSelect.value) {
+        console.log("No asana name found, skipping...");
+        return pdfConfig.y;
+    }
+
+    const repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
+    const specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+    const asanaName = asanaNameSelect.value;
+
+    try {
+        // Fetch asana data from Firestore
         const asanaDoc = await db.collection('asanas')
-          .where("name", "==", asanaNameSelect.value)
-          .get();
-          
+            .where("name", "==", asanaName)
+            .get();
+            
         if (asanaDoc.empty) {
-          console.log("No such asana found:", asanaNameSelect.value);
-          return;
+            console.log("No such asana found:", asanaName);
+            return pdfConfig.y;
         }
         
         const asanaData = asanaDoc.docs[0].data();
-        let imageUrl = asanaData.imageUrl;
-        let displayName = asanaData.displayName || asanaData.name;
-  
-        try {
-          let response = await fetch(imageUrl);
-          let blob = await response.blob();
-  
-          return new Promise((resolve, reject) => {
-            let reader = new FileReader();
-            reader.onloadend = () => {
-              let base64data = reader.result;
-              let imgWidth = 45;
-              let imgHeight = 45;
-  
-              if (pdfConfig.y + imgHeight + 40 > pdfConfig.pageHeight) {
-                pdf.addPage();
-                pdfConfig.y = 20;
-              }
-  
-              // Add asana name with styling
-              this.applyStyle(pdfConfig.styles.asanaName);
-              pdf.text(displayName, 15, pdfConfig.y);
-              pdfConfig.y += 8;
-  
-              // Add image with a border
-              pdf.setDrawColor(189, 195, 199);
-              pdf.setLineWidth(0.3);
-              pdf.rect(15, pdfConfig.y, imgWidth, imgHeight);
-              pdf.addImage(base64data, 'PNG', 15, pdfConfig.y, imgWidth, imgHeight);
-              pdfConfig.y += imgHeight + 5;
-  
-              // Add description and details with proper styling
-              this.applyStyle(pdfConfig.styles.normal);
-              let description = asanasMap.get(asanaNameSelect.value);
-              if (description) {
-                let splitDescription = pdf.splitTextToSize(`Description: ${description}`, pdfConfig.pageWidth - 30);
-                pdf.text(splitDescription, 15, pdfConfig.y);
-                pdfConfig.y += splitDescription.length * 7 + 3;
-              }
-  
-              // Add repetitions and notes with subtle highlighting
-              if (repetitionsInput && repetitionsInput.value) {
-                pdf.setFillColor(247, 247, 247);
-                pdf.rect(15, pdfConfig.y - 4, pdfConfig.pageWidth - 30, 12, 'F');
-                pdf.text(`Repetitions: ${repetitionsInput.value}`, 15, pdfConfig.y);
-                pdfConfig.y += 8;
-              }
-  
-              if (specialNotesTextarea && specialNotesTextarea.value) {
-                let notesText = `Special notes: ${specialNotesTextarea.value}`;
-                let splitNotes = pdf.splitTextToSize(notesText, pdfConfig.pageWidth - 30);
-                pdf.text(splitNotes, 15, pdfConfig.y);
-                pdfConfig.y += splitNotes.length * 7 + 10;
-              }
-  
-              resolve();
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.error("Error processing asana:", error);
-          return Promise.resolve();
+        const imageUrl = asanaData.imageUrl;
+        const displayName = asanaData.displayName || asanaData.name;
+
+        // Check if we need a page break
+        const estimatedContentHeight = 100; // Approximate height for name, image, and description
+        if (pdfConfig.y + estimatedContentHeight > pdfConfig.pageHeight - pdfConfig.margin) {
+            pdf.addPage();
+            pdfConfig.y = pdfConfig.margin;
         }
-      }
-    };
+
+        // Add asana name
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(displayName, pdfConfig.margin, pdfConfig.y);
+        pdfConfig.y += 15;
+
+        // Add image if available
+        if (imageUrl) {
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                const base64data = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+
+                const imgWidth = 100;
+                const imgHeight = 100;
+                
+                pdf.addImage(base64data, 'PNG', pdfConfig.margin, pdfConfig.y, imgWidth, imgHeight);
+                pdfConfig.y += imgHeight + 10;
+            } catch (error) {
+                console.error("Error loading image:", error);
+            }
+        }
+
+        // Add description
+        const description = asanasMap.get(asanaName);
+        if (description) {
+            pdf.setFontSize(12);
+            pdf.setFont("helvetica", "normal");
+            const splitDescription = pdf.splitTextToSize(
+                `Description: ${description}`, 
+                pdfConfig.pageWidth - (2 * pdfConfig.margin)
+            );
+            pdf.text(splitDescription, pdfConfig.margin, pdfConfig.y);
+            pdfConfig.y += splitDescription.length * 15 + 10;
+        }
+
+        // Add repetitions if available
+        if (repetitionsInput && repetitionsInput.value) {
+            pdf.setFontSize(12);
+            pdf.setFont("helvetica", "bold");
+            pdf.text(`Repetitions: ${repetitionsInput.value}`, pdfConfig.margin, pdfConfig.y);
+            pdfConfig.y += 15;
+        }
+
+        // Add special notes if available
+        if (specialNotesTextarea && specialNotesTextarea.value) {
+            pdf.setFontSize(12);
+            pdf.setFont("helvetica", "italic");
+            const splitNotes = pdf.splitTextToSize(
+                `Special notes: ${specialNotesTextarea.value}`, 
+                pdfConfig.pageWidth - (2 * pdfConfig.margin)
+            );
+            pdf.text(splitNotes, pdfConfig.margin, pdfConfig.y);
+            pdfConfig.y += splitNotes.length * 15 + 10;
+        }
+
+        // Add some padding after each asana
+        pdfConfig.y += 10;
+
+        return pdfConfig.y;
+
+    } catch (error) {
+        console.error("Error processing asana:", error);
+        return pdfConfig.y;
+    }
+}
+
+async function saveSadhakaReportAsPdf() {
+  const asanasMap = await loadAsanasForPdf();
+  const pdf = new jsPDF('p', 'pt', 'a4');
+  const sadhakaName = document.getElementById('sadhakaName').value;
   
-    // Add title
-    await helpers.addContent(`Sadhaka Report - ${sadhakaName}`, 10, pdfConfig.styles.title);
-    helpers.drawSeparator();
+  // PDF configuration
+  const pdfConfig = {
+      pageWidth: pdf.internal.pageSize.width,
+      pageHeight: pdf.internal.pageSize.height,
+      margin: 40
+  };
+
+  // Store section starts for ToC
+  const sectionPages = [];
+  let currentPage = 1;
+
+  // Title Page (page 1)
+  const logoImg = document.querySelector('.logo');
+  if (logoImg) {
+      const canvas = await html2canvas(logoImg);
+      const logoData = canvas.toDataURL('image/png');
+      const logoWidth = 200;
+      const logoHeight = (logoWidth * canvas.height) / canvas.width;
+      const logoX = (pdfConfig.pageWidth - logoWidth) / 2;
+      pdf.addImage(logoData, 'PNG', logoX, 100, logoWidth, logoHeight);
+  }
+
+  const centerX = pdfConfig.pageWidth / 2;
+
+  pdf.setFontSize(24);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(41, 128, 185);
+  const mainTitle = "Personal Sadhana Plan";
+  pdf.text(mainTitle, centerX - (mainTitle.length * 24/2)/2, 300);
   
-    // Process each category
-    for (let category of categories) {
+  pdf.setFontSize(20);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(52, 73, 94);
+  const subtitle = `for ${sadhakaName}`;
+  pdf.text(subtitle, centerX - (subtitle.length * 20/2)/2, 350);
+
+  pdf.setFontSize(12);
+  const date = new Date().toLocaleDateString();
+  const dateText = `Created on ${date}`;
+  pdf.text(dateText, centerX - (dateText.length * 12/2)/2, 400);
+
+  // Contents Page (page 2)
+  pdf.addPage();
+  currentPage++;
+  let tocY = pdfConfig.margin;
+
+  pdf.setFontSize(20);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(41, 128, 185);
+  const contentsTitle = "Contents";
+  pdf.text(contentsTitle, centerX - (contentsTitle.length * 20/2)/2, tocY);
+  tocY += 40;
+
+  // Skip contents entries for now - we'll come back to fill them
+  const tocStartPage = currentPage;
+
+  // Process each category starting from page 3
+  pdf.addPage();
+  currentPage++;
+
+  // Generate content and track page numbers
+  for (const category of categories) {
+      sectionPages.push({
+          title: category.title,
+          page: currentPage
+      });
+
+      let y = pdfConfig.margin;
+
       // Add section header
-      await helpers.addContent(category.title, 8, pdfConfig.styles.sectionHeader);
-  
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(52, 73, 94);
+      pdf.text(category.title, pdfConfig.margin, y);
+      y += 30;
+
       if (category.type === 'text') {
-        // Handle text content
-        var content = document.getElementById(category.id).value;
-        if (content && content.trim() !== '') {
-          var splitContent = pdf.splitTextToSize(content, pdfConfig.pageWidth - 20);
-          helpers.applyStyle(pdfConfig.styles.normal);
-          await helpers.addContent(splitContent, splitContent.length * 7, pdfConfig.styles.normal);
-        }
-        helpers.drawSeparator();
+          const content = document.getElementById(category.id).value;
+          if (content && content.trim() !== '') {
+              pdf.setFontSize(12);
+              pdf.setFont("helvetica", "normal");
+              pdf.setTextColor(0, 0, 0);
+              const splitContent = pdf.splitTextToSize(content, pdfConfig.pageWidth - (2 * pdfConfig.margin));
+              pdf.text(splitContent, pdfConfig.margin, y);
+              y += splitContent.length * 15 + 20;
+          }
       } 
       else if (category.type === 'asanas') {
-        var containerDiv = document.getElementById(category.id);
-        if (containerDiv && containerDiv.children.length > 0) {
-          for (let i = 0; i < containerDiv.children.length; i++) {
-            await helpers.addAsanaToPdfInternal(containerDiv.children[i], asanasMap);
-            if (i < containerDiv.children.length - 1) {
-              pdf.setDrawColor(224, 224, 224);
-              pdf.setLineWidth(0.3);
-              pdf.line(20, pdfConfig.y, pdfConfig.pageWidth - 20, pdfConfig.y);
-              pdfConfig.y += 3;
-            }
+          const containerDiv = document.getElementById(category.id);
+          if (containerDiv && containerDiv.children.length > 0) {
+              for (let i = 0; i < containerDiv.children.length; i++) {
+                  const newY = await addAsanaContent(pdf, containerDiv.children[i], {
+                      ...pdfConfig,
+                      y: y
+                  }, asanasMap);
+                  
+                  y = newY;
+
+                  if (y > pdfConfig.pageHeight - 100 && i < containerDiv.children.length - 1) {
+                      pdf.addPage();
+                      currentPage++;
+                      y = pdfConfig.margin;
+                  }
+              }
           }
-        }
-        helpers.drawSeparator();
       }
-    }
-  
-    // Add footer
-    pdf.setFont("helvetica", "italic");
-    pdf.setFontSize(10);
-    pdf.setTextColor(128, 128, 128);
-    const date = new Date().toLocaleDateString();
-    pdf.text(`Generated on ${date}`, 10, pdfConfig.pageHeight - 10);
-  
-    // Add a new page for liability statement
-    pdf.addPage();
-    pdfConfig.y = 20;
-  
-    // Add Liability Statement header
-    helpers.applyStyle(pdfConfig.styles.sectionHeader);
-    await helpers.addContent("Liability Statement", 8, pdfConfig.styles.sectionHeader);
-    helpers.drawSeparator();
-  
-    // Add liability text with special styling
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    pdf.setTextColor(51, 51, 51);
-    
-    const splitLiability = pdf.splitTextToSize(LIABILITY_STATEMENT, pdfConfig.pageWidth - 20);
-    pdf.text(splitLiability, 10, pdfConfig.y);
-    
-    // Add footer after liability
-    pdfConfig.y = pdfConfig.pageHeight - 10;
-    pdf.setFont("helvetica", "italic");
-    pdf.setFontSize(10);
-    pdf.setTextColor(128, 128, 128);
-    pdf.text(`Generated on ${date}`, 10, pdfConfig.y);
-  
-    pdf.save('Sadhaka_report.pdf');
+
+      // New page for next section
+      pdf.addPage();
+      currentPage++;
   }
+
+  // Add liability page
+  sectionPages.push({
+      title: "Liability Statement",
+      page: currentPage
+  });
+
+  pdf.setFontSize(16);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Liability Statement", pdfConfig.margin, pdfConfig.margin);
+  
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica", "normal");
+  const splitLiability = pdf.splitTextToSize(LIABILITY_STATEMENT, pdfConfig.pageWidth - (2 * pdfConfig.margin));
+  pdf.text(splitLiability, pdfConfig.margin, pdfConfig.margin + 30);
+
+  // Go back and fill in the contents page
+  pdf.setPage(tocStartPage);
+  tocY = pdfConfig.margin + 40;  // Start below "Contents" title
+
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(0, 0, 0);
+
+  sectionPages.forEach((section, index) => {
+      const pageText = `${section.page}`;
+      const sectionText = `${index + 1}. ${section.title}`;
+      
+      // Draw dots between text and page number
+      const dotsCount = 70;
+      const dots = '.'.repeat(dotsCount);
+      
+      // Position text, dots, and page number
+      pdf.text(sectionText, pdfConfig.margin, tocY);
+      pdf.text(dots, pdfConfig.margin + 200, tocY);
+      pdf.text(pageText, pdfConfig.pageWidth - pdfConfig.margin - 20, tocY);
+      
+      tocY += 25;
+  });
+
+  // Add page numbers to all pages except title and contents
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let i = 3; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(10);
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(`Page ${i-2}`, pdfConfig.pageWidth - 100, pdfConfig.pageHeight - 30);
+  }
+
+  pdf.save(`${sadhakaName}_sadhana_plan.pdf`);
+}
+
+async function addSection(pdf, category, pdfConfig, asanasMap) {
+    // Add section header
+    pdf.setFontSize(pdfConfig.styles.sectionHeader.fontSize);
+    pdf.setFont("helvetica", pdfConfig.styles.sectionHeader.fontStyle);
+    pdf.setTextColor(...pdfConfig.styles.sectionHeader.textColor);
+    pdf.text(category.title, pdfConfig.margin, pdfConfig.y);
+    pdfConfig.y += 20;
+
+    if (category.type === 'text') {
+        const content = document.getElementById(category.id).value;
+        if (content && content.trim() !== '') {
+            pdf.setFontSize(12);
+            pdf.setFont("helvetica", "normal");
+            const splitContent = pdf.splitTextToSize(content, pdfConfig.pageWidth - (2 * pdfConfig.margin));
+            pdf.text(splitContent, pdfConfig.margin, pdfConfig.y);
+            pdfConfig.y += splitContent.length * 15 + 20;
+        }
+    } 
+    else if (category.type === 'asanas') {
+        const containerDiv = document.getElementById(category.id);
+        if (containerDiv && containerDiv.children.length > 0) {
+            for (let i = 0; i < containerDiv.children.length; i++) {
+                pdfConfig.y = await addAsanaContent(pdf, containerDiv.children[i], pdfConfig, asanasMap);
+                
+                // Add separator between asanas
+                if (i < containerDiv.children.length - 1) {
+                    pdf.setDrawColor(224, 224, 224);
+                    pdf.line(
+                        pdfConfig.margin, 
+                        pdfConfig.y - 10, 
+                        pdfConfig.pageWidth - pdfConfig.margin, 
+                        pdfConfig.y - 10
+                    );
+                    pdfConfig.y += 10;
+                }
+            }
+        }
+    }
+
+    // Add section separator
+    pdf.setDrawColor(189, 195, 199);
+    pdf.setLineWidth(0.5);
+    pdf.line(
+        pdfConfig.margin, 
+        pdfConfig.y + 10, 
+        pdfConfig.pageWidth - pdfConfig.margin, 
+        pdfConfig.y + 10
+    );
+    pdfConfig.y += 30;
+
+    return pdfConfig.y;
+}
 
   function urlToDataUri(url) {
     return fetch(url)
