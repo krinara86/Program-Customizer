@@ -933,43 +933,47 @@ function clearSadhakaDiv() {
   
 
 
-  // Function to perform login
+  let currentUser = null;
+
   function login() {
-    // Get the input values from the login form
     const usernameInput = document.getElementById('username').value;
     const passwordInput = document.getElementById('password').value;
-
-    // Fetch the login credentials from Firestore
+  
     const db = firebase.firestore();
-    db.collection("login").get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const loginData = doc.data();
-        const hardcodedUsername = loginData.id;
-        const hardcodedPassword = loginData.password;
-
-        // Check if the input matches the fetched credentials
-        if (usernameInput === hardcodedUsername && passwordInput === hardcodedPassword) {
+    db.collection("login")
+      .where("id", "==", usernameInput)
+      .get()
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          alert("Invalid username or password. Please try again.");
+          return;
+        }
+  
+        const loginData = querySnapshot.docs[0].data();
+        if (passwordInput === loginData.password) {
+          currentUser = loginData;  // Store the current user info
           alert("Login successful!");
-
-          // Hide the login container and the overlay
+  
           const loginContainer = document.querySelector('.login-container');
           const overlay = document.querySelector('#overlay');
           loginContainer.style.visibility = 'hidden';
           overlay.style.visibility = 'hidden';
-
-          // Remove the 'blocked' class from the body to enable interaction
+  
           document.body.classList.remove('blocked');
-
-          // Load the main content after successful login
+  
+          // Show/hide manage users button based on admin status
+          const manageUsersBtn = document.querySelector('[onclick="showUserManagement()"]');
+          manageUsersBtn.style.display = loginData.isAdmin ? 'block' : 'none';
+  
           initialize();
         } else {
-          // Show a popup or modal for incorrect credentials (optional)
           alert("Invalid username or password. Please try again.");
         }
+      })
+      .catch((error) => {
+        console.log("Error checking login credentials:", error);
+        alert("An error occurred during login. Please try again.");
       });
-    }).catch((error) => {
-      console.log("Error fetching login credentials:", error);
-    });
   }
 
 
@@ -1069,5 +1073,132 @@ function clearSadhakaDiv() {
     }
   }
 
+  async function initializeDefaultUsers() {
+    const defaultUsers = [
+      { id: 'radhikama', password: 'samaya', isAdmin: true }
+    ];
+  
+    for (const user of defaultUsers) {
+      const userDoc = await db.collection('login').doc(user.id).get();
+      if (!userDoc.exists) {
+        await db.collection('login').doc(user.id).set(user);
+      }
+    }
+  }
+
+  async function loadUsers() {
+    const usersTableBody = document.getElementById('usersTableBody');
+    usersTableBody.innerHTML = '';
+  
+    try {
+      const snapshot = await db.collection('login').get();
+      snapshot.forEach((doc) => {
+        const userData = doc.data();
+        const row = document.createElement('tr');
+        
+        const nameCell = document.createElement('td');
+        nameCell.textContent = userData.id;
+        
+        const adminCell = document.createElement('td');
+        adminCell.textContent = userData.isAdmin ? 'Admin' : 'User';
+        
+        const actionCell = document.createElement('td');
+        if (userData.id !== 'radhikama' && userData.id !== 'samaya') {
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.onclick = () => deleteUser(userData.id);
+          actionCell.appendChild(deleteButton);
+        }
+  
+        row.appendChild(nameCell);
+        row.appendChild(adminCell);
+        row.appendChild(actionCell);
+        usersTableBody.appendChild(row);
+      });
+    } catch (error) {
+      showUserMessage('Error loading users: ' + error.message, true);
+    }
+  }
+
+async function addUser() {
+  const username = document.getElementById('newUsername').value;
+  const password = document.getElementById('newPassword').value;
+  const isAdmin = document.getElementById('isAdmin').checked;
+
+  if (!username || !password) {
+    showUserMessage('Please enter both username and password', true);
+    return;
+  }
+
+  try {
+    await db.collection('login').doc(username).set({
+      id: username,
+      password: password,
+      isAdmin: isAdmin
+    });
+    
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('isAdmin').checked = false;
+    showUserMessage('User added successfully');
+    loadUsers();
+  } catch (error) {
+    showUserMessage('Error adding user: ' + error.message, true);
+  }
+}
+// Delete user
+async function deleteUser(userId) {
+  if (userId === 'radhikama' || userId === 'samaya') {
+    showUserMessage('Cannot delete default users', true);
+    return;
+  }
+
+  try {
+    await db.collection('login').doc(userId).delete();
+    showUserMessage('User deleted successfully');
+    loadUsers();
+  } catch (error) {
+    showUserMessage('Error deleting user: ' + error.message, true);
+  }
+}
+
+// Show user message
+function showUserMessage(message, isError = false) {
+  const messageDiv = document.getElementById('userMessage');
+  messageDiv.textContent = message;
+  messageDiv.style.color = isError ? 'red' : 'green';
+  setTimeout(() => {
+    messageDiv.textContent = '';
+  }, 3000);
+}
+
+function showUserManagement() {
+  if (!currentUser?.isAdmin) {
+    alert("You don't have permission to access user management.");
+    return;
+  }
+  
+  const modal = document.getElementById('userManagementModal');
+  modal.style.display = 'block';
+  loadUsers();
+}
+
+function closeUserManagementModal() {
+  const modal = document.getElementById('userManagementModal');
+  modal.style.display = 'none';
+}
+
+// Initialize default users when the application starts
+document.addEventListener('DOMContentLoaded', () => {
+  initializeDefaultUsers();
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('userManagementModal');
+  if (event.target == modal) {
+    closeUserManagementModal();
+  }
+}
 
   window.onload = initialize;

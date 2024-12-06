@@ -22,13 +22,55 @@
 <body>
   <div id="overlay"></div>
 
-  <!-- Login Window -->
-  <div class="login-container">
+   <!-- Login Window -->
+   <div class="login-container">
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
   </div>
+
+  <!-- User Management Modal -->
+  <div id="userManagementModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeUserManagementModal()">&times;</span>
+      <h2>User Management</h2>
+      
+      <!-- Add User Form -->
+<div class="user-form">
+  <input type="text" id="newUsername" placeholder="Username">
+  <input type="password" id="newPassword" placeholder="Password">
+  <div style="margin: 10px 0;">
+    <input type="checkbox" id="isAdmin">
+    <label for="isAdmin">Admin User</label>
+  </div>
+  <button onclick="addUser()">Add User</button>
+</div>
+
+      <!-- Message Display -->
+      <div id="userMessage" style="margin: 10px 0;"></div>
+
+      <!-- Users List -->
+      <div id="usersList">
+        <h3>Current Users</h3>
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- Users will be listed here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add a button to open user management -->
+  <button onclick="showUserManagement()" style="margin: 10px;">Manage Users</button>
   <div class="logo-title-container">
     <img
       src="https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png"
