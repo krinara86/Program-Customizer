@@ -954,12 +954,21 @@ function clearSadhakaDiv() {
           currentUser = loginData;  // Store the current user info
           alert("Login successful!");
   
+          // Hide both login container and overlay properly
           const loginContainer = document.querySelector('.login-container');
           const overlay = document.querySelector('#overlay');
+          
+          // Hide both elements completely
+          loginContainer.style.display = 'none';
           loginContainer.style.visibility = 'hidden';
+          overlay.style.display = 'none';
           overlay.style.visibility = 'hidden';
   
-          document.body.classList.remove('blocked');
+          // Show logged in user info
+          const loginStatus = document.getElementById('loginStatus');
+          const loggedInUser = document.getElementById('loggedInUser');
+          loggedInUser.textContent = loginData.id;
+          loginStatus.style.display = 'block';
   
           // Show/hide manage users button based on admin status
           const manageUsersBtn = document.querySelector('[onclick="showUserManagement()"]');
@@ -1095,17 +1104,37 @@ function clearSadhakaDiv() {
       snapshot.forEach((doc) => {
         const userData = doc.data();
         const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #ddd';
         
         const nameCell = document.createElement('td');
         nameCell.textContent = userData.id;
+        nameCell.style.padding = '12px';
+        nameCell.style.border = '1px solid #ddd';
         
         const adminCell = document.createElement('td');
         adminCell.textContent = userData.isAdmin ? 'Admin' : 'User';
+        adminCell.style.padding = '12px';
+        adminCell.style.border = '1px solid #ddd';
         
         const actionCell = document.createElement('td');
+        actionCell.style.padding = '12px';
+        actionCell.style.border = '1px solid #ddd';
+        
         if (userData.id !== 'radhikama' && userData.id !== 'samaya') {
           const deleteButton = document.createElement('button');
           deleteButton.textContent = 'Delete';
+          deleteButton.style.padding = '6px 12px';
+          deleteButton.style.backgroundColor = '#ff4444';
+          deleteButton.style.color = 'white';
+          deleteButton.style.border = 'none';
+          deleteButton.style.borderRadius = '4px';
+          deleteButton.style.cursor = 'pointer';
+          deleteButton.onmouseover = function() {
+            this.style.backgroundColor = '#cc0000';
+          };
+          deleteButton.onmouseout = function() {
+            this.style.backgroundColor = '#ff4444';
+          };
           deleteButton.onclick = () => deleteUser(userData.id);
           actionCell.appendChild(deleteButton);
         }
@@ -1118,7 +1147,7 @@ function clearSadhakaDiv() {
     } catch (error) {
       showUserMessage('Error loading users: ' + error.message, true);
     }
-  }
+  } 
 
 async function addUser() {
   const username = document.getElementById('newUsername').value;
@@ -1162,13 +1191,22 @@ async function deleteUser(userId) {
   }
 }
 
-// Show user message
 function showUserMessage(message, isError = false) {
   const messageDiv = document.getElementById('userMessage');
   messageDiv.textContent = message;
-  messageDiv.style.color = isError ? 'red' : 'green';
+  messageDiv.style.padding = '10px';
+  messageDiv.style.marginTop = '10px';
+  messageDiv.style.marginBottom = '10px';
+  messageDiv.style.borderRadius = '4px';
+  messageDiv.style.backgroundColor = isError ? '#ffe6e6' : '#e6ffe6';
+  messageDiv.style.color = isError ? '#cc0000' : '#006600';
+  messageDiv.style.border = `1px solid ${isError ? '#ffcccc' : '#ccffcc'}`;
+  
   setTimeout(() => {
     messageDiv.textContent = '';
+    messageDiv.style.padding = '0';
+    messageDiv.style.border = 'none';
+    messageDiv.style.backgroundColor = 'transparent';
   }, 3000);
 }
 

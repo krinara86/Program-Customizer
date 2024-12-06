@@ -18,7 +18,10 @@
 <link href="styles.css" rel="stylesheet">
 <script src="script.js" defer></script>
 </head>
-
+<!-- Add this right after the opening <body> tag, before the overlay div -->
+  <div id="loginStatus" style="position: absolute; top: 10px; right: 20px; font-size: 14px; color: #333; display: none;">
+    Logged in as: <span id="loggedInUser" style="font-weight: bold;"></span>
+  </div>
 <body>
   <div id="overlay"></div>
 
@@ -30,47 +33,47 @@
     <button onclick="login()">Login</button>
   </div>
 
-  <!-- User Management Modal -->
-  <div id="userManagementModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span class="close" onclick="closeUserManagementModal()">&times;</span>
-      <h2>User Management</h2>
-      
-      <!-- Add User Form -->
-<div class="user-form">
-  <input type="text" id="newUsername" placeholder="Username">
-  <input type="password" id="newPassword" placeholder="Password">
-  <div style="margin: 10px 0;">
-    <input type="checkbox" id="isAdmin">
-    <label for="isAdmin">Admin User</label>
-  </div>
-  <button onclick="addUser()">Add User</button>
-</div>
-
-      <!-- Message Display -->
-      <div id="userMessage" style="margin: 10px 0;"></div>
-
-      <!-- Users List -->
-      <div id="usersList">
-        <h3>Current Users</h3>
-        <table id="usersTable">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Role</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody">
-            <!-- Users will be listed here -->
-          </tbody>
-        </table>
+ <!-- User Management Modal -->
+<div id="userManagementModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close" onclick="closeUserManagementModal()">&times;</span>
+    <h2>User Management</h2>
+    
+    <!-- Add User Form -->
+    <div class="user-form" style="border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+      <input type="text" id="newUsername" placeholder="Username" style="margin-bottom: 10px; padding: 8px; width: 200px;">
+      <input type="password" id="newPassword" placeholder="Password" style="margin-bottom: 10px; padding: 8px; width: 200px;">
+      <div style="margin: 10px 0;">
+        <input type="checkbox" id="isAdmin" style="margin-right: 5px; vertical-align: left;">
+        <label for="isAdmin" style="vertical-align: left;">Admin User</label>
       </div>
+      <button onclick="addUser()" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Add User</button>
+    </div>
+
+    <!-- Message Display -->
+    <div id="userMessage" style="margin: 10px 0;"></div>
+
+    <!-- Users List -->
+    <div id="usersList">
+      <h3>Current Users</h3>
+      <table id="usersTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <thead>
+          <tr style="background-color: #f5f5f5;">
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Username</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Role</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <!-- Users will be listed here -->
+        </tbody>
+      </table>
     </div>
   </div>
+</div>
 
-  <!-- Add a button to open user management -->
-  <button onclick="showUserManagement()" style="margin: 10px;">Manage Users</button>
+<!-- Add the Manage Users button -->
+<button onclick="showUserManagement()" style="margin: 10px;">Manage Users</button>
   <div class="logo-title-container">
     <img
       src="https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png"
