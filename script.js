@@ -158,25 +158,25 @@ async function loadDefaultTexts() {
 
         // Add image if available
         if (imageUrl) {
-            try {
-                const response = await fetch(imageUrl);
-                const blob = await response.blob();
-                const base64data = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                });
-
-                const imgWidth = 100;
-                const imgHeight = 100;
-                
-                pdf.addImage(base64data, 'PNG', pdfConfig.margin, pdfConfig.y, imgWidth, imgHeight);
-                pdfConfig.y += imgHeight + 10;
-            } catch (error) {
-                console.error("Error loading image:", error);
-            }
-        }
-
+          try {
+              const response = await fetch(imageUrl);
+              const blob = await response.blob();
+              const base64data = await new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result);
+                  reader.readAsDataURL(blob);
+              });
+      
+              const imgWidth = 100;
+              const imgHeight = 100;
+              
+              pdf.addImage(base64data, 'PNG', pdfConfig.margin, pdfConfig.y, imgWidth, imgHeight);
+              pdfConfig.y += imgHeight + 10;
+          } catch (error) {
+              console.error("Error loading image:", error);
+          }
+      }
+      
         // Add description
         const description = asanasMap.get(asanaName);
         if (description) {

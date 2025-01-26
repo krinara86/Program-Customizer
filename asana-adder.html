@@ -410,11 +410,7 @@
           await selectedAsana.ref.update(asanaData);
           alert("Asana updated successfully!");
         } else {
-          // Add new asana
-          if (!imageUrl) {
-            alert("Please select an image for the new asana.");
-            return;
-          }
+        
           await asanasRef.add(asanaData);
           alert("New asana added successfully!");
         }
