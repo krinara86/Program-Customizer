@@ -1,3 +1,14 @@
+const defaultPrayerText = `In the Samaya Tradition we are taught to pray in our own words. So instead of repeating prayers in dead languages out of scriptures or translations of the same, you can have a conversation with the Divine in your mother tongue or your primary language. This Samaya prayer is a form of internal dialogue. You can use internal dialogue to converse with the Divine in your own language, in your own words. Since the Divinity within is subtler than the subtlest, it is hard for most of us to have a conversation with it. Therefore, you can relate to the Divinity in yourself as your mother, father, master, friend or lover. Some prefer to relate to the Divinity within as a teacher or guiding light.
+While there may be many different kinds of prayers asking for fulfillment of worldly desires, the following prayers described here are those recommended by the Samaya tradition.
+A prayer of petition: This is the most important prayer for those who start systematic meditation. You are praying for sankalpa shakti, that is, for the determination and will power to continue on this path. Pray four times daily before practice asking for internal strength and guidance on this inner journey. Ask the Divinity within you for courage to continue on the path of Truth. Remember, when you practice with full commitment you are always protected. Even if you do not do any systematic meditation practice, you can still pray four times a day.
+A prayer of thanksgiving: The second kind of prayer is an expression of gratitude for all the good and beautiful gifts you have, including your body. To have a human body and live out desires on this plane of existence is a privilege. We all tend to get gloomy in the face of troubles and problems, but instead of becoming negative you learn to focus on the good and beautiful in your life by counting your blessings. Express your gratitude for the good and beautiful in your life before or after your systematic meditation practice four times daily. If you do not practice, you can still express gratitude to the Divinity within at least once a day.
+How to pray
+When should I pray? Most of us only pray when we are anxious and in trouble. However, best practice is to pray daily, even four times a day, as many religions prescribe. The timings of prayer should not conflict with your general routine. Meal times are anchors in everyone’s day, so you can pray in the morning before breakfast, at midday before lunch, at dusk before an early evening meal and a fourth time before bedtime. Those who practice systematic meditation four times a day, can add a short prayer before and after the meditation practice.
+To whom shall I pray? If you are unable to develop a relationship with the Divinity within you, then you can pray to a deity that you are drawn to, keeping in mind that deities are auspicious symbols. You can also pray to saints and sages. In the Samaya tradition, internal prayer is preferred. The Divinity within is God without attributes (nirguna brahman). Sages, saints and deities are God with attributes (saguna brahman). The choice between the two depends on the nature of your mind and what you feel drawn to. 
+Where shall I pray? While it is common to pray in a house of worship or in front of an altar at home, you can pray anywhere. According to the Samaya tradition there is no inauspicious place and if you believe a place to be inauspicious, prayer will surely purify it and make it auspicious. It is recommended to have a fixed area or space at home for prayer. An altar is not necessary.
+What is the best posture for prayer? You can pray in any posture you like, standing, seated or even lying down. While the supine position is only recommended if you are unwell or have a physical disability, the standing and seated positions are a matter of preference. If you chose to have a seated position you can sit on a chair with your back straight or on a meditation mat.
+`;
+
 
 const LIABILITY_STATEMENT = `This document has not been created by a medical doctor or healing practitioner. Therefore, please perform all practices mentioned in this document at your own discretion. 
 
@@ -626,12 +637,12 @@ function clearSadhakaDiv() {
   var meditationDiv = document.getElementById('meditationDiv');
   meditationDiv.innerHTML = '';
   
-  // Set default texts for diet and routine
+  // Set default texts
+  document.getElementById('prayerText').value = defaultPrayerText;
   document.getElementById('dietAndAdditionalNotes').value = defaultDietText;
   document.getElementById('routineText').value = defaultRoutineText;
   document.getElementById('advisoryText').value = '';
 }
-
 
 
 function createAsanaDivWithCategory(asana, category) {
@@ -875,6 +886,14 @@ function createAsanaDivWithCategory(asana, category) {
     // Position the description next to the infoButton
     asanaDescriptionDiv.style.top = infoButtonTop + 'px';
     asanaDescriptionDiv.style.left = (infoButtonLeft + infoButton.offsetWidth) + 'px';
+
+    // Add click event handler to document
+    document.addEventListener('click', function hideDescription(e) {
+      if (!asanaDescriptionDiv.contains(e.target) && !infoButton.contains(e.target)) {
+        asanaDescriptionDiv.style.display = 'none';
+        document.removeEventListener('click', hideDescription);
+      }
+    });
   }
 
   function hideAsanaDescription() {
