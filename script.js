@@ -608,6 +608,202 @@ async function addSection(pdf, category, pdfConfig, asanasMap) {
     return asanas;
 }
 
+async function deleteSadhaka() {
+  const sadhakaName = document.getElementById('sadhakaName').value;
+  
+  if (!sadhakaName) {
+    alert('Please select a sadhaka to delete');
+    return;
+  }
+
+  if (confirm(`Are you sure you want to delete ${sadhakaName}?`)) {
+    try {
+      await db.collection('sadhakas').doc(sadhakaName).delete();
+      alert('Sadhaka deleted successfully');
+      
+      // Update the sadhaka names list
+      sadhakaNames = sadhakaNames.filter(name => name !== sadhakaName);
+      populateSadhakaNameList();
+      
+      // Clear the form
+      document.getElementById('sadhakaName').value = '';
+      clearSadhakaDiv();
+    } catch (error) {
+      console.error('Error deleting sadhaka:', error);
+      alert('Error deleting sadhaka');
+    }
+  }
+}
+
+function toggleMultiSelect() {
+  const container = document.getElementById('multiSelectContainer');
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    populateMultiSelect();
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function populateMultiSelect() {
+  const container = document.getElementById('sadhakaCheckboxes');
+  container.innerHTML = '';
+  
+  sadhakaNames.forEach(name => {
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.gap = '8px';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = name;
+    checkbox.id = `sadhaka-${name}`;
+    
+    const label = document.createElement('label');
+    label.htmlFor = `sadhaka-${name}`;
+    label.textContent = name;
+    
+    div.appendChild(checkbox);
+    div.appendChild(label);
+    container.appendChild(div);
+  });
+}
+
+async function deleteSelectedSadhakas() {
+  const selected = Array.from(document.querySelectorAll('#sadhakaCheckboxes input:checked'))
+    .map(cb => cb.value);
+  
+  if (selected.length === 0) {
+    alert('Please select at least one sadhaka to delete');
+    return;
+  }
+  
+  if (confirm(`Are you sure you want to delete ${selected.length} sadhaka(s)?`)) {
+    try {
+      const batch = db.batch();
+      selected.forEach(name => {
+        const ref = db.collection('sadhakas').doc(name);
+        batch.delete(ref);
+      });
+      
+      await batch.commit();
+      alert('Selected sadhakas deleted successfully');
+      
+      // Update the sadhaka names list
+      sadhakaNames = sadhakaNames.filter(name => !selected.includes(name));
+      populateSadhakaNameList();
+      
+      // Clear the form and multi-select
+      document.getElementById('sadhakaName').value = '';
+      clearSadhakaDiv();
+      toggleMultiSelect();
+    } catch (error) {
+      console.error('Error deleting sadhakas:', error);
+      alert('Error deleting sadhakas');
+    }
+  }
+}
+
+function showMultiDeleteModal() {
+  const modal = document.getElementById('multiDeleteModal');
+  modal.style.display = 'block';
+  populateSadhakaCheckboxes();
+}
+
+function closeMultiDeleteModal() {
+  const modal = document.getElementById('multiDeleteModal');
+  modal.style.display = 'none';
+}
+
+function populateSadhakaCheckboxes() {
+  const container = document.getElementById('sadhakaCheckboxList');
+  container.innerHTML = '';
+  
+  sadhakaNames.forEach(name => {
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.padding = '4px 0';
+    div.style.width = '100%';  // Ensure full width
+    
+    const checkboxWrapper = document.createElement('div');
+    checkboxWrapper.style.width = '24px';  // Fixed width for checkbox area
+    checkboxWrapper.style.display = 'flex';
+    checkboxWrapper.style.justifyContent = 'center';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = name;
+    checkbox.id = `sadhaka-${name}`;
+    checkboxWrapper.appendChild(checkbox);
+    
+    const label = document.createElement('label');
+    label.htmlFor = `sadhaka-${name}`;
+    label.textContent = name;
+    label.style.marginLeft = '8px';
+    label.style.flex = '1';  // Take remaining space
+    
+    div.appendChild(checkboxWrapper);
+    div.appendChild(label);
+    container.appendChild(div);
+  });
+
+  // Add search functionality
+  document.getElementById('sadhakaSearchInput').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const checkboxDivs = container.children;
+    
+    Array.from(checkboxDivs).forEach(div => {
+      const label = div.querySelector('label');
+      const shouldShow = label.textContent.toLowerCase().includes(searchText);
+      div.style.display = shouldShow ? 'flex' : 'none';
+    });
+  });
+}
+
+async function deleteSelectedSadhakas() {
+  const selected = Array.from(document.querySelectorAll('#sadhakaCheckboxList input:checked'))
+    .map(cb => cb.value);
+  
+  if (selected.length === 0) {
+    alert('Please select at least one sadhaka to delete');
+    return;
+  }
+  
+  if (confirm(`Are you sure you want to delete ${selected.length} sadhaka(s)?`)) {
+    try {
+      const batch = db.batch();
+      selected.forEach(name => {
+        const ref = db.collection('sadhakas').doc(name);
+        batch.delete(ref);
+      });
+      
+      await batch.commit();
+      alert('Selected sadhakas deleted successfully');
+      
+      // Update the sadhaka names list
+      sadhakaNames = sadhakaNames.filter(name => !selected.includes(name));
+      populateSadhakaNameList();
+      
+      // Clear the form and close modal
+      document.getElementById('sadhakaName').value = '';
+      clearSadhakaDiv();
+      closeMultiDeleteModal();
+    } catch (error) {
+      console.error('Error deleting sadhakas:', error);
+      alert('Error deleting sadhakas');
+    }
+  }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('multiDeleteModal');
+  if (event.target == modal) {
+    closeMultiDeleteModal();
+  }
+}
   function sadhakaNameChanged(name) {
     //var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
     //suggestionsDiv.innerHTML = ''; // clear previous suggestions

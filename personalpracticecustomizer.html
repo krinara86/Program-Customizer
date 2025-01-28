@@ -22,6 +22,31 @@
   <div id="loginStatus" style="position: absolute; top: 10px; right: 20px; font-size: 14px; color: #333; display: none;">
     Logged in as: <span id="loggedInUser" style="font-weight: bold;"></span>
   </div>
+
+  <!-- Multi-Delete Modal -->
+<div id="multiDeleteModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <span class="close" onclick="closeMultiDeleteModal()">&times;</span>
+    <h3 style="margin-top: 0;">Select Sadhakas to Delete</h3>
+    <input type="text" id="sadhakaSearchInput" placeholder="Search sadhakas..." 
+           style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+      <div id="sadhakaCheckboxList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="closeMultiDeleteModal()" 
+              style="padding: 8px 16px; background-color: #ccc; color: white; border: none; border-radius: 4px;">
+        Cancel
+      </button>
+      <button onclick="deleteSelectedSadhakas()" 
+              style="padding: 8px 16px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
+        Delete Selected
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <body>
   <div id="overlay"></div>
 
@@ -86,9 +111,20 @@
   </div>
 
 
-  <input type="text" id="sadhakaName" list="sadhakaNameList" style="margin-bottom: 10px;"
-    oninput="sadhakaNameChanged(this.value)">
-  <datalist id="sadhakaNameList"></datalist>
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+    <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)" 
+           style="width: 200px; height: 28px; padding: 2px 8px;">
+    <datalist id="sadhakaNameList"></datalist>
+    <button onclick="deleteSadhaka()" 
+            style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
+      Delete Sadhaka
+    </button>
+    <button onclick="showMultiDeleteModal()" 
+            style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
+      Delete Multiple
+    </button>
+  </div>
+
 
   <div id="prayerSection" class="section">
     <h2>Prayer</h2>
