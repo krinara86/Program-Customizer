@@ -580,18 +580,33 @@ async function addSection(pdf, category, pdfConfig, asanasMap) {
     if (!div) return asanas;
   
     for (let i = 0; i < div.children.length; i++) {
-      let asanaDiv = div.children[i];
-      let asana = {
-        asanaName: asanaDiv.querySelector('.asanaNameSelect')?.value || '',
-        repetitions: asanaDiv.querySelector('#repetitionsInput')?.value || '',
-        specialNotes: asanaDiv.querySelector('#specialNotesTextarea')?.value || ''
-      };
-      if (asana.asanaName) {
-        asanas.push(asana);
-      }
+        let asanaDiv = div.children[i];
+        let asanaName = asanaDiv.querySelector('.asanaNameSelect')?.value || '';
+        
+        // Check if this is a section with notes
+        let isSectionWithNotes = ['jointsAndGlandsDiv', 'cardioDiv', 'nonCardioDiv'].includes(div.id);
+        
+        let asana = {
+            asanaName: asanaName
+        };
+
+        // Only add repetitions if not in a section with notes
+        if (!isSectionWithNotes) {
+            asana.repetitions = asanaDiv.querySelector('#repetitionsInput')?.value || '';
+        }
+
+        // Only add special notes for sections that allow them
+        let specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+        if (specialNotesTextarea) {
+            asana.specialNotes = specialNotesTextarea.value || '';
+        }
+
+        if (asana.asanaName) {
+            asanas.push(asana);
+        }
     }
     return asanas;
-  }
+}
 
   function sadhakaNameChanged(name) {
     //var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
@@ -647,6 +662,7 @@ function clearSadhakaDiv() {
 
 function createAsanaDivWithCategory(asana, category) {
   const excludeIndividualNotes = ['Joints and Glands', 'Physical Asana'];
+  const excludeRepetitions = ['Joints and Glands', 'Physical Asana'];
   
   var asanaDiv = document.createElement('div');
   asanaDiv.style.display = 'flex';
@@ -659,7 +675,7 @@ function createAsanaDivWithCategory(asana, category) {
   asanaDiv.appendChild(asanaNameSelect);
   
   $(asanaNameSelect).select2({
-      width: excludeIndividualNotes.includes(category) ? '50%' : '30%',
+      width: excludeIndividualNotes.includes(category) ? '70%' : '30%',
       minimumResultsForSearch: 1
   });
 
@@ -673,9 +689,11 @@ function createAsanaDivWithCategory(asana, category) {
       }
   }
 
-  // Add repetitions for all categories
-  var repetitionsInput = createRepetitionsInput(asana);
-  asanaDiv.appendChild(repetitionsInput);
+  // Add repetitions only for categories that don't have section notes
+  if (!excludeRepetitions.includes(category)) {
+      var repetitionsInput = createRepetitionsInput(asana);
+      asanaDiv.appendChild(repetitionsInput);
+  }
 
   // Only add special notes for non-excluded categories
   if (!excludeIndividualNotes.includes(category)) {
@@ -688,7 +706,6 @@ function createAsanaDivWithCategory(asana, category) {
 
   return asanaDiv;
 }
-
   function createAsanaNameSelect(category) {
     console.log("Creating asana select. Category:", category, "Asanas:", asanas);
     var asanaNameSelect = document.createElement('select');
@@ -841,15 +858,18 @@ function createAsanaDivWithCategory(asana, category) {
     asanaDiv.appendChild(asanaNameSelect);
 
     $(asanaNameSelect).select2({
-        width: '50%',
+        width: '70%',
         minimumResultsForSearch: 1
     });
 
     var infoButton = createInfoButton(asanaNameSelect);
     asanaDiv.appendChild(infoButton);
 
-    var repetitionsInput = createRepetitionsInput();
-    asanaDiv.appendChild(repetitionsInput);
+    // Add repetitions only for categories that don't have section notes
+    if (category !== 'Joints and Glands' && category !== 'Physical Asana') {
+        var repetitionsInput = createRepetitionsInput();
+        asanaDiv.appendChild(repetitionsInput);
+    }
 
     // Only add special notes for non-excluded categories
     if (category !== 'Joints and Glands' && category !== 'Physical Asana') {
