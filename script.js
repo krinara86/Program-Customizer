@@ -762,6 +762,74 @@ function populateSadhakaCheckboxes() {
   });
 }
 
+function showChangePasswordModal() {
+  const modal = document.getElementById('changePasswordModal');
+  modal.style.display = 'block';
+  // Clear previous inputs
+  document.getElementById('currentPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+}
+
+function closeChangePasswordModal() {
+  const modal = document.getElementById('changePasswordModal');
+  modal.style.display = 'none';
+}
+
+async function changePassword() {
+  const modal = document.getElementById('changePasswordModal');
+  const currentPassword = modal.querySelector('#currentPassword').value;
+  const newPassword = modal.querySelector('#newPassword').value;
+  const confirmPassword = modal.querySelector('#confirmPassword').value;
+  
+  console.log('Passwords:', {currentPassword, newPassword, confirmPassword}); // For debugging
+  
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    alert('Please fill in all fields');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    alert('New passwords do not match');
+    return;
+  }
+  
+  try {
+    // Verify current password first
+    const userDoc = await db.collection('login')
+      .where("id", "==", currentUser.id)
+      .get();
+    
+    if (userDoc.empty || userDoc.docs[0].data().password !== currentPassword) {
+      alert('Current password is incorrect');
+      return;
+    }
+    
+    // Update password
+    await db.collection('login').doc(userDoc.docs[0].id).update({
+      password: newPassword
+    });
+    
+    alert('Password changed successfully');
+    closeChangePasswordModal();
+  } catch (error) {
+    console.error('Error changing password:', error);
+    alert('Error changing password');
+  }
+}
+
+// Add to your existing window.onclick handler
+window.onclick = function(event) {
+  const multiDeleteModal = document.getElementById('multiDeleteModal');
+  const changePasswordModal = document.getElementById('changePasswordModal');
+  if (event.target == multiDeleteModal) {
+    closeMultiDeleteModal();
+  }
+  if (event.target == changePasswordModal) {
+    closeChangePasswordModal();
+  }
+}
+
 async function deleteSelectedSadhakas() {
   const selected = Array.from(document.querySelectorAll('#sadhakaCheckboxList input:checked'))
     .map(cb => cb.value);
