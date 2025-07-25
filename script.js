@@ -128,16 +128,17 @@ var categories = [
   { id: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text' }
 ];
 
-async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap) {
+async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
   const asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
   if (!asanaNameSelect || !asanaNameSelect.value) {
     return pdfConfig.y;
   }
 
-  let y = pdfConfig.y; // Use a local y tracker
+  let y = pdfConfig.y;
   const asanaName = asanaNameSelect.value;
   const repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
   const specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
+  const contentWidth = pdfConfig.pageWidth - (2 * pdfConfig.margin);
 
   try {
     const asanaDoc = await db.collection('asanas').where("name", "==", asanaName).get();
@@ -145,14 +146,22 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap) {
 
     const asanaData = asanaDoc.docs[0].data();
 
-    // Normalize all text
+    // Values
     const displayName = normalizeText(asanaData.displayName || asanaData.name);
-    const repetitions = normalizeText(repetitionsInput.value);
-    const specialNotes = normalizeText(specialNotesTextarea.value);
+    const repetitions = repetitionsInput ? normalizeText(repetitionsInput.value) : '';
+    const specialNotes = specialNotesTextarea ? normalizeText(specialNotesTextarea.value) : '';
     const description = normalizeText(asanasMap.get(asanaName));
 
-    // Add a new page if the image and title won't fit
-    if (y + 250 + 40 > pdfConfig.pageHeight - pdfConfig.margin) {
+    // Calculate required space to check for page break
+    let requiredHeight = 0;
+    if (description) {
+      const tempDescLines = pdf.splitTextToSize(description, contentWidth);
+      requiredHeight += (tempDescLines.length * 14); // approximate height for description
+    }
+    if (asanaData.imageUrl) requiredHeight += 200; // image height + padding
+    requiredHeight += 80; // titles and other padding
+
+    if (y + requiredHeight > pdfConfig.pageHeight - pdfConfig.margin) {
       pdf.addPage();
       y = pdfConfig.margin;
     }
@@ -160,40 +169,53 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap) {
     // Add Image
     if (asanaData.imageUrl) {
       try {
-        const response = await fetch(asanaData.imageUrl);
-        const blob = await response.blob();
-        // **FIXED** Correctly read the image data
-        const base64data = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        const imageWidth = 250;
-        const imageHeight = 250;
+        const base64data = await urlToDataUri(asanaData.imageUrl);
+        const imageWidth = 180;
+        const imageHeight = 180;
         const imageX = (pdfConfig.pageWidth - imageWidth) / 2;
         pdf.addImage(base64data, 'PNG', imageX, y, imageWidth, imageHeight);
         y += imageHeight + 20;
       } catch (e) { console.error("Error adding image:", e); }
     }
 
-    // Add Text Content using the robust addText helper
-    const textOptions = { maxWidth: pdfConfig.pageWidth - 80, font: 'helvetica' };
+    // Add Text Content
+    const textOptions = { maxWidth: contentWidth, font: 'helvetica', size: 12 };
 
+    // Asana Display Name
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(colors.primaryText);
     y = addText(pdf, displayName, pdfConfig.margin, y, { ...textOptions, size: 14, style: 'bold' });
-    y += 5; // Small gap
+    y += 10;
+
+    // Repetitions and Special Notes
+    pdf.setFontSize(12);
+    pdf.setTextColor(colors.primaryText);
 
     if (repetitions) {
-      y = addText(pdf, `Repetitions: ${repetitions}`, pdfConfig.margin, y, { ...textOptions, size: 12, style: 'bold' });
-    }
-    if (specialNotes) {
-      y = addText(pdf, `Special notes: ${specialNotes}`, pdfConfig.margin, y, { ...textOptions, size: 12, style: 'italic' });
-    }
-    if (description) {
-      y = addText(pdf, description, pdfConfig.margin, y, { ...textOptions, size: 12, style: 'normal' });
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Repetitions:", pdfConfig.margin, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(repetitions, pdfConfig.margin + 70, y);
+      y += 20;
     }
 
-    return y + 20; // Return the final y position with spacing
+    if (specialNotes) {
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Special Notes:", pdfConfig.margin, y);
+      pdf.setFont("helvetica", "italic");
+      // Use addText for notes as they can be multi-line
+      y = addText(pdf, specialNotes, pdfConfig.margin + 85, y, { ...textOptions, style: 'italic' });
+      y += 10;
+    }
+
+    // Description
+    if (description) {
+      pdf.setFont("helvetica", "normal");
+      y = addText(pdf, description, pdfConfig.margin, y, { ...textOptions, style: 'normal' });
+    }
+
+    return y + 25; // Return final y with spacing
 
   } catch (error) {
     console.error("Error in addAsanaContent:", error);
@@ -247,52 +269,131 @@ function addText(pdf, text, x, y, options) {
 }
 
 
+function urlToDataUri(url) {
+  return fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    });
+}
+
 async function saveSadhakaReportAsPdf() {
   const asanasMap = await loadAsanasForPdf();
   const pdf = new jsPDF('p', 'pt', 'a4');
   const sadhakaName = document.getElementById('sadhakaName').value;
 
+  // --- Design & Color Palette ---
+  const colors = {
+    primaryText: '#333333', // Dark Grey
+    headerBlue: '#005A9C',   // Professional Blue
+    lightGrey: '#CCCCCC',   // Light Grey for borders/lines
+    subtleText: '#777777'   // Lighter grey for subtitles
+  };
+
   const pdfConfig = {
     pageWidth: pdf.internal.pageSize.width,
     pageHeight: pdf.internal.pageSize.height,
-    margin: 40
+    margin: 50, // Increased margin for a cleaner look
   };
+  const contentWidth = pdfConfig.pageWidth - (2 * pdfConfig.margin);
 
   // --- Title Page ---
+  pdf.setFont("helvetica", "normal");
+  const logoUrl = 'https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png';
+  try {
+    const logoDataUri = await urlToDataUri(logoUrl);
+    pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth / 2) - 40, 150, 80, 80);
+  } catch (e) {
+    console.error("Could not add logo to PDF:", e);
+  }
+
   const centerX = pdfConfig.pageWidth / 2;
-  pdf.setFontSize(24);
+  pdf.setFontSize(26);
   pdf.setFont("helvetica", "bold");
-  pdf.text("Personal Sadhana Plan", centerX, 280, { align: 'center' });
+  pdf.setTextColor(colors.headerBlue);
+  pdf.text("Personal Sadhana Plan", centerX, 320, { align: 'center' });
+
   pdf.setFontSize(20);
   pdf.setFont("helvetica", "normal");
-  pdf.text(`for ${sadhakaName}`, centerX, 320, { align: 'center' });
+  pdf.setTextColor(colors.primaryText);
+  pdf.text(`for ${sadhakaName}`, centerX, 360, { align: 'center' });
+
   const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   pdf.setFontSize(12);
-  pdf.text(`Created on ${date}`, centerX, 360, { align: 'center' });
+  pdf.setFont("helvetica", "italic");
+  pdf.setTextColor(colors.subtleText);
+  pdf.text(`Created on ${date}`, centerX, 400, { align: 'center' });
+
 
   // --- Main Content ---
   pdf.addPage();
   let y = pdfConfig.margin;
 
   for (const category of categories) {
-    // Add section header
-    y = addText(pdf, category.title, pdfConfig.margin, y, { maxWidth: pdfConfig.pageWidth - 80, size: 16, style: 'bold', font: 'helvetica' });
-    y += 10;
+    let categoryHasContent = false;
 
-    const textOptions = { maxWidth: pdfConfig.pageWidth - 80, size: 12, font: 'helvetica' };
-
-    // Handle section notes
+    // Determine if the category has any content to display
     const notesElementId = {
       'jointsAndGlandsDiv': 'jointsAndGlandsNotes', 'cardioDiv': 'cardioNotes', 'nonCardioDiv': 'nonCardioNotes'
     }[category.id];
+
+    let notes = '';
     if (notesElementId) {
-      const notes = normalizeText(document.getElementById(notesElementId).value);
-      if (notes) {
-        y = addText(pdf, `Section Notes: ${notes}`, pdfConfig.margin, y, { ...textOptions, style: 'italic' });
-        y += 10;
+      notes = normalizeText(document.getElementById(notesElementId).value);
+      if (notes) categoryHasContent = true;
+    }
+
+    if (category.type === 'text') {
+      const content = normalizeText(document.getElementById(category.id).value);
+      if (content && content !== normalizeText(defaultPrayerText) && content !== normalizeText(defaultDietText) && content !== normalizeText(defaultRoutineText)) {
+        categoryHasContent = true;
+      }
+    } else if (category.type === 'asanas') {
+      const containerDiv = document.getElementById(category.id);
+      if (containerDiv && containerDiv.children.length > 0) {
+        categoryHasContent = true;
       }
     }
 
+    // Only add the section header and content if it's not empty
+    if (!categoryHasContent) continue;
+
+    // Check for page break before adding a new section header
+    if (y + 60 > pdfConfig.pageHeight - pdfConfig.margin) {
+      pdf.addPage();
+      y = pdfConfig.margin;
+    }
+
+    // Add section header
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(colors.headerBlue);
+    pdf.text(category.title, pdfConfig.margin, y);
+    y += 10;
+
+    // Add a line under the header
+    pdf.setDrawColor(colors.lightGrey);
+    pdf.setLineWidth(1);
+    pdf.line(pdfConfig.margin, y, pdfConfig.pageWidth - pdfConfig.margin, y);
+    y += 25;
+
+    // Reset font for content
+    pdf.setTextColor(colors.primaryText);
+    const textOptions = { maxWidth: contentWidth, size: 12, font: 'helvetica' };
+
+    // Handle and display section notes
+    if (notes) {
+      pdf.setFont("helvetica", "italic");
+      y = addText(pdf, `Notes: ${notes}`, pdfConfig.margin, y, { ...textOptions, style: 'italic' });
+      y += 15;
+    }
+
+    // Display the main content for the category
     if (category.type === 'text') {
       const content = normalizeText(document.getElementById(category.id).value);
       if (content) {
@@ -302,27 +403,27 @@ async function saveSadhakaReportAsPdf() {
       const containerDiv = document.getElementById(category.id);
       if (containerDiv && containerDiv.children.length > 0) {
         for (let i = 0; i < containerDiv.children.length; i++) {
-          // Pass the current 'y' and get the new 'y' back
-          y = await addAsanaContent(pdf, containerDiv.children[i], { ...pdfConfig, y: y }, asanasMap);
+          y = await addAsanaContent(pdf, containerDiv.children[i], { ...pdfConfig, y: y }, asanasMap, colors);
         }
       }
     }
-    y += 20; // Space between categories
+    y += 30; // Add space between categories
   }
 
   // --- Add Borders and Page Numbers to All Pages ---
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
-    // Add Border
-    pdf.setDrawColor(180, 180, 180); // Light grey border
+    pdf.setDrawColor(colors.lightGrey);
+    pdf.setLineWidth(0.5);
     pdf.rect(20, 20, pdfConfig.pageWidth - 40, pdfConfig.pageHeight - 40);
 
     // Add Page Number (skip on title page)
     if (i > 1) {
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Page ${i - 1} of ${totalPages - 1}`, centerX, pdfConfig.pageHeight - 30, { align: 'center' });
+      pdf.setTextColor(colors.subtleText);
+      pdf.text(`Page ${i - 1}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, { align: 'center' });
     }
   }
 
