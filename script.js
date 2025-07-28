@@ -134,7 +134,7 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     return pdfConfig.y;
   }
 
-  let y = pdfConfig.y;
+  let y = pdfConfig.y; // Current Y position passed from calling function
   const asanaName = asanaNameSelect.value;
   const repetitionsInput = asanaDiv.querySelector('#repetitionsInput');
   const specialNotesTextarea = asanaDiv.querySelector('#specialNotesTextarea');
@@ -144,7 +144,7 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     const asanaDoc = await db.collection('asanas').where("name", "==", asanaName).get();
     if (asanaDoc.empty) return y;
 
-    const asanaData = asanaDoc.docs[0].data();
+    const asanaData = asanaDoc.docs[0].data(); // Correctly fetch asanaData here
 
     // Values
     const displayName = normalizeText(asanaData.displayName || asanaData.name);
@@ -152,55 +152,74 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     const specialNotes = specialNotesTextarea ? normalizeText(specialNotesTextarea.value) : '';
     const description = normalizeText(asanasMap.get(asanaName));
 
-    // Calculate required space to check for page break
+    // Calculate required space for the *entire asana block* including image, title, notes, description
     let requiredHeight = 0;
-    if (asanaData.imageUrl) requiredHeight += 200; // image height + padding + border/shadow
-    requiredHeight += 20; // Title padding
-    requiredHeight += pdf.splitTextToSize(displayName, contentWidth).length * 14; // Approximate height for title
-    if (repetitions) requiredHeight += 20; // Repetitions height
-    if (specialNotes) requiredHeight += pdf.splitTextToSize(specialNotes, contentWidth).length * 14; // Notes height
-    if (description) requiredHeight += pdf.splitTextToSize(description, contentWidth).length * 14; // Description height
-    requiredHeight += 40; // Additional spacing
+    requiredHeight += pdf.splitTextToSize(displayName, contentWidth).length * 14; // Asana Display Name height
+    requiredHeight += 10; // Space below asana name
 
-    if (y + requiredHeight > pdfConfig.pageHeight - pdfConfig.margin) {
-      pdf.addPage();
-      y = pdfConfig.margin;
+    if (asanaData.imageUrl) {
+      requiredHeight += 180; // image height (fixed size)
+      requiredHeight += 20; // Space after image
     }
 
+    if (repetitions) {
+      requiredHeight += 20; // Repetitions line height
+    }
+    if (specialNotes) {
+      requiredHeight += pdf.splitTextToSize(specialNotes, contentWidth).length * 14; // Notes height (approx)
+      if (repetitions) requiredHeight += 5; // Small extra space if both exist
+    }
+    if (description) {
+      requiredHeight += pdf.splitTextToSize(description, contentWidth).length * 14; // Description height (approx)
+      if (repetitions || specialNotes) requiredHeight += 5; // Small extra space
+    }
+    requiredHeight += 25; // Additional spacing after this asana block
+
+    // Check for page break for the entire asana block. If it doesn't fit, add a new page.
+    if (y + requiredHeight > pdfConfig.pageHeight - pdfConfig.margin) {
+      pdf.addPage();
+      y = pdfConfig.margin; // Reset y to the top margin on the new page
+    }
+
+    // --- Draw Asana Content ---
+
     // Add Image
-    if (asanaData.imageUrl) {
+    if (asanaData.imageUrl) { // Use asanaData.imageUrl here
       try {
-        const base64data = await urlToDataUri(asanaData.imageUrl);
+        const base64data = await urlToDataUri(asanaData.imageUrl); // Corrected: use asanaData.imageUrl
         const imageWidth = 180;
         const imageHeight = 180;
         const imageX = (pdfConfig.pageWidth - imageWidth) / 2;
 
-        // Add image with border and subtle shadow
         pdf.setDrawColor(colors.lightGrey);
         pdf.setLineWidth(1);
-        // Simple shadow effect by drawing a slightly offset rectangle
         pdf.setFillColor(240, 240, 240); // Light grey fill for shadow
         pdf.rect(imageX + 3, y + 3, imageWidth, imageHeight, 'F'); // Shadow
         pdf.addImage(base64data, 'PNG', imageX, y, imageWidth, imageHeight);
         pdf.rect(imageX, y, imageWidth, imageHeight, 'S'); // Border
 
-        y += imageHeight + 20;
-      } catch (e) { console.error("Error adding image:", e); }
+        y += imageHeight + 20; // Update y after image
+      } catch (e) {
+        console.error("Error adding image:", e);
+      }
     }
-
-    // Add Text Content
-    const textOptions = { maxWidth: contentWidth, font: 'helvetica', size: 12 };
 
     // Asana Display Name
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.primaryText);
-    y = addText(pdf, displayName, pdfConfig.margin, y, { ...textOptions, size: 14, style: 'bold' });
-    y += 10;
+    pdf.setTextColor(colors.primaryText); // Ensure asana display name is primary text color
+    y = addText(pdf, displayName, pdfConfig.margin, y, {
+      ...pdfConfig, // Pass full config including margins
+      size: 14,
+      style: 'bold',
+      maxWidth: contentWidth,
+      currentY: y // Pass current y to addText for internal page breaks
+    });
+    y += 10; // Space below asana name
 
     // Repetitions and Special Notes
     pdf.setFontSize(12);
-    pdf.setTextColor(colors.primaryText);
+    pdf.setTextColor(colors.primaryText); // Ensure repetitions and special notes are primary text color
 
     if (repetitions) {
       pdf.setFont("helvetica", "bold");
@@ -214,25 +233,35 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
       pdf.setFont("helvetica", "bold");
       pdf.text("Special Notes:", pdfConfig.margin, y);
       pdf.setFont("helvetica", "italic");
-      // Use addText for notes as they can be multi-line
-      y = addText(pdf, specialNotes, pdfConfig.margin + 85, y, { ...textOptions, style: 'italic' });
+      y = addText(pdf, specialNotes, pdfConfig.margin + 85, y, {
+        ...pdfConfig,
+        size: 12,
+        style: 'italic',
+        maxWidth: contentWidth - 85, // Adjust max width for notes
+        currentY: y // Pass current y for internal page breaks
+      });
       y += 10;
     }
 
     // Description
     if (description) {
       pdf.setFont("helvetica", "normal");
-      y = addText(pdf, description, pdfConfig.margin, y, { ...textOptions, style: 'normal' });
+      pdf.setTextColor(colors.primaryText); // Ensure description is primary text color
+      y = addText(pdf, description, pdfConfig.margin, y, {
+        ...pdfConfig,
+        size: 12,
+        style: 'normal',
+        maxWidth: contentWidth,
+        currentY: y // Pass current y for internal page breaks
+      });
     }
 
-    return y + 25; // Return final y with spacing
-
+    return y + 25; // Return final y with spacing after the entire asana block
   } catch (error) {
     console.error("Error in addAsanaContent:", error);
     return y;
   }
 }
-
 
 function normalizeText(text) {
   if (!text || typeof text !== 'string') {
@@ -300,10 +329,10 @@ async function saveSadhakaReportAsPdf() {
 
   // --- Design & Color Palette ---
   const colors = {
-    primaryText: '#333333', // Dark Grey
-    headerBlue: '#005A9C', // Professional Blue
+    primaryText: '#333333', // Dark Grey - This is the default for most text
+    headerBlue: '#005A9C', // Professional Blue - For section titles and main PDF title
     lightGrey: '#CCCCCC', // Light Grey for borders/lines
-    subtleText: '#777777' // Lighter grey for subtitles
+    subtleText: '#777777' // Lighter grey for subtitles like date/page numbers
   };
 
   const pdfConfig = {
@@ -320,24 +349,22 @@ async function saveSadhakaReportAsPdf() {
     const logoWidth = 80;
     const logoHeight = 80;
     const logoDataUri = await urlToDataUri(logoUrl);
-    // Image is centered by calculating its x position
     pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth - logoWidth) / 2, 150, logoWidth, logoHeight);
   } catch (e) {
     console.error("Could not add logo to PDF:", e);
   }
 
   const centerX = pdfConfig.pageWidth / 2;
-  // For text, align: 'center' property with centerX ensures proper centering.
   pdf.setFontSize(26);
   pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(colors.headerBlue);
-  pdf.text("Personal Sadhana Plan", centerX, 320, {
+  pdf.setTextColor(colors.headerBlue); // Set color for main title
+  pdf.text("Sadhana Plan", centerX, 320, {
     align: 'center'
   });
 
   pdf.setFontSize(20);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(colors.primaryText);
+  pdf.setTextColor(colors.primaryText); // Reset to primary text color
   pdf.text(`for ${sadhakaName}`, centerX, 360, {
     align: 'center'
   });
@@ -349,7 +376,7 @@ async function saveSadhakaReportAsPdf() {
   });
   pdf.setFontSize(12);
   pdf.setFont("helvetica", "italic");
-  pdf.setTextColor(colors.subtleText);
+  pdf.setTextColor(colors.subtleText); // Set color for date
   pdf.text(`Created on ${date}`, centerX, 400, {
     align: 'center'
   });
@@ -359,15 +386,15 @@ async function saveSadhakaReportAsPdf() {
   pdf.addPage();
   let y = pdfConfig.margin;
 
-  // Get the current order of sections from the DOM
   const sectionElementsInOrder = Array.from(document.querySelectorAll('.section'));
   const sortedCategories = sectionElementsInOrder.map(sectionEl => {
     return categories.find(cat => cat.id === sectionEl.id);
-  }).filter(Boolean); // Filter out any undefined if an ID doesn't match
+  }).filter(Boolean);
 
 
   for (const category of sortedCategories) {
     let categoryHasContent = false;
+    let notes = '';
 
     const notesElementId = {
       'jointsAndGlandsDiv': 'jointsAndGlandsNotes',
@@ -375,7 +402,6 @@ async function saveSadhakaReportAsPdf() {
       'nonCardioDiv': 'nonCardioNotes'
     }[category.elementId];
 
-    let notes = '';
     if (notesElementId) {
       notes = normalizeText(document.getElementById(notesElementId).value);
       if (notes) categoryHasContent = true;
@@ -398,91 +424,62 @@ async function saveSadhakaReportAsPdf() {
 
     if (!categoryHasContent) continue;
 
-    // Estimate height for the section header, line, notes, and potential first asana
-    let estimatedSectionBlockHeight = 18; // Section title font size
-    estimatedSectionBlockHeight += 10; // Space below title
-    estimatedSectionBlockHeight += 1; // Line thickness
-    estimatedSectionBlockHeight += 20; // Space after line (before notes/content)
+    let sectionIntroHeightEstimate = 18;
+    sectionIntroHeightEstimate += 10;
+    sectionIntroHeightEstimate += 1;
+    sectionIntroHeightEstimate += 20;
 
     if (notes) {
       const splitNotes = pdf.splitTextToSize(`Notes: ${notes}`, contentWidth);
-      estimatedSectionBlockHeight += splitNotes.length * 14; // Approximate height for notes (line height 1.2 * font size 12)
-      estimatedSectionBlockHeight += 10; // Space after notes
+      sectionIntroHeightEstimate += splitNotes.length * 14;
+      sectionIntroHeightEstimate += 10;
     }
 
-    // If it's an asana section, estimate the first asana's height to ensure it fits with the header
-    if (category.type === 'asanas') {
-      const containerDiv = document.getElementById(category.elementId);
-      if (containerDiv && containerDiv.children.length > 0) {
-        const firstAsanaDiv = containerDiv.children[0];
-        const asanaNameSelect = firstAsanaDiv.querySelector('.asanaNameSelect');
-        if (asanaNameSelect && asanaNameSelect.value) {
-          const asanaDoc = await db.collection('asanas').where("name", "==", asanaNameSelect.value).get();
-          if (!asanaDoc.empty) {
-            const asanaData = asanaDoc.docs[0].data();
-            // Asana Display Name height
-            estimatedSectionBlockHeight += pdf.splitTextToSize(asanaData.displayName || asanaData.name, contentWidth).length * 14;
-            estimatedSectionBlockHeight += 10; // Space below asana name
-
-            // Image height
-            if (asanaData.imageUrl) {
-              estimatedSectionBlockHeight += 180; // Image height
-              estimatedSectionBlockHeight += 20; // Space after image
-            }
-            // Repetitions and Special Notes height (approx)
-            estimatedSectionBlockHeight += 40; // Max for repetitions and notes line + padding
-            estimatedSectionBlockHeight += 25; // Additional spacing after the asana
-          }
-        }
-      }
-    }
-
-
-    // Check for page break before adding a new section block
-    if (y + estimatedSectionBlockHeight > pdfConfig.pageHeight - pdfConfig.margin) {
+    if (y + sectionIntroHeightEstimate > pdfConfig.pageHeight - pdfConfig.margin) {
       pdf.addPage();
-      y = pdfConfig.margin; // Reset y to the top margin on the new page
+      y = pdfConfig.margin;
     }
-
 
     // Add section header
     pdf.setFontSize(18);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.headerBlue);
+    pdf.setTextColor(colors.headerBlue); // Set color for section titles
     pdf.text(category.title, pdfConfig.margin, y);
-    y += 10; // Move y down for the line
+    y += 10;
 
     // Add a line under the header
     pdf.setDrawColor(colors.lightGrey);
     pdf.setLineWidth(1);
     pdf.line(pdfConfig.margin, y, pdfConfig.pageWidth - pdfConfig.margin, y);
-    y += 20; // Space after the line before content
-
-    // Reset font for content
-    pdf.setTextColor(colors.primaryText);
-    const textOptions = {
-      maxWidth: contentWidth,
-      size: 12,
-      font: 'helvetica'
-    };
+    y += 20;
 
     // Handle and display section notes
     if (notes) {
       pdf.setFont("helvetica", "italic");
+      pdf.setTextColor(colors.primaryText); // Ensure notes are primary text color
       y = addText(pdf, `Notes: ${notes}`, pdfConfig.margin, y, {
-        ...textOptions,
-        style: 'italic'
+        ...pdfConfig,
+        size: 12,
+        font: 'helvetica',
+        style: 'italic',
+        maxWidth: contentWidth,
+        currentY: y
       });
-      y += 10; // Space after notes
+      y += 10;
     }
 
     // Display the main content for the category
     if (category.type === 'text') {
       const content = normalizeText(document.getElementById(category.elementId).value);
       if (content) {
+        pdf.setTextColor(colors.primaryText); // Ensure text content is primary text color
         y = addText(pdf, content, pdfConfig.margin, y, {
-          ...textOptions,
-          style: 'normal'
+          ...pdfConfig,
+          size: 12,
+          font: 'helvetica',
+          style: 'normal',
+          maxWidth: contentWidth,
+          currentY: y
         });
       }
     } else if (category.type === 'asanas') {
@@ -496,7 +493,7 @@ async function saveSadhakaReportAsPdf() {
         }
       }
     }
-    y += 20; // Add space between sections
+    y += 20;
   }
 
   // --- Add Borders and Page Numbers to All Pages ---
@@ -511,7 +508,7 @@ async function saveSadhakaReportAsPdf() {
     if (i > 1) {
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(colors.subtleText);
+      pdf.setTextColor(colors.subtleText); // Set color for page numbers
       pdf.text(`Page ${i - 1}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, {
         align: 'center'
       });
