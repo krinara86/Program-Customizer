@@ -114,18 +114,18 @@ var sadhakaNameList = document.getElementById('sadhakaNameList');
 var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
 var categories = [
-  { id: 'prayerText', title: 'Prayer', type: 'text' },
-  { id: 'jointsAndGlandsDiv', title: 'Joints and Glands Asanas', type: 'asanas', category: 'Joints and Glands' },
-  { id: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation' },
-  { id: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
-  { id: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana' },
-  { id: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana' },
-  { id: 'breathingDiv', title: 'Breathing Exercises', type: 'asanas', category: 'Breathing' },
-  { id: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana' },
-  { id: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation' },
-  { id: 'routineText', title: 'Routine', type: 'text' },
-  { id: 'advisoryText', title: 'Advisory', type: 'text' },
-  { id: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text' }
+  { id: 'prayerSection', elementId: 'prayerText', title: 'Prayer', type: 'text', order: 1 },
+  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 2 },
+  { id: 'jointsAndGlandsSection', elementId: 'jointsAndGlandsDiv', title: 'Joints and Glands', type: 'asanas', category: 'Joints and Glands', notesId: 'jointsAndGlandsNotes', order: 3 },
+  { id: 'cardioSection', elementId: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'cardioNotes', order: 4 },
+  { id: 'nonCardioSection', elementId: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'nonCardioNotes', order: 5 },
+  { id: 'relaxationSection', elementId: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation', order: 6 },
+  { id: 'meditativeSection', elementId: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana', order: 7 },
+  { id: 'breathingSection', elementId: 'breathingDiv', title: 'Breathing exercises', type: 'asanas', category: 'Breathing', order: 8 },
+  { id: 'pranayamaSection', elementId: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana', order: 9 },
+  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation', order: 10 },
+  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 11 },
+  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 12 }
 ];
 
 async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
@@ -154,12 +154,13 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
 
     // Calculate required space to check for page break
     let requiredHeight = 0;
-    if (description) {
-      const tempDescLines = pdf.splitTextToSize(description, contentWidth);
-      requiredHeight += (tempDescLines.length * 14); // approximate height for description
-    }
-    if (asanaData.imageUrl) requiredHeight += 200; // image height + padding
-    requiredHeight += 80; // titles and other padding
+    if (asanaData.imageUrl) requiredHeight += 200; // image height + padding + border/shadow
+    requiredHeight += 20; // Title padding
+    requiredHeight += pdf.splitTextToSize(displayName, contentWidth).length * 14; // Approximate height for title
+    if (repetitions) requiredHeight += 20; // Repetitions height
+    if (specialNotes) requiredHeight += pdf.splitTextToSize(specialNotes, contentWidth).length * 14; // Notes height
+    if (description) requiredHeight += pdf.splitTextToSize(description, contentWidth).length * 14; // Description height
+    requiredHeight += 40; // Additional spacing
 
     if (y + requiredHeight > pdfConfig.pageHeight - pdfConfig.margin) {
       pdf.addPage();
@@ -173,7 +174,16 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
         const imageWidth = 180;
         const imageHeight = 180;
         const imageX = (pdfConfig.pageWidth - imageWidth) / 2;
+
+        // Add image with border and subtle shadow
+        pdf.setDrawColor(colors.lightGrey);
+        pdf.setLineWidth(1);
+        // Simple shadow effect by drawing a slightly offset rectangle
+        pdf.setFillColor(240, 240, 240); // Light grey fill for shadow
+        pdf.rect(imageX + 3, y + 3, imageWidth, imageHeight, 'F'); // Shadow
         pdf.addImage(base64data, 'PNG', imageX, y, imageWidth, imageHeight);
+        pdf.rect(imageX, y, imageWidth, imageHeight, 'S'); // Border
+
         y += imageHeight + 20;
       } catch (e) { console.error("Error adding image:", e); }
     }
@@ -222,6 +232,7 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     return y;
   }
 }
+
 
 function normalizeText(text) {
   if (!text || typeof text !== 'string') {
@@ -290,9 +301,9 @@ async function saveSadhakaReportAsPdf() {
   // --- Design & Color Palette ---
   const colors = {
     primaryText: '#333333', // Dark Grey
-    headerBlue: '#005A9C',   // Professional Blue
-    lightGrey: '#CCCCCC',   // Light Grey for borders/lines
-    subtleText: '#777777'   // Lighter grey for subtitles
+    headerBlue: '#005A9C', // Professional Blue
+    lightGrey: '#CCCCCC', // Light Grey for borders/lines
+    subtleText: '#777777' // Lighter grey for subtitles
   };
 
   const pdfConfig = {
@@ -306,41 +317,63 @@ async function saveSadhakaReportAsPdf() {
   pdf.setFont("helvetica", "normal");
   const logoUrl = 'https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png';
   try {
+    const logoWidth = 80;
+    const logoHeight = 80;
     const logoDataUri = await urlToDataUri(logoUrl);
-    pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth / 2) - 40, 150, 80, 80);
+    // Image is centered by calculating its x position
+    pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth - logoWidth) / 2, 150, logoWidth, logoHeight);
   } catch (e) {
     console.error("Could not add logo to PDF:", e);
   }
 
   const centerX = pdfConfig.pageWidth / 2;
+  // For text, align: 'center' property with centerX ensures proper centering.
   pdf.setFontSize(26);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(colors.headerBlue);
-  pdf.text("Personal Sadhana Plan", centerX, 320, { align: 'center' });
+  pdf.text("Personal Sadhana Plan", centerX, 320, {
+    align: 'center'
+  });
 
   pdf.setFontSize(20);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(colors.primaryText);
-  pdf.text(`for ${sadhakaName}`, centerX, 360, { align: 'center' });
+  pdf.text(`for ${sadhakaName}`, centerX, 360, {
+    align: 'center'
+  });
 
-  const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const date = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
   pdf.setFontSize(12);
   pdf.setFont("helvetica", "italic");
   pdf.setTextColor(colors.subtleText);
-  pdf.text(`Created on ${date}`, centerX, 400, { align: 'center' });
+  pdf.text(`Created on ${date}`, centerX, 400, {
+    align: 'center'
+  });
 
 
   // --- Main Content ---
   pdf.addPage();
   let y = pdfConfig.margin;
 
-  for (const category of categories) {
+  // Get the current order of sections from the DOM
+  const sectionElementsInOrder = Array.from(document.querySelectorAll('.section'));
+  const sortedCategories = sectionElementsInOrder.map(sectionEl => {
+    return categories.find(cat => cat.id === sectionEl.id);
+  }).filter(Boolean); // Filter out any undefined if an ID doesn't match
+
+
+  for (const category of sortedCategories) {
     let categoryHasContent = false;
 
-    // Determine if the category has any content to display
     const notesElementId = {
-      'jointsAndGlandsDiv': 'jointsAndGlandsNotes', 'cardioDiv': 'cardioNotes', 'nonCardioDiv': 'nonCardioNotes'
-    }[category.id];
+      'jointsAndGlandsDiv': 'jointsAndGlandsNotes',
+      'cardioDiv': 'cardioNotes',
+      'nonCardioDiv': 'nonCardioNotes'
+    }[category.elementId];
 
     let notes = '';
     if (notesElementId) {
@@ -349,65 +382,121 @@ async function saveSadhakaReportAsPdf() {
     }
 
     if (category.type === 'text') {
-      const content = normalizeText(document.getElementById(category.id).value);
-      if (content && content !== normalizeText(defaultPrayerText) && content !== normalizeText(defaultDietText) && content !== normalizeText(defaultRoutineText)) {
+      const content = normalizeText(document.getElementById(category.elementId).value);
+      if (content && content.trim() !== '' &&
+        content !== normalizeText(defaultPrayerText) &&
+        content !== normalizeText(defaultDietText) &&
+        content !== normalizeText(defaultRoutineText)) {
         categoryHasContent = true;
       }
     } else if (category.type === 'asanas') {
-      const containerDiv = document.getElementById(category.id);
+      const containerDiv = document.getElementById(category.elementId);
       if (containerDiv && containerDiv.children.length > 0) {
         categoryHasContent = true;
       }
     }
 
-    // Only add the section header and content if it's not empty
     if (!categoryHasContent) continue;
 
-    // Check for page break before adding a new section header
-    if (y + 60 > pdfConfig.pageHeight - pdfConfig.margin) {
-      pdf.addPage();
-      y = pdfConfig.margin;
+    // Estimate height for the section header, line, notes, and potential first asana
+    let estimatedSectionBlockHeight = 18; // Section title font size
+    estimatedSectionBlockHeight += 10; // Space below title
+    estimatedSectionBlockHeight += 1; // Line thickness
+    estimatedSectionBlockHeight += 20; // Space after line (before notes/content)
+
+    if (notes) {
+      const splitNotes = pdf.splitTextToSize(`Notes: ${notes}`, contentWidth);
+      estimatedSectionBlockHeight += splitNotes.length * 14; // Approximate height for notes (line height 1.2 * font size 12)
+      estimatedSectionBlockHeight += 10; // Space after notes
     }
+
+    // If it's an asana section, estimate the first asana's height to ensure it fits with the header
+    if (category.type === 'asanas') {
+      const containerDiv = document.getElementById(category.elementId);
+      if (containerDiv && containerDiv.children.length > 0) {
+        const firstAsanaDiv = containerDiv.children[0];
+        const asanaNameSelect = firstAsanaDiv.querySelector('.asanaNameSelect');
+        if (asanaNameSelect && asanaNameSelect.value) {
+          const asanaDoc = await db.collection('asanas').where("name", "==", asanaNameSelect.value).get();
+          if (!asanaDoc.empty) {
+            const asanaData = asanaDoc.docs[0].data();
+            // Asana Display Name height
+            estimatedSectionBlockHeight += pdf.splitTextToSize(asanaData.displayName || asanaData.name, contentWidth).length * 14;
+            estimatedSectionBlockHeight += 10; // Space below asana name
+
+            // Image height
+            if (asanaData.imageUrl) {
+              estimatedSectionBlockHeight += 180; // Image height
+              estimatedSectionBlockHeight += 20; // Space after image
+            }
+            // Repetitions and Special Notes height (approx)
+            estimatedSectionBlockHeight += 40; // Max for repetitions and notes line + padding
+            estimatedSectionBlockHeight += 25; // Additional spacing after the asana
+          }
+        }
+      }
+    }
+
+
+    // Check for page break before adding a new section block
+    if (y + estimatedSectionBlockHeight > pdfConfig.pageHeight - pdfConfig.margin) {
+      pdf.addPage();
+      y = pdfConfig.margin; // Reset y to the top margin on the new page
+    }
+
 
     // Add section header
     pdf.setFontSize(18);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(colors.headerBlue);
     pdf.text(category.title, pdfConfig.margin, y);
-    y += 10;
+    y += 10; // Move y down for the line
 
     // Add a line under the header
     pdf.setDrawColor(colors.lightGrey);
     pdf.setLineWidth(1);
     pdf.line(pdfConfig.margin, y, pdfConfig.pageWidth - pdfConfig.margin, y);
-    y += 25;
+    y += 20; // Space after the line before content
 
     // Reset font for content
     pdf.setTextColor(colors.primaryText);
-    const textOptions = { maxWidth: contentWidth, size: 12, font: 'helvetica' };
+    const textOptions = {
+      maxWidth: contentWidth,
+      size: 12,
+      font: 'helvetica'
+    };
 
     // Handle and display section notes
     if (notes) {
       pdf.setFont("helvetica", "italic");
-      y = addText(pdf, `Notes: ${notes}`, pdfConfig.margin, y, { ...textOptions, style: 'italic' });
-      y += 15;
+      y = addText(pdf, `Notes: ${notes}`, pdfConfig.margin, y, {
+        ...textOptions,
+        style: 'italic'
+      });
+      y += 10; // Space after notes
     }
 
     // Display the main content for the category
     if (category.type === 'text') {
-      const content = normalizeText(document.getElementById(category.id).value);
+      const content = normalizeText(document.getElementById(category.elementId).value);
       if (content) {
-        y = addText(pdf, content, pdfConfig.margin, y, { ...textOptions, style: 'normal' });
+        y = addText(pdf, content, pdfConfig.margin, y, {
+          ...textOptions,
+          style: 'normal'
+        });
       }
     } else if (category.type === 'asanas') {
-      const containerDiv = document.getElementById(category.id);
+      const containerDiv = document.getElementById(category.elementId);
       if (containerDiv && containerDiv.children.length > 0) {
         for (let i = 0; i < containerDiv.children.length; i++) {
-          y = await addAsanaContent(pdf, containerDiv.children[i], { ...pdfConfig, y: y }, asanasMap, colors);
+          y = await addAsanaContent(pdf, containerDiv.children[i], {
+            ...pdfConfig,
+            y: y
+          }, asanasMap, colors);
         }
       }
     }
-    y += 30; // Add space between categories
+    y += 20; // Add space between sections
   }
 
   // --- Add Borders and Page Numbers to All Pages ---
@@ -423,7 +512,9 @@ async function saveSadhakaReportAsPdf() {
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(colors.subtleText);
-      pdf.text(`Page ${i - 1}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, { align: 'center' });
+      pdf.text(`Page ${i - 1}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, {
+        align: 'center'
+      });
     }
   }
 
@@ -551,14 +642,21 @@ function loadSadhakaNames() {
   });
 }
 
+
 function initialize() {
   document.querySelector('.login-container').style.display = 'block';
   document.querySelector('#overlay').style.display = 'block';
   Promise.all([loadAsanas(), loadSadhakaNames(), loadDefaultTexts()])
     .then(([fetchedAsanas, fetchedNames]) => {
-      asanas = fetchedAsanas;  // Assign fetched asanas to global asanas array
+      asanas = fetchedAsanas; // Assign fetched asanas to global asanas array
       sadhakaNames = fetchedNames;
       populateSadhakaNameList();
+      // setupDragAndDrop() will be called by displaySadhaka when a sadhaka is loaded,
+      // or if no sadhaka is loaded, we can call it here once.
+      // For initial load without a selected sadhaka, ensure drag/drop is enabled.
+      if (!sadhakaNameInput.value) { // If no sadhaka name pre-selected
+        setupDragAndDrop();
+      }
       console.log("Initialization complete. Asanas:", asanas);
     }).catch((error) => {
       console.error("Error initializing:", error);
@@ -736,15 +834,31 @@ function populateSadhakaCheckboxes() {
   const container = document.getElementById('sadhakaCheckboxList');
   container.innerHTML = '';
 
+  // Ensure sadhakaNames is populated
+  if (sadhakaNames.length === 0) {
+    // Attempt to load sadhaka names if not already loaded
+    loadSadhakaNames().then(names => {
+      sadhakaNames = names;
+      renderSadhakaCheckboxes(container);
+    }).catch(error => {
+      console.error("Error loading sadhaka names for multi-delete:", error);
+      container.textContent = "Error loading sadhakas.";
+    });
+  } else {
+    renderSadhakaCheckboxes(container);
+  }
+}
+
+function renderSadhakaCheckboxes(container) {
   sadhakaNames.forEach(name => {
     const div = document.createElement('div');
     div.style.display = 'flex';
     div.style.alignItems = 'center';
     div.style.padding = '4px 0';
-    div.style.width = '100%';  // Ensure full width
+    div.style.width = '100%';
 
     const checkboxWrapper = document.createElement('div');
-    checkboxWrapper.style.width = '24px';  // Fixed width for checkbox area
+    checkboxWrapper.style.width = '24px';
     checkboxWrapper.style.display = 'flex';
     checkboxWrapper.style.justifyContent = 'center';
 
@@ -758,7 +872,7 @@ function populateSadhakaCheckboxes() {
     label.htmlFor = `sadhaka-${name}`;
     label.textContent = name;
     label.style.marginLeft = '8px';
-    label.style.flex = '1';  // Take remaining space
+    label.style.flex = '1';
 
     div.appendChild(checkboxWrapper);
     div.appendChild(label);
@@ -888,55 +1002,69 @@ window.onclick = function (event) {
     closeMultiDeleteModal();
   }
 }
+
 function sadhakaNameChanged(name) {
-  //var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
-  //suggestionsDiv.innerHTML = ''; // clear previous suggestions
-  //suggestionsDiv.style.display = 'none';
-
-  var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.startsWith(name));
-  if (matchingNames.length > 0) {
-    //suggestionsDiv.style.display = 'block';
+  // Clear suggestions (if they exist)
+  var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
+  if (suggestionsDiv) {
+    suggestionsDiv.innerHTML = ''; // clear previous suggestions
+    suggestionsDiv.style.display = 'none';
   }
-  matchingNames.forEach(sadhakaName => {
-    var suggestionDiv = document.createElement('div');
-    suggestionDiv.textContent = sadhakaName;
-    suggestionDiv.onclick = function () {
-      sadhakaNameInput.value = sadhakaName;
-      //suggestionsDiv.innerHTML = ''; // clear suggestions
-      //suggestionsDiv.style.display = 'none';
-      loadSadhaka(sadhakaName);
-    };
-    //suggestionsDiv.appendChild(suggestionDiv);
-  });
 
-  // load Sadhaka details
-  if (!sadhakaNames.includes(name)) {
-    clearSadhakaDiv(); // Clear the div if the entered name is not found
-  } else {
+  // Always clear the form BEFORE attempting to load new sadhaka data
+  // This ensures a clean slate and avoids issues with elements from previous loads.
+  clearSadhakaDiv();
+
+  var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.toLowerCase().startsWith(name.toLowerCase()));
+  if (matchingNames.length > 0 && name.length > 0) {
+    if (suggestionsDiv) suggestionsDiv.style.display = 'block';
+    matchingNames.forEach(sadhakaName => {
+      var suggestionDiv = document.createElement('div');
+      suggestionDiv.textContent = sadhakaName;
+      suggestionDiv.onclick = function () {
+        sadhakaNameInput.value = sadhakaName;
+        if (suggestionsDiv) {
+          suggestionsDiv.innerHTML = '';
+          suggestionsDiv.style.display = 'none';
+        }
+        loadSadhaka(sadhakaName);
+      };
+      if (suggestionsDiv) suggestionsDiv.appendChild(suggestionDiv);
+    });
+  }
+
+  // If the entered name exactly matches an existing sadhaka, load it.
+  // This is for when the user types the full name without selecting from suggestions.
+  if (sadhakaNames.includes(name)) {
     loadSadhaka(name);
   }
 }
 
-// Modify the clearSadhakaDiv function to include new sections
 function clearSadhakaDiv() {
-  var cardiosadhakaDiv = document.getElementById('cardioDiv');
-  cardiosadhakaDiv.innerHTML = '';
-  var noncardiosadhakaDiv = document.getElementById('nonCardioDiv');
-  noncardiosadhakaDiv.innerHTML = '';
-  var meditativeDiv = document.getElementById('meditativeDiv');
-  meditativeDiv.innerHTML = '';
-  var breathingDiv = document.getElementById('breathingDiv');
-  breathingDiv.innerHTML = '';
-  var pranayamaDiv = document.getElementById('pranayamaDiv');
-  pranayamaDiv.innerHTML = '';
-  var meditationDiv = document.getElementById('meditationDiv');
-  meditationDiv.innerHTML = '';
-
-  // Set default texts
+  categories.forEach(category => {
+    if (category.type === 'text') {
+      const element = document.getElementById(category.elementId);
+      if (element) {
+        // Only clear if it's not a default text (e.g., prayer, diet, routine)
+        if (![defaultPrayerText, defaultDietText, defaultRoutineText].includes(element.value)) {
+          element.value = '';
+        }
+      }
+    } else if (category.type === 'asanas') {
+      const containerDiv = document.getElementById(category.elementId);
+      if (containerDiv) {
+        containerDiv.innerHTML = ''; // Clear all asana divs
+      }
+    }
+  });
+  // Explicitly set default texts for those sections
   document.getElementById('prayerText').value = defaultPrayerText;
   document.getElementById('dietAndAdditionalNotes').value = defaultDietText;
   document.getElementById('routineText').value = defaultRoutineText;
-  document.getElementById('advisoryText').value = '';
+  document.getElementById('advisoryText').value = ''; // Advisory typically starts empty
+  document.getElementById('jointsAndGlandsNotes').value = '';
+  document.getElementById('cardioNotes').value = '';
+  document.getElementById('nonCardioNotes').value = '';
 }
 
 
@@ -946,59 +1074,62 @@ function createAsanaDivWithCategory(asana, category) {
 
   var asanaDiv = document.createElement('div');
   asanaDiv.style.display = 'flex';
-  asanaDiv.style.flexWrap = 'no-wrap';
+  asanaDiv.style.flexWrap = 'nowrap'; // Changed to 'nowrap'
   asanaDiv.style.alignItems = 'center';
-  asanaDiv.style.justifyContent = 'space-between';
+  asanaDiv.style.justifyContent = 'space-between'; // Distribute space
   asanaDiv.style.marginBottom = '10px';
+  asanaDiv.style.width = '100%'; // Ensure it takes full width of its parent
 
   var asanaNameSelect = createAsanaNameSelect(category);
   asanaDiv.appendChild(asanaNameSelect);
 
+  // Initialize Select2 after appending to DOM for proper width calculation
   $(asanaNameSelect).select2({
-    width: excludeIndividualNotes.includes(category) ? '70%' : '30%',
+    width: 'resolve', // Let Select2 calculate width based on container
     minimumResultsForSearch: 1
   });
 
   var infoButton = createInfoButton(asanaNameSelect);
+  infoButton.style.flexShrink = '0'; // Prevent button from shrinking
+  infoButton.style.marginLeft = '10px';
+  infoButton.style.marginRight = '10px'; // Space from repetition input
   asanaDiv.appendChild(infoButton);
-
-  if (asana && asana.asanaName) {
-    var matchingAsana = asanas.find(asanaOption => asanaOption[0].toLowerCase() === asana.asanaName.toLowerCase());
-    if (matchingAsana) {
-      $(asanaNameSelect).val(matchingAsana[0]).trigger('change');
-    }
-  }
 
   // Add repetitions only for categories that don't have section notes
   if (!excludeRepetitions.includes(category)) {
     var repetitionsInput = createRepetitionsInput(asana);
+    repetitionsInput.style.flex = '1'; // Give it a flexible width
+    repetitionsInput.style.maxWidth = '80px'; // Limit max width
+    repetitionsInput.style.marginRight = '10px';
     asanaDiv.appendChild(repetitionsInput);
+  } else {
+    // If repetitions are excluded, give the select more space
+    $(asanaNameSelect).next('.select2-container').css('flex', '5'); // Adjust flex for Select2 container
   }
 
   // Only add special notes for non-excluded categories
   if (!excludeIndividualNotes.includes(category)) {
     var specialNotesTextarea = createSpecialNotesTextarea(asana);
+    specialNotesTextarea.style.flex = '2'; // Give it a flexible width
+    specialNotesTextarea.style.marginRight = '10px';
     asanaDiv.appendChild(specialNotesTextarea);
   }
 
   var deleteButton = createDeleteButton(asanaDiv);
+  deleteButton.style.flexShrink = '0'; // Prevent button from shrinking
+  deleteButton.style.marginLeft = 'auto'; // Push to the right
   asanaDiv.appendChild(deleteButton);
 
   return asanaDiv;
 }
+
 function createAsanaNameSelect(category) {
-  console.log("Creating asana select. Category:", category, "Asanas:", asanas);
   var asanaNameSelect = document.createElement('select');
-  asanaNameSelect.style.padding = '10px';
-  asanaNameSelect.style.borderRadius = '5px';
-  asanaNameSelect.style.border = '1px solid #cccccc';
-  asanaNameSelect.style.backgroundColor = '#ffffff';
-  asanaNameSelect.style.color = '#333333';
-  asanaNameSelect.style.width = 'auto';
+  // The styling for flex and margin will be handled by the CSS for .select2-container
+  asanaNameSelect.classList.add('asanaNameSelect');
 
   // Filter asanas by category
   var filteredAsanas = asanas.filter(asana => asana[3] === category);
-  console.log("Filtered asanas:", filteredAsanas);
 
   // Populate the dropdown options
   filteredAsanas.forEach((asanaOption) => {
@@ -1008,7 +1139,6 @@ function createAsanaNameSelect(category) {
     asanaNameSelect.appendChild(option);
   });
 
-  asanaNameSelect.classList.add('asanaNameSelect');
   return asanaNameSelect;
 }
 
@@ -1071,27 +1201,68 @@ function displaySadhaka(sadhaka) {
   document.getElementById('cardioNotes').value = sadhaka.cardioNotes || '';
   document.getElementById('nonCardioNotes').value = sadhaka.nonCardioNotes || '';
 
-  categories.forEach(category => {
+  // Get the main container for sections (assuming body is the parent, adjust if different)
+  const mainContainer = document.body;
+
+  // Ensure all sections are present in the categories array
+  // If a new category is added but an old sadhaka doesn't have it saved, this ensures it appears.
+  const allCategoryIds = categories.map(cat => cat.id);
+  let currentCategoryOrder = sadhaka.categoryOrder || allCategoryIds;
+
+  // Filter out any IDs in saved order that no longer exist in `categories`
+  currentCategoryOrder = currentCategoryOrder.filter(id => allCategoryIds.includes(id));
+  // Add any new categories (not in saved order) to the end
+  const newCategories = allCategoryIds.filter(id => !currentCategoryOrder.includes(id));
+  currentCategoryOrder = currentCategoryOrder.concat(newCategories);
+
+  // Create a map for quick lookup of category definitions by ID
+  const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+
+  // Create a document fragment to append sections efficiently
+  const fragment = document.createDocumentFragment();
+
+  // Iterate through the determined order and append actual section elements to the fragment
+  currentCategoryOrder.forEach(sectionId => {
+    const sectionElement = document.getElementById(sectionId);
+    if (sectionElement) {
+      fragment.appendChild(sectionElement);
+    }
+  });
+
+  // Append the reordered fragment to the body (or your main content div)
+  // This ensures the DOM elements are in the correct order for drag-and-drop
+  mainContainer.append(fragment);
+
+  // Now populate content based on the (potentially new) order
+  categories.forEach(category => { // Iterate through original 'categories' for data population logic
     if (category.type === 'text') {
-      const element = document.getElementById(category.id);
-      if (category.id === 'dietAndAdditionalNotes' && (!sadhaka[category.id] || sadhaka[category.id].trim() === '')) {
-        element.value = defaultDietText;
-      } else if (category.id === 'routineText' && (!sadhaka[category.id] || sadhaka[category.id].trim() === '')) {
-        element.value = defaultRoutineText;
-      } else {
-        element.value = sadhaka[category.id] || '';
+      const element = document.getElementById(category.elementId);
+      if (element) {
+        if (category.elementId === 'dietAndAdditionalNotes' && (!sadhaka[category.elementId] || sadhaka[category.elementId].trim() === '')) {
+          element.value = defaultDietText;
+        } else if (category.elementId === 'routineText' && (!sadhaka[category.elementId] || sadhaka[category.elementId].trim() === '')) {
+          element.value = defaultRoutineText;
+        } else {
+          element.value = sadhaka[category.elementId] || '';
+        }
       }
     } else if (category.type === 'asanas') {
-      var containerDiv = document.getElementById(category.id);
-      containerDiv.innerHTML = '';
-      if (Array.isArray(sadhaka[category.id])) {
-        sadhaka[category.id].forEach(asana => {
-          var asanaDiv = createAsanaDivWithCategory(asana, category.category);
-          containerDiv.appendChild(asanaDiv);
-        });
+      var containerDiv = document.getElementById(category.elementId);
+      if (containerDiv) {
+        containerDiv.innerHTML = ''; // Clear previous content before repopulating
+        if (Array.isArray(sadhaka[category.elementId])) {
+          sadhaka[category.elementId].forEach(asana => {
+            var asanaDiv = createAsanaDivWithCategory(asana, category.category);
+            containerDiv.appendChild(asanaDiv);
+          });
+        }
       }
     }
   });
+  console.log("Sadhaka data displayed successfully.");
+
+  // IMPORTANT: Re-setup drag and drop after reordering DOM elements
+  setupDragAndDrop();
 }
 
 function displayAsanasForCategory(asanaList, containerDiv, category) {
@@ -1133,31 +1304,43 @@ function addAsana(divId, category) {
 
 function addAsanaToDiv(divId, category) {
   var categoryDiv = document.getElementById(divId);
-  var asanaDiv = createAsanaDiv();
+  var asanaDiv = createAsanaDiv(); // Use existing createAsanaDiv
   var asanaNameSelect = createAsanaNameSelect(category);
   asanaDiv.appendChild(asanaNameSelect);
 
   $(asanaNameSelect).select2({
-    width: '70%',
+    width: 'resolve', // Let Select2 calculate width based on container
     minimumResultsForSearch: 1
   });
 
   var infoButton = createInfoButton(asanaNameSelect);
+  infoButton.style.flexShrink = '0';
+  infoButton.style.marginLeft = '10px';
+  infoButton.style.marginRight = '10px';
   asanaDiv.appendChild(infoButton);
 
   // Add repetitions only for categories that don't have section notes
   if (category !== 'Joints and Glands' && category !== 'Physical Asana') {
     var repetitionsInput = createRepetitionsInput();
+    repetitionsInput.style.flex = '1';
+    repetitionsInput.style.maxWidth = '80px';
+    repetitionsInput.style.marginRight = '10px';
     asanaDiv.appendChild(repetitionsInput);
+  } else {
+    $(asanaNameSelect).next('.select2-container').css('flex', '5');
   }
 
   // Only add special notes for non-excluded categories
   if (category !== 'Joints and Glands' && category !== 'Physical Asana') {
     var specialNotesTextarea = createSpecialNotesTextarea();
+    specialNotesTextarea.style.flex = '2';
+    specialNotesTextarea.style.marginRight = '10px';
     asanaDiv.appendChild(specialNotesTextarea);
   }
 
   var deleteButton = createDeleteButton(asanaDiv);
+  deleteButton.style.flexShrink = '0';
+  deleteButton.style.marginLeft = 'auto';
   asanaDiv.appendChild(deleteButton);
 
   categoryDiv.appendChild(asanaDiv);
@@ -1216,6 +1399,10 @@ function loadSadhaka(name) {
   } else {
     fetchAndDisplaySadhaka(name);
   }
+
+  // Ensure save buttons are visible when a sadhaka is loaded
+  document.querySelector('button[onclick="saveSadhakaWithCategory()"]').style.display = 'inline-block';
+  document.querySelector('button[onclick="saveSadhakaReportAsPdf()"]').style.display = 'inline-block';
 }
 
 function fetchAndDisplaySadhaka(name) {
@@ -1247,6 +1434,11 @@ function fetchAndDisplaySadhaka(name) {
 
 async function saveSadhakaWithCategory() {
   var sadhakaName = sadhakaNameInput.value;
+  if (!sadhakaName) {
+    alert('Please enter a Sadhaka name to save.');
+    return;
+  }
+
   var sadhaka = {
     name: sadhakaName,
     jointsAndGlandsNotes: document.getElementById('jointsAndGlandsNotes').value,
@@ -1256,21 +1448,31 @@ async function saveSadhakaWithCategory() {
 
   categories.forEach(category => {
     if (category.type === 'text') {
-      sadhaka[category.id] = document.getElementById(category.id).value;
+      sadhaka[category.elementId] = document.getElementById(category.elementId).value;
     } else if (category.type === 'asanas') {
-      sadhaka[category.id] = getAsanasFromDiv(document.getElementById(category.id));
+      sadhaka[category.elementId] = getAsanasFromDiv(document.getElementById(category.elementId));
     }
   });
 
+  // Save the current order of sections
+  const sectionElements = document.querySelectorAll('.section');
+  sadhaka.categoryOrder = Array.from(sectionElements).map(section => section.id);
+
   saveSadhakaToDB(sadhaka).then(() => {
     alert('Saved successfully!');
+    // Update sadhakaNames if it's a new sadhaka
+    if (!sadhakaNames.includes(sadhakaName)) {
+      sadhakaNames.push(sadhakaName);
+      populateSadhakaNameList();
+    }
   }).catch((error) => {
     console.log("Error saving sadhaka:", error);
+    alert('Error saving Sadhaka. Please check the console for details.');
   });
 }
 
-
 let currentUser = null;
+
 
 function login() {
   const usernameInput = document.getElementById('username').value;
@@ -1288,7 +1490,7 @@ function login() {
 
       const loginData = querySnapshot.docs[0].data();
       if (passwordInput === loginData.password) {
-        currentUser = loginData;  // Store the current user info
+        currentUser = loginData; // Store the current user info
         alert("Login successful!");
 
         // Hide both login container and overlay properly
@@ -1311,6 +1513,10 @@ function login() {
         const manageUsersBtn = document.querySelector('[onclick="showUserManagement()"]');
         manageUsersBtn.style.display = loginData.isAdmin ? 'block' : 'none';
 
+        // Show save buttons after successful login
+        document.querySelector('button[onclick="saveSadhakaWithCategory()"]').style.display = 'inline-block';
+        document.querySelector('button[onclick="saveSadhakaReportAsPdf()"]').style.display = 'inline-block';
+
         initialize();
       } else {
         alert("Invalid username or password. Please try again.");
@@ -1321,7 +1527,6 @@ function login() {
       alert("An error occurred during login. Please try again.");
     });
 }
-
 
 
 function showMultiAsanaModal(category, asanaCategory) {
@@ -1556,6 +1761,77 @@ function showUserManagement() {
   const modal = document.getElementById('userManagementModal');
   modal.style.display = 'block';
   loadUsers();
+}
+
+
+function setupDragAndDrop() {
+  const sections = document.querySelectorAll('.section');
+  let draggedItem = null; // This variable will be used by the named functions
+
+  // Define named event handler functions
+  const handleDragStart = (e) => {
+    draggedItem = e.currentTarget.closest('.section'); // Get the parent section
+    setTimeout(() => {
+      draggedItem.classList.add('dragging');
+    }, 0);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedItem.id);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedItem) {
+      draggedItem.classList.remove('dragging');
+      draggedItem = null;
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Necessary to allow a drop
+    const targetSection = e.currentTarget; // The section currently being dragged over
+
+    if (draggedItem && draggedItem !== targetSection) {
+      const rect = targetSection.getBoundingClientRect();
+      const isAfter = (e.clientY - rect.top) / (rect.height) > 0.5;
+
+      const parent = targetSection.parentNode;
+      if (isAfter && targetSection.nextSibling) {
+        // If dragging over bottom half and there's a next sibling, insert after
+        parent.insertBefore(draggedItem, targetSection.nextSibling);
+      } else if (!isAfter) {
+        // If dragging over top half, insert before
+        parent.insertBefore(draggedItem, targetSection);
+      }
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    // The actual reordering happens in dragover, so drop just prevents default browser behavior
+  };
+
+  sections.forEach(section => {
+    // Find the h2 element within the section to use as the drag handle
+    const h2Handle = section.querySelector('h2');
+
+    // Remove existing listeners to prevent duplicates before re-attaching
+    // This is crucial if setupDragAndDrop is called multiple times (e.g., after loading sadhaka)
+    if (h2Handle) {
+      h2Handle.removeEventListener('dragstart', handleDragStart);
+      h2Handle.removeEventListener('dragend', handleDragEnd);
+    }
+    section.removeEventListener('dragover', handleDragOver);
+    section.removeEventListener('drop', handleDrop);
+
+
+    // Attach new listeners
+    if (h2Handle) {
+      h2Handle.setAttribute('draggable', 'true'); // Make the h2 draggable
+      h2Handle.addEventListener('dragstart', handleDragStart);
+      h2Handle.addEventListener('dragend', handleDragEnd);
+    }
+    section.addEventListener('dragover', handleDragOver);
+    section.addEventListener('drop', handleDrop);
+  });
 }
 
 function closeUserManagementModal() {

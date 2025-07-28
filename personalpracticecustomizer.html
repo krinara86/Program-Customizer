@@ -1,88 +1,93 @@
 <head>
+  <meta charset="UTF-8">
   <title>Sadhaka Customizer</title>
   <!-- Original Firebase and external library scripts remain unchanged -->
-<script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-<!-- Select2 CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
+  <!-- Select2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
 
-<!-- Select2 JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+  <!-- Select2 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
 
-<!-- Add these new lines -->
-<link href="styles.css" rel="stylesheet">
-<script src="script.js" defer></script>
+  <!-- Add these new lines -->
+  <link href="styles.css" rel="stylesheet">
+  <script src="script.js" defer></script>
 </head>
 <!-- Add this right after the opening <body> tag, before the overlay div -->
-  <div id="loginStatus" style="position: absolute; top: 10px; right: 20px; font-size: 14px; color: #333; display: none;">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      Logged in as: <span id="loggedInUser" style="font-weight: bold;"></span>
-      <button onclick="showChangePasswordModal()" 
-              style="padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 12px;">
-        Change Password
-      </button>
-    </div>
+<div id="loginStatus" style="position: absolute; top: 10px; right: 20px; font-size: 14px; color: #333; display: none;">
+  <div style="display: flex; align-items: center; gap: 10px;">
+    Logged in as: <span id="loggedInUser" style="font-weight: bold;"></span>
+    <button onclick="showChangePasswordModal()"
+      style="padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 12px;">
+      Change Password
+    </button>
   </div>
+</div>
 
- 
+
 
 <body>
   <div id="overlay"></div>
 
-   <!-- Login Window -->
-   <div class="login-container">
+  <!-- Login Window -->
+  <div class="login-container">
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
   </div>
 
- <!-- User Management Modal -->
-<div id="userManagementModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <span class="close" onclick="closeUserManagementModal()">&times;</span>
-    <h2>User Management</h2>
-    
-    <!-- Add User Form -->
-    <div class="user-form" style="border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-      <input type="text" id="newUsername" placeholder="Username" style="margin-bottom: 10px; padding: 8px; width: 200px;">
-      <input type="password" id="newPassword" placeholder="Password" style="margin-bottom: 10px; padding: 8px; width: 200px;">
-      <div style="margin: 10px 0;">
-        <input type="checkbox" id="isAdmin" style="margin-right: 5px; vertical-align: left;">
-        <label for="isAdmin" style="vertical-align: left;">Admin User</label>
+  <!-- User Management Modal -->
+  <div id="userManagementModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeUserManagementModal()">&times;</span>
+      <h2>User Management</h2>
+
+      <!-- Add User Form -->
+      <div class="user-form" style="border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+        <input type="text" id="newUsername" placeholder="Username"
+          style="margin-bottom: 10px; padding: 8px; width: 200px;">
+        <input type="password" id="newPassword" placeholder="Password"
+          style="margin-bottom: 10px; padding: 8px; width: 200px;">
+        <div style="margin: 10px 0;">
+          <input type="checkbox" id="isAdmin" style="margin-right: 5px; vertical-align: left;">
+          <label for="isAdmin" style="vertical-align: left;">Admin User</label>
+        </div>
+        <button onclick="addUser()"
+          style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Add
+          User</button>
       </div>
-      <button onclick="addUser()" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Add User</button>
-    </div>
 
-    <!-- Message Display -->
-    <div id="userMessage" style="margin: 10px 0;"></div>
+      <!-- Message Display -->
+      <div id="userMessage" style="margin: 10px 0;"></div>
 
-    <!-- Users List -->
-    <div id="usersList">
-      <h3>Current Users</h3>
-      <table id="usersTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-        <thead>
-          <tr style="background-color: #f5f5f5;">
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Username</th>
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Role</th>
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Action</th>
-          </tr>
-        </thead>
-        <tbody id="usersTableBody">
-          <!-- Users will be listed here -->
-        </tbody>
-      </table>
+      <!-- Users List -->
+      <div id="usersList">
+        <h3>Current Users</h3>
+        <table id="usersTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr style="background-color: #f5f5f5;">
+              <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Username</th>
+              <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Role</th>
+              <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- Users will be listed here -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Add the Manage Users button -->
-<button onclick="showUserManagement()" style="margin: 10px;">Manage Users</button>
+  <!-- Add the Manage Users button -->
+  <button onclick="showUserManagement()" style="margin: 10px;">Manage Users</button>
   <div class="logo-title-container">
     <img
       src="https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png"
@@ -92,15 +97,15 @@
 
 
   <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-    <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)" 
-           style="width: 200px; height: 28px; padding: 2px 8px;">
+    <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)"
+      style="width: 200px; height: 28px; padding: 2px 8px;">
     <datalist id="sadhakaNameList"></datalist>
-    <button onclick="deleteSadhaka()" 
-            style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
+    <button onclick="deleteSadhaka()"
+      style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
       Delete Sadhaka
     </button>
-    <button onclick="showMultiDeleteModal()" 
-            style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
+    <button onclick="showMultiDeleteModal()"
+      style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
       Delete Multiple
     </button>
   </div>
@@ -118,26 +123,33 @@
 
   <div id="jointsAndGlandsSection" class="section">
     <h2>Joints and Glands</h2>
-    <textarea id="jointsAndGlandsNotes" placeholder="Special notes for Joints and Glands" rows="4" class="category-notes"></textarea>
+    <textarea id="jointsAndGlandsNotes" placeholder="Special notes for Joints and Glands" rows="4"
+      class="category-notes"></textarea>
     <div id="jointsAndGlandsDiv" class="asana-div sadhakaDiv"></div>
-    <button onclick="addAsana('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Joints and Glands Asana</button>
-    <button onclick="showMultiAsanaModal('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Multiple Joints and Glands Asanas</button>
+    <button onclick="addAsana('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Joints and Glands
+      Asana</button>
+    <button onclick="showMultiAsanaModal('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Multiple
+      Joints and Glands Asanas</button>
   </div>
 
   <div id="cardioSection" class="section">
     <h2>Cardio Day Asanas</h2>
-    <textarea id="cardioNotes" placeholder="Special notes for Cardio Day Asanas" rows="4" class="category-notes"></textarea>
+    <textarea id="cardioNotes" placeholder="Special notes for Cardio Day Asanas" rows="4"
+      class="category-notes"></textarea>
     <div id="cardioDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('cardioDiv', 'Physical Asana')" class="asana-button">Add Cardio Day Asana</button>
-    <button onclick="showMultiAsanaModal('cardioDiv', 'Physical Asana')" class="asana-button">Add Multiple Cardio Day Asanas</button>
+    <button onclick="showMultiAsanaModal('cardioDiv', 'Physical Asana')" class="asana-button">Add Multiple Cardio Day
+      Asanas</button>
   </div>
 
   <div id="nonCardioSection" class="section">
     <h2>Non-Cardio Day Asanas</h2>
-    <textarea id="nonCardioNotes" placeholder="Special notes for Non-Cardio Day Asanas" rows="4" class="category-notes"></textarea>
+    <textarea id="nonCardioNotes" placeholder="Special notes for Non-Cardio Day Asanas" rows="4"
+      class="category-notes"></textarea>
     <div id="nonCardioDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('nonCardioDiv', 'Physical Asana')" class="asana-button">Add Non-Cardio Day Asana</button>
-    <button onclick="showMultiAsanaModal('nonCardioDiv', 'Physical Asana')" class="asana-button">Add Multiple Non-Cardio Day Asanas</button>
+    <button onclick="showMultiAsanaModal('nonCardioDiv', 'Physical Asana')" class="asana-button">Add Multiple Non-Cardio
+      Day Asanas</button>
   </div>
 
   <div id="relaxationSection" class="section">
@@ -152,42 +164,49 @@
     <h2>Meditative Asanas</h2>
     <div id="meditativeDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Meditative Asana</button>
-    <button onclick="showMultiAsanaModal('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Multiple Meditative Asanas</button>
+    <button onclick="showMultiAsanaModal('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Multiple
+      Meditative Asanas</button>
   </div>
 
   <div id="breathingSection" class="section">
     <h2>Breathing exercises</h2>
     <div id="breathingDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('breathingDiv', 'Breathing')" class="asana-button">Add Breathing exercises</button>
-    <button onclick="showMultiAsanaModal('breathingDiv', 'Breathing')" class="asana-button">Add Multiple Breathing exercises</button>
+    <button onclick="showMultiAsanaModal('breathingDiv', 'Breathing')" class="asana-button">Add Multiple Breathing
+      exercises</button>
   </div>
-  
+
   <div id="pranayamaSection" class="section">
     <h2>Pranayama</h2>
     <div id="pranayamaDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('pranayamaDiv', 'Pranayana')" class="asana-button">Add Pranayama</button>
-    <button onclick="showMultiAsanaModal('pranayamaDiv', 'Pranayana')" class="asana-button">Add Multiple Pranayama</button>
+    <button onclick="showMultiAsanaModal('pranayamaDiv', 'Pranayana')" class="asana-button">Add Multiple
+      Pranayama</button>
   </div>
-  
+
   <div id="meditationSection" class="section">
     <h2>Meditation</h2>
     <div id="meditationDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('meditationDiv', 'Meditation')" class="asana-button">Add Meditation</button>
-    <button onclick="showMultiAsanaModal('meditationDiv', 'Meditation')" class="asana-button">Add Multiple Meditation</button>
+    <button onclick="showMultiAsanaModal('meditationDiv', 'Meditation')" class="asana-button">Add Multiple
+      Meditation</button>
   </div>
 
   <div id="routineSection" class="section">
     <h2>Routine</h2>
     <textarea id="routineText" placeholder="Routine" rows="20"></textarea>
   </div>
-  
+
 
   <div id="asanaDescription" class="asana-description"></div>
 
-  <textarea id="dietAndAdditionalNotes" placeholder="Dietery recommendations" rows="20"></textarea>
+  <div id="dietAndAdditionalNotesSection" class="section">
+    <h2>Dietary recommendations</h2>
+    <textarea id="dietAndAdditionalNotes" placeholder="Dietery recommendations" rows="20"></textarea>
+  </div>
 
-  <button onclick="saveSadhakaWithCategory()">Save Sadhaka</button>
-  <button onclick="saveSadhakaReportAsPdf()">Save Sadhaka report as pdf</button>
+  <button onclick="saveSadhakaWithCategory()" style="display: none;">Save Sadhaka</button>
+  <button onclick="saveSadhakaReportAsPdf()" style="display: none;">Save Sadhaka report as pdf</button>
 
   <!-- Multi-Asana Modal -->
   <div id="multiAsanaModal" class="modal">
@@ -211,28 +230,28 @@
     </div>
   </div>
 
-   <!-- Multi-Delete Modal -->
-<div id="multiDeleteModal" class="modal" style="display: none;">
-  <div class="modal-content" style="max-width: 500px;">
-    <span class="close" onclick="closeMultiDeleteModal()">&times;</span>
-    <h3 style="margin-top: 0;">Select Sadhakas to Delete</h3>
-    <input type="text" id="sadhakaSearchInput" placeholder="Search sadhakas..." 
-           style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
-    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
-      <div id="sadhakaCheckboxList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-    </div>
-    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-      <button onclick="closeMultiDeleteModal()" 
-              style="padding: 8px 16px; background-color: #ccc; color: white; border: none; border-radius: 4px;">
-        Cancel
-      </button>
-      <button onclick="deleteSelectedSadhakas()" 
-              style="padding: 8px 16px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
-        Delete Selected
-      </button>
+  <!-- Multi-Delete Modal -->
+  <div id="multiDeleteModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+      <span class="close" onclick="closeMultiDeleteModal()">&times;</span>
+      <h3 style="margin-top: 0;">Select Sadhakas to Delete</h3>
+      <input type="text" id="sadhakaSearchInput" placeholder="Search sadhakas..."
+        style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+      <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+        <div id="sadhakaCheckboxList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button onclick="closeMultiDeleteModal()"
+          style="padding: 8px 16px; background-color: #ccc; color: white; border: none; border-radius: 4px;">
+          Cancel
+        </button>
+        <button onclick="deleteSelectedSadhakas()"
+          style="padding: 8px 16px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">
+          Delete Selected
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
 
 
@@ -241,20 +260,20 @@
       <span class="close" onclick="closeChangePasswordModal()">&times;</span>
       <h3 style="margin-top: 0;">Change Password</h3>
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <input type="password" id="currentPassword" placeholder="Current Password" 
-               style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        <input type="password" id="newPassword" placeholder="New Password" 
-               style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        <input type="password" id="confirmPassword" placeholder="Confirm New Password" 
-               style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <input type="password" id="currentPassword" placeholder="Current Password"
+          style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <input type="password" id="newPassword" placeholder="New Password"
+          style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <input type="password" id="confirmPassword" placeholder="Confirm New Password"
+          style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
       </div>
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-        <button onclick="closeChangePasswordModal()" 
-                style="padding: 8px 16px; background-color: #ccc; color: white; border: none; border-radius: 4px;">
+        <button onclick="closeChangePasswordModal()"
+          style="padding: 8px 16px; background-color: #ccc; color: white; border: none; border-radius: 4px;">
           Cancel
         </button>
-        <button onclick="changePassword()" 
-                style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">
+        <button onclick="changePassword()"
+          style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">
           Change Password
         </button>
       </div>
