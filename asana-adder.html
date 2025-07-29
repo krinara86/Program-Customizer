@@ -6,10 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add new Asana to Firestore</title>
   <!-- Include the Firebase libraries -->
-  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
-  <!-- Add Firebase Storage library -->
-  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
   <style>
     body {
       background-color: #BBC9D2;
@@ -72,6 +71,7 @@
       border: 1px solid #cccccc;
       background-color: #ffffff;
       color: #333333;
+      box-sizing: border-box;
     }
 
     button,
@@ -134,117 +134,61 @@
       background-color: #252829;
     }
 
-    #sadhakaDiv {
-      margin-top: 50px;
-      margin-bottom: 20px;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #cccccc;
-      border-radius: 5px;
-      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24);
-      transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
-    }
-
-    #sadhakaDiv:hover {
-      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25), 0px 2px 3px rgba(0, 0, 0, 0.22);
-    }
-
-    #sadhakaDiv div {
-      margin-top: 50px;
-      margin-bottom: 10px;
-    }
-
-    .info-button {
-      font-size: 12px;
-      line-height: 1;
-      padding: 2px 5px;
-      margin-left: 1px;
-      margin-right: 20px;
-      margin-top: auto;
-      margin-bottom: auto;
-      background-color: #706962;
-    }
-
-    #sadhakaName {
-      width: 200px;
-      /* Or whatever width you prefer */
-      box-sizing: border-box;
-    }
-
-    .suggestions {
-      position: relative;
-      background-color: #f0f0f0;
-      color: #333333;
-      padding: 10px;
-      max-height: 150px;
-      overflow-y: auto;
+    .modal {
+      display: none;
+      position: fixed;
       z-index: 1;
-      display: none;
-    }
-
-    .suggestions div {
-      cursor: pointer;
-      padding: 5px;
-    }
-
-    .asana-description {
-      position: absolute;
-      background-color: #f0f0f0;
-      color: #333333;
-      padding: 10px;
-      max-width: 300px;
-      z-index: 2;
-      display: none;
-    }
-
-    .login-container {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 300px;
-      padding: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      display: none;
-      z-index: 1000;
-      /* Ensures it's on top of the overlay */
-    }
-
-    .login-container h2 {
-      margin-bottom: 10px;
-    }
-
-    .login-container input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    .login-container button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      background-color: #007bff;
-      color: #fff;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    #overlay {
-      position: fixed;
-      top: 0;
       left: 0;
-      height: 100%;
+      top: 0;
       width: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      /* Black with 50% opacity */
-      display: none;
-      z-index: 999;
-      /* Ensures it's on top of other page elements */
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 700px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    #displayNameTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #displayNameTable th,
+    #displayNameTable td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    #displayNameTable th {
+      background-color: #f2f2f2;
+    }
+
+    #displayNameTable .category-header td {
+      font-weight: bold;
+      background-color: #e9e9e9;
+      padding-top: 12px;
+      padding-bottom: 12px;
     }
   </style>
 </head>
@@ -262,9 +206,10 @@
   <div>
     <label for="image">Image:</label>
     <input type="file" id="image" accept="image/*">
+    <img id="imagePreview" src="" alt="Asana Image Preview"
+      style="max-width: 200px; max-height: 200px; display: none; margin-top: 10px; border-radius: 5px;">
   </div>
   <button id="saveButton">Save</button>
-  <button id="updateButton" onclick="updateAsanasWithNormalizedNames()">Normalize Asana Names (Run Once)</button>
   <button id="openDisplayNameEditor">Edit Display Name and Category</button>
 
   <div id="displayNameModal" class="modal">
@@ -286,9 +231,6 @@
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
   <script>
     // Your Firebase config
     const firebaseConfig = {
@@ -302,11 +244,13 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     const nameInput = document.getElementById("name");
     const searchResults = document.getElementById("searchResults");
     const descriptionInput = document.getElementById("description");
     const imageInput = document.getElementById("image");
+    const imagePreview = document.getElementById("imagePreview");
     const saveButton = document.getElementById("saveButton");
     const modal = document.getElementById("displayNameModal");
     const openModalBtn = document.getElementById("openDisplayNameEditor");
@@ -330,8 +274,6 @@
 
     nameInput.addEventListener("input", debounce(async (e) => {
       const searchTerm = e.target.value.trim().toLowerCase();
-      console.log("Search term:", searchTerm);
-
       if (searchTerm.length < 2) {
         searchResults.style.display = "none";
         return;
@@ -339,8 +281,6 @@
 
       try {
         const asanasRef = db.collection("asanas");
-
-        // Perform a case-insensitive search
         const snapshot = await asanasRef.get();
         const matchingAsanas = snapshot.docs.filter(doc => {
           const asanaData = doc.data();
@@ -348,12 +288,9 @@
             (asanaData.displayName && asanaData.displayName.toLowerCase().includes(searchTerm));
         });
 
-        console.log("Query results:", matchingAsanas.length);
-
         searchResults.innerHTML = "";
         matchingAsanas.forEach(doc => {
           const asanaData = doc.data();
-          console.log("Matching asana:", asanaData.name);
           const div = document.createElement("div");
           div.textContent = asanaData.displayName || asanaData.name;
           div.addEventListener("click", () => selectAsana(doc));
@@ -371,12 +308,21 @@
       const asanaData = doc.data();
       nameInput.value = asanaData.displayName || asanaData.name;
       descriptionInput.value = asanaData.description || "";
+
+      if (asanaData.imageUrl) {
+        imagePreview.src = asanaData.imageUrl;
+        imagePreview.style.display = "block";
+      } else {
+        imagePreview.src = "";
+        imagePreview.style.display = "none";
+      }
+
       searchResults.style.display = "none";
     }
 
     saveButton.addEventListener("click", async () => {
       const name = nameInput.value.trim();
-      const normalizedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+      const normalizedName = name.charAt(0).toUpperCase() + name.slice(1); // Keep casing as entered after first char
       const description = descriptionInput.value.trim();
       const imageFile = imageInput.files[0];
 
@@ -385,33 +331,41 @@
         return;
       }
 
-      let imageUrl = null;
-      if (imageFile) {
-        const storageRef = firebase.storage().ref();
-        const imageRef = storageRef.child('images/' + imageFile.name);
-        const snapshot = await imageRef.put(imageFile);
-        imageUrl = await snapshot.ref.getDownloadURL();
-      }
-
-      const asanasRef = db.collection("asanas");
-
       try {
-        const asanaData = {
-          name: normalizedName,
-          nameLower: normalizedName.toLowerCase(),
-          description: description
-        };
-        if (imageUrl) {
-          asanaData.imageUrl = imageUrl;
-        }
-
         if (selectedAsana) {
-          // Modify existing asana
-          await selectedAsana.ref.update(asanaData);
+          // --- UPDATE EXISTING ASANA ---
+          const updateData = {
+            name: normalizedName,
+            nameLower: normalizedName.toLowerCase(),
+            description: description,
+            displayName: normalizedName // Always update display name on edit
+          };
+
+          if (imageFile) {
+            const imageRef = storage.ref().child('images/' + Date.now() + '_' + imageFile.name);
+            const snapshot = await imageRef.put(imageFile);
+            updateData.imageUrl = await snapshot.ref.getDownloadURL();
+          }
+          // If no new image is selected, the existing imageUrl is preserved by not including it in updateData.
+
+          await selectedAsana.ref.update(updateData);
           alert("Asana updated successfully!");
         } else {
-        
-          await asanasRef.add(asanaData);
+          // --- ADD NEW ASANA ---
+          const addData = {
+            name: normalizedName,
+            nameLower: normalizedName.toLowerCase(),
+            description: description,
+            displayName: normalizedName // Set initial display name
+          };
+
+          if (imageFile) {
+            const imageRef = storage.ref().child('images/' + Date.now() + '_' + imageFile.name);
+            const snapshot = await imageRef.put(imageFile);
+            addData.imageUrl = await snapshot.ref.getDownloadURL();
+          }
+
+          await db.collection("asanas").add(addData);
           alert("New asana added successfully!");
         }
 
@@ -419,39 +373,22 @@
         nameInput.value = "";
         descriptionInput.value = "";
         imageInput.value = "";
+        imagePreview.style.display = "none";
+        imagePreview.src = "";
         selectedAsana = null;
+
       } catch (error) {
         console.error("Error saving asana:", error);
         alert("An error occurred while saving the asana. Please try again.");
       }
     });
 
-    // Close search results when clicking outside
     document.addEventListener("click", (e) => {
       if (e.target !== nameInput && e.target !== searchResults) {
         searchResults.style.display = "none";
       }
     });
 
-    async function updateAsanasWithNormalizedNames() {
-      const asanasRef = db.collection("asanas");
-      const snapshot = await asanasRef.get();
-
-      snapshot.forEach(async (doc) => {
-        const asanaData = doc.data();
-        const normalizedName = asanaData.name.charAt(0).toUpperCase() + asanaData.name.slice(1).toLowerCase();
-        if (asanaData.name !== normalizedName || !asanaData.nameLower) {
-          await doc.ref.update({
-            name: normalizedName,
-            nameLower: normalizedName.toLowerCase()
-          });
-          console.log(`Updated ${asanaData.name} to ${normalizedName}`);
-        }
-      });
-      alert("Asanas updated with normalized names. You can now remove this button.");
-    }
-
-    // Display Name and Category Editor Functions
     openModalBtn.onclick = async function () {
       modal.style.display = "block";
       await populateDisplayNameTable();
@@ -470,64 +407,97 @@
     async function populateDisplayNameTable() {
       const asanasRef = db.collection("asanas");
       const snapshot = await asanasRef.get();
+      const categorizedAsanas = {};
 
-      displayNameTableBody.innerHTML = "";
+      // Group asanas by category
       snapshot.forEach(doc => {
         const asanaData = doc.data();
-        const row = displayNameTableBody.insertRow();
-        const cell1 = row.insertCell(0);
-        const cell2 = row.insertCell(1);
-        const cell3 = row.insertCell(2);
+        const category = asanaData.category || "Uncategorized";
+        if (!categorizedAsanas[category]) {
+          categorizedAsanas[category] = [];
+        }
+        // Sort by name within category
+        categorizedAsanas[category].push({ id: doc.id, ...asanaData });
+        categorizedAsanas[category].sort((a, b) => a.name.localeCompare(b.name));
+      });
 
-        row.style.padding = "5px";
+      displayNameTableBody.innerHTML = "";
+      // Sort categories alphabetically
+      const sortedCategories = Object.keys(categorizedAsanas).sort();
 
-        cell1.textContent = asanaData.name;
+      sortedCategories.forEach(category => {
+        // Add category header row
+        const headerRow = displayNameTableBody.insertRow();
+        headerRow.className = 'category-header';
+        const headerCell = headerRow.insertCell(0);
+        headerCell.colSpan = 3;
+        headerCell.textContent = category;
 
-        const displayNameInput = document.createElement("input");
-        displayNameInput.type = "text";
-        displayNameInput.value = asanaData.displayName || "";
-        displayNameInput.dataset.docId = doc.id;
-        displayNameInput.style.marginRight = "1px";
-        cell2.appendChild(displayNameInput);
+        // Add asana rows for this category
+        categorizedAsanas[category].forEach(asana => {
+          const row = displayNameTableBody.insertRow();
+          const cell1 = row.insertCell(0);
+          const cell2 = row.insertCell(1);
+          const cell3 = row.insertCell(2);
 
-        const categorySelect = document.createElement("select");
-        categorySelect.dataset.docId = doc.id;
-        categorySelect.style.marginLeft = "25px";
-        const categories = ["Prayer", "Relaxation", "Joints and Glands", "Meditative Asana", "Breathing", "Pranayana", "Meditation", "Physical Asana"];
-        categories.forEach(category => {
-          const option = document.createElement("option");
-          option.value = category;
-          option.textContent = category;
-          categorySelect.appendChild(option);
+          cell1.textContent = asana.name;
+
+          const displayNameInput = document.createElement("input");
+          displayNameInput.type = "text";
+          displayNameInput.value = asana.displayName || "";
+          displayNameInput.dataset.docId = asana.id;
+          cell2.appendChild(displayNameInput);
+
+          const categorySelect = document.createElement("select");
+          categorySelect.dataset.docId = asana.id;
+          const categories = ["Prayer", "Relaxation", "Joints and Glands", "Meditative Asana", "Breathing", "Pranayana", "Meditation", "Physical Asana"];
+
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "Select Category";
+          categorySelect.appendChild(placeholder);
+
+          categories.forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat;
+            option.textContent = cat;
+            categorySelect.appendChild(option);
+          });
+          categorySelect.value = asana.category || "";
+          cell3.appendChild(categorySelect);
         });
-        categorySelect.value = asanaData.category || "";
-        cell3.appendChild(categorySelect);
       });
     }
 
+
     saveDisplayNamesBtn.onclick = async function () {
-      const displayNameInputs = displayNameTableBody.querySelectorAll("input");
-      const categorySelects = displayNameTableBody.querySelectorAll("select");
+      const allRows = displayNameTableBody.querySelectorAll("tr:not(.category-header)");
       const batch = db.batch();
 
-      displayNameInputs.forEach((input, index) => {
-        const docRef = db.collection("asanas").doc(input.dataset.docId);
-        const category = categorySelects[index].value;
+      allRows.forEach(row => {
+        const displayNameInput = row.querySelector("input");
+        const categorySelect = row.querySelector("select");
+        const docId = displayNameInput.dataset.docId;
 
-        const updateData = {};
-        if (input.value.trim()) {
-          updateData.displayName = input.value.trim();
-        } else {
-          updateData.displayName = firebase.firestore.FieldValue.delete();
+        if (docId) {
+          const docRef = db.collection("asanas").doc(docId);
+          const updateData = {};
+          const newDisplayName = displayNameInput.value.trim();
+          const newCategory = categorySelect.value;
+
+          if (newDisplayName) {
+            updateData.displayName = newDisplayName;
+          } else {
+            updateData.displayName = firebase.firestore.FieldValue.delete();
+          }
+
+          if (newCategory) {
+            updateData.category = newCategory;
+          } else {
+            updateData.category = firebase.firestore.FieldValue.delete();
+          }
+          batch.update(docRef, updateData);
         }
-
-        if (category) {
-          updateData.category = category;
-        } else {
-          updateData.category = firebase.firestore.FieldValue.delete();
-        }
-
-        batch.update(docRef, updateData);
       });
 
       try {
