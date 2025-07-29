@@ -1107,7 +1107,7 @@ function clearSadhakaDiv() {
 
 function createAsanaDivWithCategory(asana, category) {
   const excludeIndividualNotes = ['Joints and Glands', 'Physical Asana'];
-  const excludeRepetitions = ['Joints and Glands', 'Physical Asana'];
+  const excludeRepetitions = ['Joints and Glands', 'Physical Asana', 'Relaxation', 'Meditative Asana', 'Meditation'];
 
   var asanaDiv = document.createElement('div');
   asanaDiv.style.display = 'flex';
@@ -1170,6 +1170,7 @@ function createAsanaDivWithCategory(asana, category) {
 
   return asanaDiv;
 }
+
 
 function createAsanaNameSelect(category) {
   var asanaNameSelect = document.createElement('select');
@@ -1365,8 +1366,10 @@ function addAsanaToDiv(divId, category) {
   infoButton.style.marginRight = '10px';
   asanaDiv.appendChild(infoButton);
 
+  const excludeRepetitions = ['Joints and Glands', 'Physical Asana', 'Relaxation', 'Meditative Asana', 'Meditation'];
+
   // Add repetitions only for categories that don't have section notes
-  if (category !== 'Joints and Glands' && category !== 'Physical Asana') {
+  if (!excludeRepetitions.includes(category)) {
     var repetitionsInput = createRepetitionsInput();
     repetitionsInput.style.flex = '1';
     repetitionsInput.style.maxWidth = '80px';
@@ -1760,7 +1763,7 @@ function addAsanaToCategory(asana, containerDivId, categoryType) {
   asanaDiv.appendChild(infoButton);
 
   // Determine if repetitions and special notes should be added based on categoryType
-  const excludeRepetitions = ['Joints and Glands', 'Physical Asana'];
+  const excludeRepetitions = ['Joints and Glands', 'Physical Asana', 'Relaxation', 'Meditative Asana', 'Meditation'];
   const excludeIndividualNotes = ['Joints and Glands', 'Physical Asana'];
 
   if (!excludeRepetitions.includes(categoryType)) {
@@ -1788,6 +1791,7 @@ function addAsanaToCategory(asana, containerDivId, categoryType) {
 
   categoryDiv.appendChild(asanaDiv);
 }
+
 
 function filterAsanas() {
   var searchValue = document.getElementById('asanaSearch').value.toLowerCase();
