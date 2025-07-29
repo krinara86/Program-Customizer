@@ -97,8 +97,8 @@
 
 
   <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-    <input type="text" id="sadhakaName" list="sadhakaNameList" oninput="sadhakaNameChanged(this.value)"
-      style="width: 200px; height: 28px; padding: 2px 8px;">
+    <input type="text" id="sadhakaName" list="sadhakaNameList" onchange="sadhakaNameSelected(this.value)"
+      onkeyup="sadhakaNameTyping(this.value)" style="width: 200px; height: 28px; padding: 2px 8px;">
     <datalist id="sadhakaNameList"></datalist>
     <button onclick="deleteSadhaka()"
       style="height: 28px; padding: 0 10px; background-color: #ff4444; color: white; border: none; border-radius: 4px;">

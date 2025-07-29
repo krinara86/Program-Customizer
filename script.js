@@ -643,20 +643,31 @@ function loadSadhakaNames() {
 function initialize() {
   document.querySelector('.login-container').style.display = 'block';
   document.querySelector('#overlay').style.display = 'block';
+
+  const sadhakaNameInput = document.getElementById('sadhakaName'); // Get reference here
+
   Promise.all([loadAsanas(), loadSadhakaNames(), loadDefaultTexts()])
     .then(([fetchedAsanas, fetchedNames]) => {
-      asanas = fetchedAsanas; // Assign fetched asanas to global asanas array
+      asanas = fetchedAsanas;
       sadhakaNames = fetchedNames;
       populateSadhakaNameList();
-      // setupDragAndDrop() will be called by displaySadhaka when a sadhaka is loaded,
-      // or if no sadhaka is loaded, we can call it here once.
-      // For initial load without a selected sadhaka, ensure drag/drop is enabled.
-      if (!sadhakaNameInput.value) { // If no sadhaka name pre-selected
-        setupDragAndDrop();
+
+      // On initial page load, if sadhakaName input is not empty (e.g., autofilled)
+      if (sadhakaNameInput.value.trim() !== '') {
+        // Trigger the loading logic as if the user selected it
+        sadhakaNameSelected(sadhakaNameInput.value);
+      } else {
+        // If no sadhaka name pre-filled, ensure a clean state for a new sadhaka
+        clearSadhakaDiv();
+        sadhakaNameInput.removeAttribute('data-loaded-name'); // Ensure it's not marked as loaded
       }
+
+      setupDragAndDrop(); // Setup drag and drop for initial empty or loaded state
       console.log("Initialization complete. Asanas:", asanas);
-    }).catch((error) => {
+    })
+    .catch((error) => {
       console.error("Error initializing:", error);
+      alert("Failed to initialize application data. Please check console for details.");
     });
 }
 
@@ -1001,67 +1012,96 @@ window.onclick = function (event) {
 }
 
 function sadhakaNameChanged(name) {
-  // Clear suggestions (if they exist)
+  var sadhakaNameInput = document.getElementById('sadhakaName');
   var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
+
+  // Clear suggestions
   if (suggestionsDiv) {
-    suggestionsDiv.innerHTML = ''; // clear previous suggestions
+    suggestionsDiv.innerHTML = '';
     suggestionsDiv.style.display = 'none';
   }
 
-  // Always clear the form BEFORE attempting to load new sadhaka data
-  // This ensures a clean slate and avoids issues with elements from previous loads.
-  clearSadhakaDiv();
+  // IMPORTANT: Check if the entered 'name' is empty or just whitespace.
+  // If it's empty, we want to clear the form as if starting fresh.
+  if (name.trim() === '') {
+    clearSadhakaDiv();
+    return; // Exit function, no sadhaka to load
+  }
 
   var matchingNames = sadhakaNames.filter(sadhakaName => sadhakaName.toLowerCase().startsWith(name.toLowerCase()));
-  if (matchingNames.length > 0 && name.length > 0) {
+
+  if (matchingNames.length > 0) {
     if (suggestionsDiv) suggestionsDiv.style.display = 'block';
     matchingNames.forEach(sadhakaName => {
       var suggestionDiv = document.createElement('div');
       suggestionDiv.textContent = sadhakaName;
       suggestionDiv.onclick = function () {
-        sadhakaNameInput.value = sadhakaName;
+        sadhakaNameInput.value = sadhakaName; // Set value from suggestion
         if (suggestionsDiv) {
           suggestionsDiv.innerHTML = '';
           suggestionsDiv.style.display = 'none';
         }
+        // When a suggestion is clicked, clear everything *before* loading
+        // This ensures a clean slate specific to the selected sadhaka.
+        clearSadhakaDiv();
+        sadhakaNameInput.value = sadhakaName; // Re-set the name after clearing
         loadSadhaka(sadhakaName);
       };
       if (suggestionsDiv) suggestionsDiv.appendChild(suggestionDiv);
     });
   }
 
-  // If the entered name exactly matches an existing sadhaka, load it.
-  // This is for when the user types the full name without selecting from suggestions.
-  if (sadhakaNames.includes(name)) {
+  // Logic for when user types a name without selecting from suggestions
+  // If the typed name is an exact match in the sadhakaNames list, load it.
+  // This prevents reloading for every character typed if it's already loaded.
+  if (sadhakaNames.includes(name) && sadhakaNameInput.getAttribute('data-loaded-name') !== name) {
+    // Clear the UI before loading new data
+    clearSadhakaDiv();
+    sadhakaNameInput.value = name; // Re-set the name after clearing
     loadSadhaka(name);
+  } else if (!sadhakaNames.includes(name) && sadhakaNameInput.getAttribute('data-loaded-name') !== '') {
+    // If it's a new name and an old one was loaded, clear the old data to start fresh.
+    // But ensure the current new name in the input field is kept.
+    const tempName = sadhakaNameInput.value; // Store the new name
+    clearSadhakaDiv();
+    sadhakaNameInput.value = tempName; // Restore the new name
+    sadhakaNameInput.removeAttribute('data-loaded-name'); // Mark as no sadhaka loaded
   }
 }
 
 function clearSadhakaDiv() {
+  console.log("Clearing Sadhaka UI...");
+
   categories.forEach(category => {
     if (category.type === 'text') {
       const element = document.getElementById(category.elementId);
       if (element) {
-        // Only clear if it's not a default text (e.g., prayer, diet, routine)
-        if (![defaultPrayerText, defaultDietText, defaultRoutineText].includes(element.value)) {
+        if (category.elementId === 'prayerText') {
+          element.value = defaultPrayerText;
+        } else if (category.elementId === 'dietAndAdditionalNotes') {
+          element.value = defaultDietText;
+        } else if (category.elementId === 'routineText') {
+          element.value = defaultRoutineText;
+        } else {
           element.value = '';
         }
       }
     } else if (category.type === 'asanas') {
       const containerDiv = document.getElementById(category.elementId);
       if (containerDiv) {
-        containerDiv.innerHTML = ''; // Clear all asana divs
+        containerDiv.innerHTML = '';
       }
     }
   });
-  // Explicitly set default texts for those sections
-  document.getElementById('prayerText').value = defaultPrayerText;
-  document.getElementById('dietAndAdditionalNotes').value = defaultDietText;
-  document.getElementById('routineText').value = defaultRoutineText;
-  document.getElementById('advisoryText').value = ''; // Advisory typically starts empty
+
   document.getElementById('jointsAndGlandsNotes').value = '';
   document.getElementById('cardioNotes').value = '';
   document.getElementById('nonCardioNotes').value = '';
+
+  // *** IMPORTANT: DO NOT CLEAR sadhakaName input field here. ***
+  // Its value is managed by sadhakaNameTyping/sadhakaNameSelected.
+
+  console.log("Sadhaka UI cleared.");
 }
 
 
@@ -1085,6 +1125,17 @@ function createAsanaDivWithCategory(asana, category) {
     width: 'resolve', // Let Select2 calculate width based on container
     minimumResultsForSearch: 1
   });
+
+  // FIX: Set the selected value in the dropdown based on the loaded sadhaka data.
+  // This ensures the correct asana is selected when loading an existing profile.
+  if (asana && asana.asanaName) {
+    // Check if the option actually exists in the select2 dropdown
+    if ($(asanaNameSelect).find(`option[value='${asana.asanaName}']`).length) {
+      $(asanaNameSelect).val(asana.asanaName).trigger('change');
+    } else {
+      console.warn(`Asana '${asana.asanaName}' not found in the dropdown for category '${category}'.`);
+    }
+  }
 
   var infoButton = createInfoButton(asanaNameSelect);
   infoButton.style.flexShrink = '0'; // Prevent button from shrinking
@@ -1191,9 +1242,10 @@ function createDeleteButton(asanaDiv) {
   return deleteButton;
 }
 
-
 function displaySadhaka(sadhaka) {
-  // Load category notes
+  console.log("Displaying sadhaka data:", sadhaka);
+
+  // Load category notes first
   document.getElementById('jointsAndGlandsNotes').value = sadhaka.jointsAndGlandsNotes || '';
   document.getElementById('cardioNotes').value = sadhaka.cardioNotes || '';
   document.getElementById('nonCardioNotes').value = sadhaka.nonCardioNotes || '';
@@ -1201,21 +1253,17 @@ function displaySadhaka(sadhaka) {
   // Get the main container for sections (assuming body is the parent, adjust if different)
   const mainContainer = document.body;
 
-  // Ensure all sections are present in the categories array
-  // If a new category is added but an old sadhaka doesn't have it saved, this ensures it appears.
+  // Determine the order of categories: Use saved order if available, otherwise default.
   const allCategoryIds = categories.map(cat => cat.id);
   let currentCategoryOrder = sadhaka.categoryOrder || allCategoryIds;
 
-  // Filter out any IDs in saved order that no longer exist in `categories`
+  // Filter out any IDs in saved order that no longer exist in `categories` (to prevent errors)
   currentCategoryOrder = currentCategoryOrder.filter(id => allCategoryIds.includes(id));
-  // Add any new categories (not in saved order) to the end
+  // Add any new categories (not in saved order) to the end of the order list
   const newCategories = allCategoryIds.filter(id => !currentCategoryOrder.includes(id));
   currentCategoryOrder = currentCategoryOrder.concat(newCategories);
 
-  // Create a map for quick lookup of category definitions by ID
-  const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-
-  // Create a document fragment to append sections efficiently
+  // Create a document fragment for efficient DOM manipulation during reordering
   const fragment = document.createDocumentFragment();
 
   // Iterate through the determined order and append actual section elements to the fragment
@@ -1223,15 +1271,16 @@ function displaySadhaka(sadhaka) {
     const sectionElement = document.getElementById(sectionId);
     if (sectionElement) {
       fragment.appendChild(sectionElement);
+    } else {
+      console.warn(`Section element with ID ${sectionId} not found in DOM.`);
     }
   });
 
-  // Append the reordered fragment to the body (or your main content div)
-  // This ensures the DOM elements are in the correct order for drag-and-drop
+  // Append the reordered fragment to the main container. This physically reorders the sections.
   mainContainer.append(fragment);
 
-  // Now populate content based on the (potentially new) order
-  categories.forEach(category => { // Iterate through original 'categories' for data population logic
+  // Now, populate the content for each section based on their 'category' definition
+  categories.forEach(category => {
     if (category.type === 'text') {
       const element = document.getElementById(category.elementId);
       if (element) {
@@ -1244,9 +1293,9 @@ function displaySadhaka(sadhaka) {
         }
       }
     } else if (category.type === 'asanas') {
-      var containerDiv = document.getElementById(category.elementId);
+      const containerDiv = document.getElementById(category.elementId); // e.g., 'jointsAndGlandsDiv'
       if (containerDiv) {
-        containerDiv.innerHTML = ''; // Clear previous content before repopulating
+        containerDiv.innerHTML = ''; // *** CRITICAL: Clear content before populating ***
         if (Array.isArray(sadhaka[category.elementId])) {
           sadhaka[category.elementId].forEach(asana => {
             var asanaDiv = createAsanaDivWithCategory(asana, category.category);
@@ -1258,7 +1307,7 @@ function displaySadhaka(sadhaka) {
   });
   console.log("Sadhaka data displayed successfully.");
 
-  // IMPORTANT: Re-setup drag and drop after reordering DOM elements
+  // Re-setup drag and drop listeners as DOM elements might have changed positions
   setupDragAndDrop();
 }
 
@@ -1383,6 +1432,11 @@ function hideAsanaDescription() {
 
 function loadSadhaka(name) {
   console.log("Loading sadhaka:", name);
+  var sadhakaNameInput = document.getElementById('sadhakaName');
+
+  // Set a data attribute to indicate which sadhaka is currently loaded
+  sadhakaNameInput.setAttribute('data-loaded-name', name);
+
   if (!Array.isArray(asanas) || asanas.length === 0) {
     console.log("Asanas not loaded, loading them first...");
     loadAsanas()
@@ -1397,7 +1451,6 @@ function loadSadhaka(name) {
     fetchAndDisplaySadhaka(name);
   }
 
-  // Ensure save buttons are visible when a sadhaka is loaded
   document.querySelector('button[onclick="saveSadhakaWithCategory()"]').style.display = 'inline-block';
   document.querySelector('button[onclick="saveSadhakaReportAsPdf()"]').style.display = 'inline-block';
 }
@@ -1409,23 +1462,98 @@ function fetchAndDisplaySadhaka(name) {
         console.log("Sadhaka data found:", doc.data());
         displaySadhaka(doc.data());
       } else {
-        console.log("No sadhaka found with name:", name);
+        console.log("No sadhaka found with name:", name + ". Initializing for new sadhaka.");
+        // If no sadhaka found, still initialize a default empty state
         var newSadhaka = {
           name: name,
-          prayerText: '',
-          dietAndAdditionalNotes: ''
+          prayerText: defaultPrayerText,
+          dietAndAdditionalNotes: defaultDietText,
+          routineText: defaultRoutineText,
+          advisoryText: '', // Advisory typically starts empty
+          jointsAndGlandsNotes: '',
+          cardioNotes: '',
+          nonCardioNotes: ''
         };
         categories.forEach(category => {
           if (category.type === 'asanas') {
-            newSadhaka[category.id] = [];
+            newSadhaka[category.elementId] = []; // Use elementId for asana arrays
           }
         });
-        displaySadhaka(newSadhaka);
+        // IMPORTANT: When a new sadhaka is being "loaded" (i.e., not found),
+        // we need to ensure the UI is fully cleared and reset to defaults.
+        clearSadhakaDiv(); // Re-clear to ensure defaults are properly set
+        document.getElementById('sadhakaName').value = name; // Ensure name remains
+        displaySadhaka(newSadhaka); // Display the empty/default state
       }
     })
     .catch((error) => {
       console.error("Error getting document:", error);
+      // Even on error, ensure UI is cleared but name is preserved.
+      const tempName = document.getElementById('sadhakaName').value;
+      clearSadhakaDiv();
+      document.getElementById('sadhakaName').value = tempName;
+      alert("Error loading sadhaka data. Please try again.");
     });
+}
+
+// Function to handle typing for suggestions only
+function sadhakaNameTyping(name) {
+  var sadhakaNameInput = document.getElementById('sadhakaName');
+  var suggestionsDiv = document.getElementById('sadhakaNameSuggestions');
+
+  // Clear existing suggestions
+  if (suggestionsDiv) {
+    suggestionsDiv.innerHTML = '';
+    suggestionsDiv.style.display = 'none';
+  }
+
+  if (name.trim().length === 0) {
+    // If input is cleared, clear the UI completely
+    clearSadhakaDiv();
+    sadhakaNameInput.removeAttribute('data-loaded-name'); // No sadhaka loaded
+    return;
+  }
+
+  // Filter and display suggestions
+  var matchingNames = sadhakaNames.filter(sadhaka => sadhaka.toLowerCase().startsWith(name.toLowerCase()));
+  if (matchingNames.length > 0) {
+    if (suggestionsDiv) suggestionsDiv.style.display = 'block';
+    matchingNames.forEach(sadhaka => {
+      var suggestionDiv = document.createElement('div');
+      suggestionDiv.textContent = sadhaka;
+      suggestionDiv.onclick = function () {
+        sadhakaNameInput.value = sadhaka;
+        if (suggestionsDiv) {
+          suggestionsDiv.innerHTML = '';
+          suggestionsDiv.style.display = 'none';
+        }
+        sadhakaNameSelected(sadhaka); // Call the selection handler
+      };
+      if (suggestionsDiv) suggestionsDiv.appendChild(suggestionDiv);
+    });
+  }
+}
+
+// Function to handle selection (from datalist/suggestion) or when input loses focus
+function sadhakaNameSelected(name) {
+  var sadhakaNameInput = document.getElementById('sadhakaName');
+
+  // Check if the name in the input field is different from what's currently loaded
+  // and if it's an existing sadhaka, then load it.
+  if (name.trim() !== '' && sadhakaNames.includes(name) && sadhakaNameInput.getAttribute('data-loaded-name') !== name) {
+    clearSadhakaDiv(); // Clear UI before loading new sadhaka
+    sadhakaNameInput.value = name; // Ensure the name is in the input field
+    loadSadhaka(name);
+  } else if (name.trim() === '') {
+    // If the input is empty after change/blur, clear the UI
+    clearSadhakaDiv();
+    sadhakaNameInput.removeAttribute('data-loaded-name');
+  } else if (!sadhakaNames.includes(name) && name.trim() !== '') {
+    // If it's a new name not in the list, clear any old data but keep the new name
+    clearSadhakaDiv();
+    sadhakaNameInput.value = name;
+    sadhakaNameInput.removeAttribute('data-loaded-name'); // No sadhaka loaded
+  }
 }
 
 
@@ -1541,14 +1669,18 @@ function closeMultiAsanaModal() {
   modal.style.display = "none";
 }
 
-// Modified populateAsanaCheckboxList function to use displayName
 function populateAsanaCheckboxList(category) {
   console.log("Populating asana checkbox list. Category:", category, "Asanas:", asanas);
   var tableBody = document.getElementById('asanaCheckboxTableBody');
-  tableBody.innerHTML = '';
+  tableBody.innerHTML = ''; // Clear previous entries
 
-  var filteredAsanas = asanas.filter(asana => asana[3] === category);
-  console.log("Filtered asanas for checkboxes:", filteredAsanas);
+  // Filter asanas by the category passed (e.g., 'Joints and Glands', 'Physical Asana', etc.)
+  var filteredAsanas = asanas.filter(asana => asana[3] === category); // asana[3] is the category
+
+  if (filteredAsanas.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="2">No asanas found for this category.</td></tr>';
+    return;
+  }
 
   filteredAsanas.forEach(asana => {
     var row = tableBody.insertRow();
@@ -1556,14 +1688,14 @@ function populateAsanaCheckboxList(category) {
     var checkboxCell = row.insertCell(0);
     var checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.value = asana[0];
-    checkbox.id = "asana_" + asana[0];
+    checkbox.value = asana[0]; // asana[0] is the asana name (internal ID)
+    checkbox.id = "asana_" + asana[0].replace(/\s+/g, '_'); // Create unique ID for checkbox
     checkboxCell.appendChild(checkbox);
 
     var nameCell = row.insertCell(1);
     var nameLabel = document.createElement('label');
-    nameLabel.htmlFor = "asana_" + asana[0];
-    nameLabel.textContent = asana[2] || asana[0]; // Use displayName if available, otherwise use name
+    nameLabel.htmlFor = checkbox.id;
+    nameLabel.textContent = asana[2] || asana[0]; // asana[2] is displayName, asana[0] is name
     nameCell.appendChild(nameLabel);
   });
 }
@@ -1592,9 +1724,68 @@ function addMultipleAsanas() {
 }
 
 
-function addAsanaToCategory(asana, category, asanaCategory) {
-  var categoryDiv = document.getElementById(category);
-  var asanaDiv = createAsanaDivWithCategory(asana, asanaCategory);
+function addAsanaToCategory(asana, containerDivId, categoryType) {
+  var categoryDiv = document.getElementById(containerDivId);
+  if (!categoryDiv) {
+    console.error("Container div not found:", containerDivId);
+    return;
+  }
+
+  var asanaDiv = createAsanaDiv();
+  var asanaNameSelect = createAsanaNameSelect(categoryType); // Pass the categoryType
+
+  asanaDiv.appendChild(asanaNameSelect);
+
+  // Initialize Select2 BEFORE setting its value
+  $(asanaNameSelect).select2({
+    width: 'resolve',
+    minimumResultsForSearch: 1
+  });
+
+  // Set the selected value in the dropdown
+  if (asana && asana.asanaName) {
+    // Check if the option actually exists in the select2 dropdown
+    if ($(asanaNameSelect).find(`option[value='${asana.asanaName}']`).length) {
+      $(asanaNameSelect).val(asana.asanaName).trigger('change');
+    } else {
+      console.warn(`Asana '${asana.asanaName}' not found in the dropdown for category '${categoryType}'.`);
+      // Optionally, add a default selection or handle this case.
+    }
+  }
+
+  var infoButton = createInfoButton(asanaNameSelect);
+  infoButton.style.flexShrink = '0';
+  infoButton.style.marginLeft = '10px';
+  infoButton.style.marginRight = '10px';
+  asanaDiv.appendChild(infoButton);
+
+  // Determine if repetitions and special notes should be added based on categoryType
+  const excludeRepetitions = ['Joints and Glands', 'Physical Asana'];
+  const excludeIndividualNotes = ['Joints and Glands', 'Physical Asana'];
+
+  if (!excludeRepetitions.includes(categoryType)) {
+    var repetitionsInput = createRepetitionsInput(asana); // Pass asana object to retrieve saved value
+    repetitionsInput.style.flex = '1';
+    repetitionsInput.style.maxWidth = '80px';
+    repetitionsInput.style.marginRight = '10px';
+    asanaDiv.appendChild(repetitionsInput);
+  } else {
+    // Adjust width for Select2 if repetitions/notes are excluded
+    $(asanaNameSelect).next('.select2-container').css('flex', '5');
+  }
+
+  if (!excludeIndividualNotes.includes(categoryType)) {
+    var specialNotesTextarea = createSpecialNotesTextarea(asana); // Pass asana object to retrieve saved value
+    specialNotesTextarea.style.flex = '2';
+    specialNotesTextarea.style.marginRight = '10px';
+    asanaDiv.appendChild(specialNotesTextarea);
+  }
+
+  var deleteButton = createDeleteButton(asanaDiv);
+  deleteButton.style.flexShrink = '0';
+  deleteButton.style.marginLeft = 'auto';
+  asanaDiv.appendChild(deleteButton);
+
   categoryDiv.appendChild(asanaDiv);
 }
 
