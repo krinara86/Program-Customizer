@@ -115,17 +115,17 @@ var sadhakaNameSuggestions = document.getElementById('sadhakaNameSuggestions');
 
 var categories = [
   { id: 'prayerSection', elementId: 'prayerText', title: 'Prayer', type: 'text', order: 1 },
-  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 2 },
-  { id: 'jointsAndGlandsSection', elementId: 'jointsAndGlandsDiv', title: 'Joints and Glands', type: 'asanas', category: 'Joints and Glands', notesId: 'jointsAndGlandsNotes', order: 3 },
-  { id: 'cardioSection', elementId: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'cardioNotes', order: 4 },
-  { id: 'nonCardioSection', elementId: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'nonCardioNotes', order: 5 },
-  { id: 'relaxationSection', elementId: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation', order: 6 },
-  { id: 'meditativeSection', elementId: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana', order: 7 },
-  { id: 'breathingSection', elementId: 'breathingDiv', title: 'Breathing exercises', type: 'asanas', category: 'Breathing', order: 8 },
-  { id: 'pranayamaSection', elementId: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana', order: 9 },
-  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation', order: 10 },
-  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 11 },
-  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 12 }
+  { id: 'jointsAndGlandsSection', elementId: 'jointsAndGlandsDiv', title: 'Joints and Glands', type: 'asanas', category: 'Joints and Glands', notesId: 'jointsAndGlandsNotes', order: 2 },
+  { id: 'cardioSection', elementId: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'cardioNotes', order: 3 },
+  { id: 'nonCardioSection', elementId: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'nonCardioNotes', order: 4 },
+  { id: 'relaxationSection', elementId: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation', order: 5 },
+  { id: 'meditativeSection', elementId: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana', order: 6 },
+  { id: 'breathingSection', elementId: 'breathingDiv', title: 'Breathing exercises', type: 'asanas', category: 'Breathing', order: 7 },
+  { id: 'pranayamaSection', elementId: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana', order: 8 },
+  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation', order: 9 },
+  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 10 },
+  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 11 },
+  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 12 }
 ];
 
 async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
