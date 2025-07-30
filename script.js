@@ -65,19 +65,48 @@ Morning Routine on waking up:
 - Go for at least 3 kms brisk walk
 - Drink warm lemon with salt and honey before breakfast`;
 
+// New default texts
+const DEFAULT_LIABILITY_TEXT = `This personal practice plan has been created specifically for you based on your individual needs and capabilities. Please note the following important information:
+
+1. This practice plan is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+
+2. Before beginning any exercise program, including the practices outlined in this plan, you should consult with a healthcare professional to ensure it is appropriate for your current health status.
+
+3. Listen to your body and never force any posture or practice. If you experience pain, dizziness, or discomfort, stop immediately and consult a healthcare professional if symptoms persist.
+
+4. The practices included in this plan should be performed mindfully and within your comfortable range of motion. Progress gradually and respect your body's limitations.
+
+5. By following this practice plan, you acknowledge that you are participating at your own risk and assume full responsibility for any risks, injuries, or damages, known or unknown, which might occur as a result of participating in these practices.
+
+Remember, yoga is a practice of self-awareness and self-care. Honor your body and practice with compassion.`;
+
+const DEFAULT_REFERENCE_BOOKS_TEXT = `Recommended Reading:
+
+1. "Light on Yoga" by B.K.S. Iyengar
+2. "The Yoga Sutras of Patanjali" - Translation and Commentary by Sri Swami Satchidananda
+3. "The Heart of Yoga: Developing a Personal Practice" by T.K.V. Desikachar
+4. "Anatomy of Hatha Yoga" by David Coulter
+5. "The Breathing Book" by Donna Farhi
+
+These texts provide deeper insights into the philosophy, practice, and anatomy of yoga to support your journey.`;
+
 const CATEGORIES = [
   { id: 'prayerSection', elementId: 'prayerText', title: 'Prayer', type: 'text', order: 1 },
   { id: 'jointsAndGlandsSection', elementId: 'jointsAndGlandsDiv', title: 'Joints and Glands', type: 'asanas', category: 'Joints and Glands', notesId: 'jointsAndGlandsNotes', order: 2 },
-  { id: 'cardioSection', elementId: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'cardioNotes', order: 3 },
-  { id: 'nonCardioSection', elementId: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'nonCardioNotes', order: 4 },
-  { id: 'relaxationSection', elementId: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation', order: 5 },
-  { id: 'meditativeSection', elementId: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana', order: 6 },
-  { id: 'breathingSection', elementId: 'breathingDiv', title: 'Breathing exercises', type: 'asanas', category: 'Breathing', order: 7 },
-  { id: 'pranayamaSection', elementId: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana', order: 8 },
-  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation', order: 9 },
-  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 10 },
-  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 11 },
-  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 12 }
+  { id: 'cardioTrainingSection', elementId: 'cardioTrainingText', title: 'Cardio Training', type: 'text', order: 3 },
+  { id: 'cardioSection', elementId: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'cardioNotes', order: 4 },
+  { id: 'nonCardioSection', elementId: 'nonCardioDiv', title: 'Non-Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'nonCardioNotes', order: 5 },
+  { id: 'relaxationSection', elementId: 'relaxationDiv', title: 'Relaxation Asanas', type: 'asanas', category: 'Relaxation', notesId: 'relaxationNotes', order: 6 },
+  { id: 'meditativeSection', elementId: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana', notesId: 'meditativeNotes', order: 7 },
+  { id: 'breathingSection', elementId: 'breathingDiv', title: 'Breathing exercises', type: 'asanas', category: 'Breathing', notesId: 'breathingNotes', order: 8 },
+  { id: 'pranayamaSection', elementId: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana', notesId: 'pranayamaNotes', order: 9 },
+  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation', notesId: 'meditationNotes', order: 10 },
+  { id: 'mantraPracticeSection', elementId: 'mantraPracticeText', title: 'Mantra Practice', type: 'text', order: 11 },
+  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 12 },
+  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 13 },
+  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 14 },
+  { id: 'liabilityClauseSection', elementId: 'liabilityClauseText', title: 'Liability Clause', type: 'text', order: 15 },
+  { id: 'referenceBooksSection', elementId: 'referenceBooksText', title: 'Reference Books', type: 'text', order: 16 }
 ];
 
 // ===========================
@@ -282,6 +311,8 @@ async function loadDefaultTexts() {
     const dietTextArea = document.getElementById('dietAndAdditionalNotes');
     const routineTextArea = document.getElementById('routineText');
     const prayerTextArea = document.getElementById('prayerText');
+    const liabilityTextArea = document.getElementById('liabilityClauseText');
+    const referenceBooksTextArea = document.getElementById('referenceBooksText');
 
     if (!dietTextArea.value || dietTextArea.value.trim() === '') {
       dietTextArea.value = DEFAULT_DIET_TEXT;
@@ -291,6 +322,12 @@ async function loadDefaultTexts() {
     }
     if (!prayerTextArea.value || prayerTextArea.value.trim() === '') {
       prayerTextArea.value = DEFAULT_PRAYER_TEXT;
+    }
+    if (!liabilityTextArea.value || liabilityTextArea.value.trim() === '') {
+      liabilityTextArea.value = DEFAULT_LIABILITY_TEXT;
+    }
+    if (!referenceBooksTextArea.value || referenceBooksTextArea.value.trim() === '') {
+      referenceBooksTextArea.value = DEFAULT_REFERENCE_BOOKS_TEXT;
     }
 
     console.log('Default texts loaded successfully');
@@ -406,7 +443,16 @@ function createNewSadhaka(name) {
     advisoryText: '',
     jointsAndGlandsNotes: '',
     cardioNotes: '',
-    nonCardioNotes: ''
+    nonCardioNotes: '',
+    relaxationNotes: '',
+    meditativeNotes: '',
+    breathingNotes: '',
+    pranayamaNotes: '',
+    meditationNotes: '',
+    cardioTrainingText: '',
+    mantraPracticeText: '',
+    liabilityClauseText: DEFAULT_LIABILITY_TEXT,
+    referenceBooksText: DEFAULT_REFERENCE_BOOKS_TEXT
   };
 
   CATEGORIES.forEach(category => {
@@ -421,10 +467,24 @@ function createNewSadhaka(name) {
 function displaySadhaka(sadhaka) {
   console.log("Displaying sadhaka data:", sadhaka);
 
-  // Load category notes
-  document.getElementById('jointsAndGlandsNotes').value = sadhaka.jointsAndGlandsNotes || '';
-  document.getElementById('cardioNotes').value = sadhaka.cardioNotes || '';
-  document.getElementById('nonCardioNotes').value = sadhaka.nonCardioNotes || '';
+  // Load all category notes
+  const notesMapping = {
+    'jointsAndGlandsNotes': 'jointsAndGlandsNotes',
+    'cardioNotes': 'cardioNotes',
+    'nonCardioNotes': 'nonCardioNotes',
+    'relaxationNotes': 'relaxationNotes',
+    'meditativeNotes': 'meditativeNotes',
+    'breathingNotes': 'breathingNotes',
+    'pranayamaNotes': 'pranayamaNotes',
+    'meditationNotes': 'meditationNotes'
+  };
+
+  Object.keys(notesMapping).forEach(noteId => {
+    const element = document.getElementById(noteId);
+    if (element) {
+      element.value = sadhaka[notesMapping[noteId]] || '';
+    }
+  });
 
   // Handle section ordering
   const mainContainer = document.body;
@@ -458,6 +518,12 @@ function displaySadhaka(sadhaka) {
         } else if (category.elementId === 'prayerText' &&
           (!sadhaka[category.elementId] || sadhaka[category.elementId].trim() === '')) {
           element.value = DEFAULT_PRAYER_TEXT;
+        } else if (category.elementId === 'liabilityClauseText' &&
+          (!sadhaka[category.elementId] || sadhaka[category.elementId].trim() === '')) {
+          element.value = DEFAULT_LIABILITY_TEXT;
+        } else if (category.elementId === 'referenceBooksText' &&
+          (!sadhaka[category.elementId] || sadhaka[category.elementId].trim() === '')) {
+          element.value = DEFAULT_REFERENCE_BOOKS_TEXT;
         } else {
           element.value = sadhaka[category.elementId] || '';
         }
@@ -493,6 +559,10 @@ function clearSadhakaDiv() {
           element.value = DEFAULT_DIET_TEXT;
         } else if (category.elementId === 'routineText') {
           element.value = DEFAULT_ROUTINE_TEXT;
+        } else if (category.elementId === 'liabilityClauseText') {
+          element.value = DEFAULT_LIABILITY_TEXT;
+        } else if (category.elementId === 'referenceBooksText') {
+          element.value = DEFAULT_REFERENCE_BOOKS_TEXT;
         } else {
           element.value = '';
         }
@@ -505,9 +575,14 @@ function clearSadhakaDiv() {
     }
   });
 
-  document.getElementById('jointsAndGlandsNotes').value = '';
-  document.getElementById('cardioNotes').value = '';
-  document.getElementById('nonCardioNotes').value = '';
+  // Clear all notes fields
+  const notesFields = ['jointsAndGlandsNotes', 'cardioNotes', 'nonCardioNotes',
+    'relaxationNotes', 'meditativeNotes', 'breathingNotes',
+    'pranayamaNotes', 'meditationNotes'];
+  notesFields.forEach(fieldId => {
+    const element = document.getElementById(fieldId);
+    if (element) element.value = '';
+  });
 
   console.log("Sadhaka UI cleared.");
 }
@@ -525,7 +600,12 @@ async function saveSadhakaWithCategory() {
     name: sadhakaName,
     jointsAndGlandsNotes: document.getElementById('jointsAndGlandsNotes').value,
     cardioNotes: document.getElementById('cardioNotes').value,
-    nonCardioNotes: document.getElementById('nonCardioNotes').value
+    nonCardioNotes: document.getElementById('nonCardioNotes').value,
+    relaxationNotes: document.getElementById('relaxationNotes').value,
+    meditativeNotes: document.getElementById('meditativeNotes').value,
+    breathingNotes: document.getElementById('breathingNotes').value,
+    pranayamaNotes: document.getElementById('pranayamaNotes').value,
+    meditationNotes: document.getElementById('meditationNotes').value
   };
 
   CATEGORIES.forEach(category => {
@@ -1592,7 +1672,7 @@ async function saveSadhakaReportAsPdf() {
   pdf.setTextColor(colors.darkBrown);
 
 
-  pdf.text("Personal Practice plan", centerX - 150, 300, { align: 'center' });
+  pdf.text("Personal Practice plan", centerX - 150, 300, { align: 'left' });
 
 
   // Decorative line under title
@@ -1605,13 +1685,13 @@ async function saveSadhakaReportAsPdf() {
   pdf.setFontSize(14);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(colors.subtleText);
-  pdf.text("Prepared for", centerX, 380, { align: 'center' });
+  pdf.text("Prepared for", centerX - 200, 380, { align: 'left' });
 
   // Student name
   pdf.setFontSize(24);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(colors.primaryText);
-  pdf.text(sadhakaName, centerX, 415, { align: 'center' });
+  pdf.text(sadhakaName, centerX - 200, 415, { align: 'left' });
 
   // Date section - single date
   const currentDate = new Date().toLocaleDateString('en-GB', {
@@ -1694,15 +1774,13 @@ Any cardio training suggested is to be practiced at your own discretion.`;
     let categoryHasContent = false;
     let notes = '';
 
-    const notesElementId = {
-      'jointsAndGlandsDiv': 'jointsAndGlandsNotes',
-      'cardioDiv': 'cardioNotes',
-      'nonCardioDiv': 'nonCardioNotes'
-    }[category.elementId];
-
-    if (notesElementId) {
-      notes = normalizeText(document.getElementById(notesElementId).value);
-      if (notes) categoryHasContent = true;
+    // Check for section-level notes
+    if (category.notesId) {
+      const notesElement = document.getElementById(category.notesId);
+      if (notesElement) {
+        notes = normalizeText(notesElement.value);
+        if (notes) categoryHasContent = true;
+      }
     }
 
     if (category.type === 'text') {
@@ -1710,7 +1788,9 @@ Any cardio training suggested is to be practiced at your own discretion.`;
       if (content && content.trim() !== '' &&
         content !== normalizeText(DEFAULT_PRAYER_TEXT) &&
         content !== normalizeText(DEFAULT_DIET_TEXT) &&
-        content !== normalizeText(DEFAULT_ROUTINE_TEXT)) {
+        content !== normalizeText(DEFAULT_ROUTINE_TEXT) &&
+        content !== normalizeText(DEFAULT_LIABILITY_TEXT) &&
+        content !== normalizeText(DEFAULT_REFERENCE_BOOKS_TEXT)) {
         categoryHasContent = true;
       }
     } else if (category.type === 'asanas') {
@@ -1786,8 +1866,19 @@ Any cardio training suggested is to be practiced at your own discretion.`;
     y += 20;
   }
 
-  // Add page numbers and borders to all pages except title page
+  // Add copyright notice at the end of the last page
   const totalPages = pdf.internal.getNumberOfPages();
+  pdf.setPage(totalPages);
+
+  // Position copyright at bottom of last page
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'italic');
+  pdf.setTextColor(colors.subtleText);
+  pdf.text("Copyright Sadhana Software", pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 60, {
+    align: 'center'
+  });
+
+  // Add page numbers and borders to all pages except title page
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
 

@@ -177,6 +177,12 @@
       Joints and Glands Asanas</button>
   </div>
 
+  <!-- New Cardio Training Section -->
+  <div id="cardioTrainingSection" class="section">
+    <h2>Cardio Training</h2>
+    <textarea id="cardioTrainingText" placeholder="Cardio training notes" rows="4"></textarea>
+  </div>
+
   <div id="cardioSection" class="section">
     <h2>Cardio Day Asanas</h2>
     <textarea id="cardioNotes" placeholder="Special notes for Cardio Day Asanas" rows="4"
@@ -199,6 +205,8 @@
 
   <div id="relaxationSection" class="section">
     <h2>Relaxation Asanas</h2>
+    <textarea id="relaxationNotes" placeholder="Special notes for Relaxation Asanas" rows="4"
+      class="category-notes"></textarea>
     <div id="relaxationDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('relaxationDiv', 'Relaxation')" class="asana-button">Add Relaxation Asana</button>
     <button onclick="showMultiAsanaModal('relaxationDiv', 'Relaxation')" class="asana-button">Add Multiple Relaxation
@@ -207,6 +215,8 @@
 
   <div id="meditativeSection" class="section">
     <h2>Meditative Asanas</h2>
+    <textarea id="meditativeNotes" placeholder="Special notes for Meditative Asanas" rows="4"
+      class="category-notes"></textarea>
     <div id="meditativeDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Meditative Asana</button>
     <button onclick="showMultiAsanaModal('meditativeDiv', 'Meditative Asana')" class="asana-button">Add Multiple
@@ -215,6 +225,8 @@
 
   <div id="breathingSection" class="section">
     <h2>Breathing exercises</h2>
+    <textarea id="breathingNotes" placeholder="Special notes for Breathing exercises" rows="4"
+      class="category-notes"></textarea>
     <div id="breathingDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('breathingDiv', 'Breathing')" class="asana-button">Add Breathing exercises</button>
     <button onclick="showMultiAsanaModal('breathingDiv', 'Breathing')" class="asana-button">Add Multiple Breathing
@@ -223,6 +235,7 @@
 
   <div id="pranayamaSection" class="section">
     <h2>Pranayama</h2>
+    <textarea id="pranayamaNotes" placeholder="Special notes for Pranayama" rows="4" class="category-notes"></textarea>
     <div id="pranayamaDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('pranayamaDiv', 'Pranayana')" class="asana-button">Add Pranayama</button>
     <button onclick="showMultiAsanaModal('pranayamaDiv', 'Pranayana')" class="asana-button">Add Multiple
@@ -231,10 +244,18 @@
 
   <div id="meditationSection" class="section">
     <h2>Meditation</h2>
+    <textarea id="meditationNotes" placeholder="Special notes for Meditation" rows="4"
+      class="category-notes"></textarea>
     <div id="meditationDiv" class="asana-div sadhakaDiv"></div>
     <button onclick="addAsana('meditationDiv', 'Meditation')" class="asana-button">Add Meditation</button>
     <button onclick="showMultiAsanaModal('meditationDiv', 'Meditation')" class="asana-button">Add Multiple
       Meditation</button>
+  </div>
+
+  <!-- New Mantra Practice Section -->
+  <div id="mantraPracticeSection" class="section">
+    <h2>Mantra Practice</h2>
+    <textarea id="mantraPracticeText" placeholder="Mantra practice notes" rows="4"></textarea>
   </div>
 
   <div id="routineSection" class="section">
@@ -252,6 +273,18 @@
   <div id="advisorySection" class="section">
     <h2>Advisory</h2>
     <textarea id="advisoryText" placeholder="Advisory" rows="20"></textarea>
+  </div>
+
+  <!-- New Liability Clause Section -->
+  <div id="liabilityClauseSection" class="section">
+    <h2>Liability Clause</h2>
+    <textarea id="liabilityClauseText" placeholder="Liability clause" rows="10"></textarea>
+  </div>
+
+  <!-- New Reference Books Section -->
+  <div id="referenceBooksSection" class="section">
+    <h2>Reference Books</h2>
+    <textarea id="referenceBooksText" placeholder="Reference books" rows="6"></textarea>
   </div>
 
   <button onclick="saveSadhakaWithCategory()" style="display: none;">Save Sadhaka</button>
