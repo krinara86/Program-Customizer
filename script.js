@@ -104,6 +104,15 @@ async function initialize() {
 
   const sadhakaNameInput = document.getElementById('sadhakaName');
 
+  // Display current date
+  const currentDateSpan = document.getElementById('currentDate');
+  const today = new Date();
+  currentDateSpan.textContent = today.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
   try {
     const [fetchedAsanas, fetchedNames] = await Promise.all([
       loadAsanas(),
@@ -135,47 +144,84 @@ async function initialize() {
 // ===========================
 
 async function login() {
-  const usernameInput = document.getElementById('username').value;
-  const passwordInput = document.getElementById('password').value;
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const loginButton = document.querySelector('.login-button');
+
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!username || !password) {
+    alert("Please enter both username and password.");
+    return;
+  }
+
+  // Show loading state
+  loginButton.textContent = 'Logging in...';
+  loginButton.disabled = true;
 
   try {
     const querySnapshot = await db.collection("login")
-      .where("id", "==", usernameInput)
+      .where("id", "==", username)
       .get();
 
     if (querySnapshot.empty) {
       alert("Invalid username or password. Please try again.");
+      passwordInput.value = '';
+      passwordInput.focus();
       return;
     }
 
     const loginData = querySnapshot.docs[0].data();
-    if (passwordInput === loginData.password) {
+    if (password === loginData.password) {
       currentUser = loginData;
-      alert("Login successful!");
 
-      // Hide login UI
-      document.querySelector('.login-container').style.display = 'none';
-      document.querySelector('#overlay').style.display = 'none';
+      // Success animation
+      loginButton.textContent = '✓ Success!';
+      loginButton.style.backgroundColor = '#4CAF50';
 
-      // Show logged in user info
-      document.getElementById('loginStatus').style.display = 'block';
-      document.getElementById('loggedInUser').textContent = loginData.id;
+      setTimeout(() => {
+        // Hide login UI with fade out
+        const loginContainer = document.querySelector('.login-container');
+        const overlay = document.querySelector('#overlay');
 
-      // Show/hide admin controls
-      const adminControls = document.getElementById('adminControls');
-      adminControls.style.display = loginData.isAdmin ? 'block' : 'none';
+        loginContainer.style.animation = 'fadeOut 0.3s ease-out';
+        overlay.style.animation = 'fadeOutOverlay 0.3s ease-out';
 
-      // Show save buttons
-      document.querySelector('button[onclick="saveSadhakaWithCategory()"]').style.display = 'inline-block';
-      document.querySelector('button[onclick="saveSadhakaReportAsPdf()"]').style.display = 'inline-block';
+        setTimeout(() => {
+          loginContainer.style.display = 'none';
+          overlay.style.display = 'none';
+        }, 300);
+
+        // Show logged in user info
+        document.getElementById('loginStatus').style.display = 'block';
+        document.getElementById('loggedInUser').textContent = loginData.id;
+
+        // Show/hide admin controls
+        const adminControls = document.getElementById('adminControls');
+        adminControls.style.display = loginData.isAdmin ? 'block' : 'none';
+
+        // Show save buttons
+        document.querySelector('button[onclick="saveSadhakaWithCategory()"]').style.display = 'inline-block';
+        document.querySelector('button[onclick="saveSadhakaReportAsPdf()"]').style.display = 'inline-block';
+      }, 500);
 
       await initializeDefaultUsers();
     } else {
       alert("Invalid username or password. Please try again.");
+      passwordInput.value = '';
+      passwordInput.focus();
     }
   } catch (error) {
     console.log("Error checking login credentials:", error);
     alert("An error occurred during login. Please try again.");
+  } finally {
+    // Reset button state if login failed
+    if (loginButton.textContent !== '✓ Success!') {
+      loginButton.textContent = 'Login';
+      loginButton.disabled = false;
+      loginButton.style.backgroundColor = '';
+    }
   }
 }
 
@@ -1506,7 +1552,8 @@ async function saveSadhakaReportAsPdf() {
     primaryText: '#333333',
     headerBlue: '#005A9C',
     lightGrey: '#CCCCCC',
-    subtleText: '#777777'
+    subtleText: '#777777',
+    darkBrown: '#483a3a'
   };
 
   const pdfConfig = {
@@ -1515,45 +1562,128 @@ async function saveSadhakaReportAsPdf() {
     margin: 50,
   };
   const contentWidth = pdfConfig.pageWidth - (2 * pdfConfig.margin);
+  const centerX = pdfConfig.pageWidth / 2;
 
-  // Title Page
+  // Simple Title Page
   pdf.setFont("helvetica", "normal");
-  const logoUrl = 'https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png';
 
+  // Add simple border
+  pdf.setDrawColor(colors.darkBrown);
+  pdf.setLineWidth(2);
+  pdf.rect(40, 40, pdfConfig.pageWidth - 80, pdfConfig.pageHeight - 80);
+
+  // Add logo - centered and larger
+  const logoUrl = 'https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png';
   try {
-    const logoWidth = 80;
-    const logoHeight = 80;
+    const logoWidth = 120;
+    const logoHeight = 120;
     const logoDataUri = await urlToDataUri(logoUrl);
-    pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth - logoWidth) / 2, 150, logoWidth, logoHeight);
+    if (logoDataUri) {
+      pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth - logoWidth) / 2, 120, logoWidth, logoHeight);
+    }
   } catch (e) {
     console.error("Could not add logo to PDF:", e);
+    // If logo fails, continue without it
   }
 
-  const centerX = pdfConfig.pageWidth / 2;
+  // Title - properly centered with "PERSONAL" added
   pdf.setFontSize(26);
   pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(colors.headerBlue);
-  pdf.text("Sadhana Plan", centerX, 320, { align: 'center' });
+  pdf.setTextColor(colors.darkBrown);
 
-  pdf.setFontSize(20);
+
+  pdf.text("Personal Practice plan", centerX - 150, 300, { align: 'center' });
+
+
+  // Decorative line under title
+  pdf.setDrawColor(colors.darkBrown);
+  pdf.setLineWidth(1);
+  const lineWidth = 250;
+  pdf.line(centerX - lineWidth / 2, 315, centerX + lineWidth / 2, 315);
+
+  // "Prepared for" text
+  pdf.setFontSize(14);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(colors.primaryText);
-  pdf.text(`for ${sadhakaName}`, centerX, 360, { align: 'center' });
+  pdf.setTextColor(colors.subtleText);
+  pdf.text("Prepared for", centerX, 380, { align: 'center' });
 
-  const date = new Date().toLocaleDateString('en-GB', {
+  // Student name
+  pdf.setFontSize(24);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(colors.primaryText);
+  pdf.text(sadhakaName, centerX, 415, { align: 'center' });
+
+  // Date section - single date
+  const currentDate = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
 
-  pdf.setFontSize(12);
-  pdf.setFont("helvetica", "italic");
+  pdf.setFontSize(14);
+  pdf.setFont("helvetica", "normal");
   pdf.setTextColor(colors.subtleText);
-  pdf.text(`Created on ${date}`, centerX, 400, { align: 'center' });
+  pdf.text("Date", centerX, 480, { align: 'center' });
 
-  // Main Content
+  pdf.setFontSize(16);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(colors.primaryText);
+  pdf.text(currentDate, centerX, 505, { align: 'center' });
+
+  // Organization info at bottom
+  pdf.setFontSize(14);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(colors.darkBrown);
+  pdf.text("Self Realization with Radhikaji", centerX, pdfConfig.pageHeight - 120, { align: 'center' });
+
+  // Add liability statement page
   pdf.addPage();
   let y = pdfConfig.margin;
+
+  pdf.setFontSize(18);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(colors.headerBlue);
+  pdf.text("Important Notice", pdfConfig.margin, y);
+  y += 30;
+
+  pdf.setDrawColor(colors.lightGrey);
+  pdf.setLineWidth(1);
+  pdf.line(pdfConfig.margin, y, pdfConfig.pageWidth - pdfConfig.margin, y);
+  y += 20;
+
+  // Add liability statement
+  const LIABILITY_STATEMENT = `This document has not been created by a medical doctor or healing practitioner. Therefore, please perform all practices mentioned in this document at your own discretion. 
+
+If you have or have had an injury or acute illness, or if you have doubts about whether yoga practices are appropriate for you, you are responsible for contacting your physician as needed to inquire about your fitness level.
+
+The instructions and advice given in yoga sessions are no substitute for professional medical or psychological care. The instructions and advice given in the following document is not a substitute for professional medical or psychological care. 
+
+If you are pregnant or experiencing menopausal transition, you are responsible for taking special care of yourself and consulting your doctor as needed.
+
+If you are menstruating, do not exceed your comfort levels.
+
+In order for yoga practice to be beneficial for you and your all-round health, please let us know if you are suffering from physical illness or have any other health restrictions that would prevent you from participating in yoga practice or in individual yoga exercises. 
+
+In case of severe health issues or chronic illness(es) please check with your doctor whether you are allowed to participate in the yoga related activities. Participation is at your own risk.
+
+The use of any suggested devices or equipment such as the indoor bike, resistance bands, chairs, pillows or any other props is at the yoga participant's own risk.
+
+Any cardio training suggested is to be practiced at your own discretion.`;
+
+  pdf.setTextColor(colors.primaryText);
+  pdf.setFontSize(11);
+  y = addText(pdf, LIABILITY_STATEMENT, pdfConfig.margin, y, {
+    ...pdfConfig,
+    size: 11,
+    font: 'helvetica',
+    style: 'normal',
+    maxWidth: contentWidth,
+    currentY: y
+  });
+
+  // Main Content starts on new page
+  pdf.addPage();
+  y = pdfConfig.margin;
 
   const sectionElementsInOrder = Array.from(document.querySelectorAll('.section'));
   const sortedCategories = sectionElementsInOrder.map(sectionEl => {
@@ -1656,25 +1786,46 @@ async function saveSadhakaReportAsPdf() {
     y += 20;
   }
 
-  // Add borders and page numbers
+  // Add page numbers and borders to all pages except title page
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
+
+    if (i === 1) {
+      // Title page already has its special border
+      continue;
+    }
+
+    // Standard border for other pages
     pdf.setDrawColor(colors.lightGrey);
     pdf.setLineWidth(0.5);
     pdf.rect(20, 20, pdfConfig.pageWidth - 40, pdfConfig.pageHeight - 40);
 
-    if (i > 1) {
+    // Add page number (skip title and liability pages)
+    if (i > 2) {
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(colors.subtleText);
-      pdf.text(`Page ${i - 1}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, {
+
+      // Add student name in header - with more margin from edge
+      const headerY = 35;
+      pdf.text(sadhakaName, 40, headerY);
+
+      // Add date with proper right alignment and margin
+      const shortDate = new Date().toLocaleDateString('en-GB');
+      const dateWidth = pdf.getStringUnitWidth(shortDate) * 10 / pdf.internal.scaleFactor;
+      pdf.text(shortDate, pdfConfig.pageWidth - 40 - dateWidth, headerY);
+
+      // Page number in footer
+      pdf.text(`Page ${i - 2} of ${totalPages - 2}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, {
         align: 'center'
       });
     }
   }
 
-  pdf.save(`${sadhakaName}_sadhana_plan.pdf`);
+  // Generate filename with date
+  const dateStr = new Date().toISOString().split('T')[0];
+  pdf.save(`${sadhakaName}_sadhana_plan_${dateStr}.pdf`);
 }
 
 async function loadAsanasForPdf() {
@@ -1862,7 +2013,12 @@ function addText(pdf, text, x, y, options) {
 
 function urlToDataUri(url) {
   return fetch(url)
-    .then(response => response.blob())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.blob();
+    })
     .then(blob => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1870,6 +2026,10 @@ function urlToDataUri(url) {
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
+    })
+    .catch(error => {
+      console.error('Error fetching image:', error);
+      return null;
     });
 }
 
