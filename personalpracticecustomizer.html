@@ -8,7 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
@@ -163,7 +163,13 @@
 
   <div id="prayerSection" class="section">
     <h2>Prayer</h2>
-    <textarea id="prayerText" placeholder="Enter prayer" rows="4"></textarea>
+    <div class="customizable-hint">
+      ✏️ Customizable - Leave blank to use default text
+    </div>
+    <textarea id="prayerText" class="customizable-field" placeholder="Enter custom prayer text, or leave blank to use default..." rows="4"></textarea>
+    <div class="field-helper">
+      💡 Tip: Default text will be used if left empty
+    </div>
   </div>
 
   <div id="jointsAndGlandsSection" class="section">
@@ -244,6 +250,13 @@
 
   <div id="meditationSection" class="section">
     <h2>Meditation</h2>
+    <div class="customizable-hint">
+      ✏️ Customizable - Leave blank to use default text
+    </div>
+    <textarea id="meditationText" class="customizable-field" placeholder="Enter custom meditation instructions, or leave blank to use default..." rows="4"></textarea>
+    <div class="field-helper">
+      💡 Tip: Default text will be used if left empty
+    </div>
     <textarea id="meditationNotes" placeholder="Special notes for Meditation" rows="4"
       class="category-notes"></textarea>
     <div id="meditationDiv" class="asana-div sadhakaDiv"></div>
@@ -281,10 +294,16 @@
     <textarea id="liabilityClauseText" placeholder="Liability clause" rows="10"></textarea>
   </div>
 
-  <!-- New Reference Books Section -->
+  <!-- Recommended Reading Section -->
   <div id="referenceBooksSection" class="section">
-    <h2>Reference Books</h2>
-    <textarea id="referenceBooksText" placeholder="Reference books" rows="6"></textarea>
+    <h2>Recommended Reading</h2>
+    <div class="customizable-hint">
+      ✏️ Customizable - Leave blank to use default text
+    </div>
+    <textarea id="referenceBooksText" class="customizable-field" placeholder="Enter recommended books, or leave blank to use default..." rows="6"></textarea>
+    <div class="field-helper">
+      💡 Tip: Default text will be used if left empty
+    </div>
   </div>
 
   <button onclick="saveSadhakaWithCategory()" style="display: none;">Save Sadhaka</button>

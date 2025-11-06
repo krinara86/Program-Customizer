@@ -459,3 +459,38 @@ button:hover,
 .close {
   cursor: pointer;
 }
+
+/* ===========================
+   Customizable Field Styles
+   =========================== */
+.customizable-hint {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196F3;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #1565C0;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.customizable-field {
+  background-color: #f0f8ff !important;
+  border: 2px solid #64B5F6 !important;
+  transition: all 0.3s ease;
+}
+
+.customizable-field:focus {
+  background-color: #ffffff !important;
+  border-color: #2196F3 !important;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.field-helper {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  padding-left: 5px;
+}

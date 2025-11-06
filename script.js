@@ -65,6 +65,28 @@ Morning Routine on waking up:
 - Go for at least 3 kms brisk walk
 - Drink warm lemon with salt and honey before breakfast`;
 
+const DEFAULT_MEDITATION_TEXT = `Meditation Practice (Atma Vichara - Self-Inquiry)
+
+Atma Vichara, or self-inquiry, is a profound meditation practice that leads to self-realization. This practice involves turning the mind inward to investigate the nature of the self.
+
+How to Practice:
+1. Find a comfortable seated position with your spine straight
+2. Close your eyes and take a few deep breaths to settle the mind
+3. Begin by asking yourself "Who am I?" or "What is the nature of my true self?"
+4. Observe thoughts, feelings, and sensations without attachment
+5. Let go of identification with the body, mind, and personality
+6. Rest in pure awareness, in the silence between thoughts
+
+Key Principles:
+- Practice with patience and consistency - results come gradually
+- There is no need to force or strain; meditation should be effortless
+- If the mind wanders, gently bring it back to self-inquiry
+- Practice daily, preferably at the same time and place
+- Start with 10-15 minutes and gradually increase duration
+- The goal is not to achieve something, but to recognize what already is
+
+Remember: You are not the thoughts, emotions, or body. You are the pure consciousness that witnesses all of these. Through regular practice, this understanding deepens from intellectual knowledge to direct experience.`;
+
 // New default texts
 const DEFAULT_LIABILITY_TEXT = `This personal practice plan has been created specifically for you based on your individual needs and capabilities. Please note the following important information:
 
@@ -91,7 +113,7 @@ const DEFAULT_REFERENCE_BOOKS_TEXT = `Recommended Reading:
 These texts provide deeper insights into the philosophy, practice, and anatomy of yoga to support your journey.`;
 
 const CATEGORIES = [
-  { id: 'prayerSection', elementId: 'prayerText', title: 'Prayer', type: 'text', order: 1 },
+  { id: 'prayerSection', elementId: 'prayerText', title: 'Prayer', type: 'text', order: 1, defaultText: 'DEFAULT_PRAYER_TEXT' },
   { id: 'jointsAndGlandsSection', elementId: 'jointsAndGlandsDiv', title: 'Joints and Glands', type: 'asanas', category: 'Joints and Glands', notesId: 'jointsAndGlandsNotes', order: 2 },
   { id: 'cardioTrainingSection', elementId: 'cardioTrainingText', title: 'Cardio Training', type: 'text', order: 3 },
   { id: 'cardioSection', elementId: 'cardioDiv', title: 'Cardio Day Asanas', type: 'asanas', category: 'Physical Asana', notesId: 'cardioNotes', order: 4 },
@@ -100,13 +122,14 @@ const CATEGORIES = [
   { id: 'meditativeSection', elementId: 'meditativeDiv', title: 'Meditative Asanas', type: 'asanas', category: 'Meditative Asana', notesId: 'meditativeNotes', order: 7 },
   { id: 'breathingSection', elementId: 'breathingDiv', title: 'Breathing exercises', type: 'asanas', category: 'Breathing', notesId: 'breathingNotes', order: 8 },
   { id: 'pranayamaSection', elementId: 'pranayamaDiv', title: 'Pranayama', type: 'asanas', category: 'Pranayana', notesId: 'pranayamaNotes', order: 9 },
-  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation', type: 'asanas', category: 'Meditation', notesId: 'meditationNotes', order: 10 },
-  { id: 'mantraPracticeSection', elementId: 'mantraPracticeText', title: 'Mantra Practice', type: 'text', order: 11 },
-  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 12 },
-  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 13 },
-  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 14 },
-  { id: 'liabilityClauseSection', elementId: 'liabilityClauseText', title: 'Liability Clause', type: 'text', order: 15 },
-  { id: 'referenceBooksSection', elementId: 'referenceBooksText', title: 'Reference Books', type: 'text', order: 16 }
+  { id: 'meditationTextSection', elementId: 'meditationText', title: 'Meditation Practice', type: 'text', order: 10, defaultText: 'DEFAULT_MEDITATION_TEXT' },
+  { id: 'meditationSection', elementId: 'meditationDiv', title: 'Meditation Exercises', type: 'asanas', category: 'Meditation', notesId: 'meditationNotes', order: 11 },
+  { id: 'mantraPracticeSection', elementId: 'mantraPracticeText', title: 'Mantra Practice', type: 'text', order: 12 },
+  { id: 'routineSection', elementId: 'routineText', title: 'Routine', type: 'text', order: 13 },
+  { id: 'dietAndAdditionalNotesSection', elementId: 'dietAndAdditionalNotes', title: 'Dietary recommendations', type: 'text', order: 14 },
+  { id: 'advisorySection', elementId: 'advisoryText', title: 'Advisory', type: 'text', order: 15 },
+  { id: 'liabilityClauseSection', elementId: 'liabilityClauseText', title: 'Liability Clause', type: 'text', order: 16 },
+  { id: 'referenceBooksSection', elementId: 'referenceBooksText', title: 'Recommended Reading', type: 'text', order: 17, defaultText: 'DEFAULT_REFERENCE_BOOKS_TEXT' }
 ];
 
 // ===========================
@@ -1625,113 +1648,179 @@ function setupDragAndDrop() {
 
 async function saveSadhakaReportAsPdf() {
   const asanasMap = await loadAsanasForPdf();
-  const pdf = new jsPDF('p', 'pt', 'a4');
+  const pdf = new jspdf.jsPDF('p', 'pt', 'a4');
   const sadhakaName = document.getElementById('sadhakaName').value;
 
   const colors = {
-    primaryText: '#333333',
-    headerBlue: '#005A9C',
-    lightGrey: '#CCCCCC',
-    subtleText: '#777777',
-    darkBrown: '#483a3a'
+    primaryPurple: [76, 57, 99],      // #4C3963 (Darker, richer purple)
+    lavenderAccent: [170, 150, 190],   // #AA96BE (More saturated lavender)
+    textDark: [58, 58, 58],            // #3A3A3A
+    textMuted: [139, 124, 153],        // #8B7C99
+    creamBg: [247, 247, 249],          // #F7F7F9 (A very light, cool grey)
+    borderLight: [229, 217, 235],      // #e5d9eb
+    cardBg: [255, 255, 255]            // #FFFFFF
   };
 
   const pdfConfig = {
     pageWidth: pdf.internal.pageSize.width,
     pageHeight: pdf.internal.pageSize.height,
-    margin: 50,
+    margin: 60,  // Increased for more elegant spacing
   };
   const contentWidth = pdfConfig.pageWidth - (2 * pdfConfig.margin);
   const centerX = pdfConfig.pageWidth / 2;
 
-  // Simple Title Page
-  pdf.setFont("helvetica", "normal");
+  // ===========================
+  // TITLE PAGE - Option 2 Design
+  // ===========================
+  
+  // Cream background for entire page
+  pdf.setFillColor(...colors.creamBg);
+  pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'F');
+  
+  // Subtle border
+  pdf.setDrawColor(...colors.borderLight);
+  pdf.setLineWidth(1);
+  pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'S');
 
-  // Add simple border
-  pdf.setDrawColor(colors.darkBrown);
-  pdf.setLineWidth(2);
-  pdf.rect(40, 40, pdfConfig.pageWidth - 80, pdfConfig.pageHeight - 80);
+  let titleY = 100;
 
-  // Add logo - centered and larger
+  // Decorative line at top
+  pdf.setDrawColor(...colors.lavenderAccent);
+  pdf.setLineWidth(2.5);
+  const topLineWidth = 60;
+  pdf.line(centerX - topLineWidth / 2, titleY, centerX + topLineWidth / 2, titleY);
+  titleY += 40;
+
+  // Add logo - centered with shadow effect
   const logoUrl = 'https://images.squarespace-cdn.com/content/v1/62f11860fb33eb592879527c/73af335a-bc0d-4450-a4c0-32ad86ceb033/neue+weisse+blumen+logo.png';
   try {
-    const logoWidth = 120;
-    const logoHeight = 120;
-    const logoDataUri = await urlToDataUri(logoUrl);
+    const logoWidth = 100;
+    const logoHeight = 100;
+    let logoDataUri = await urlToDataUri(logoUrl);
+    
+    // Fix WebP format - convert to PNG if needed
+    if (logoDataUri && logoDataUri.includes('data:image/webp')) {
+      logoDataUri = await convertWebPtoPNG(logoDataUri);
+    }
+    
     if (logoDataUri) {
-      pdf.addImage(logoDataUri, 'PNG', (pdfConfig.pageWidth - logoWidth) / 2, 120, logoWidth, logoHeight);
+      // Shadow effect (multiple light circles)
+      pdf.setFillColor(93, 78, 109, 0.1);
+      pdf.circle((pdfConfig.pageWidth - logoWidth) / 2 + logoWidth / 2, titleY + logoHeight / 2 + 3, logoWidth / 2 + 5, 'F');
+      
+      // Add logo
+      const format = logoDataUri.includes('data:image/png') ? 'PNG' : 'JPEG';
+      pdf.addImage(logoDataUri, format, (pdfConfig.pageWidth - logoWidth) / 2, titleY, logoWidth, logoHeight);
     }
   } catch (e) {
     console.error("Could not add logo to PDF:", e);
-    // If logo fails, continue without it
+    // Draw a placeholder circle if logo fails
+    pdf.setFillColor(...colors.primaryPurple);
+    pdf.circle(centerX, titleY + 50, 50, 'F');
   }
+  titleY += 140;
 
-  // Title - properly centered with "PERSONAL" added
-  pdf.setFontSize(26);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(colors.darkBrown);
+  // Main Title - Serif-style formatting
+  pdf.setFontSize(38);
+  pdf.setFont("times", "normal");  // Times is serif-like
+  pdf.setTextColor(...colors.primaryPurple);
+  pdf.text("Personal Practice Plan", centerX, titleY, { align: 'center' });
+  titleY += 10;
 
-
-  pdf.text("Personal Practice plan", centerX - 150, 300, { align: 'left' });
-
-
-  // Decorative line under title
-  pdf.setDrawColor(colors.darkBrown);
-  pdf.setLineWidth(1);
-  const lineWidth = 250;
-  pdf.line(centerX - lineWidth / 2, 315, centerX + lineWidth / 2, 315);
-
-  // "Prepared for" text
+  // Subtitle with letter spacing effect
   pdf.setFontSize(14);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(colors.subtleText);
-  pdf.text("Prepared for", centerX - 200, 380, { align: 'left' });
+  pdf.setTextColor(...colors.textMuted);
+  const subtitle = "Y O G A   S A D H A N A";
+  pdf.text(subtitle, centerX, titleY, { align: 'center' });
+  titleY += 40;
 
-  // Student name
-  pdf.setFontSize(24);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(colors.primaryText);
-  pdf.text(sadhakaName, centerX - 200, 415, { align: 'left' });
+  // Decorative line below title
+  pdf.setDrawColor(...colors.lavenderAccent);
+  pdf.setLineWidth(1);
+  const bottomLineWidth = 180;
+  pdf.line(centerX - bottomLineWidth / 2, titleY, centerX + bottomLineWidth / 2, titleY);
+  titleY += 60;
 
-  // Date section - single date
+  // "Prepared for" label
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...colors.textMuted);
+  const prepLabel = "P R E P A R E D   F O R";
+  pdf.text(prepLabel, centerX, titleY, { align: 'center' });
+  titleY += 20;
+
+  // Student name - italic serif
+  pdf.setFontSize(30);
+  pdf.setFont("times", "italic");
+  pdf.setTextColor(...colors.textDark);
+  pdf.text(sadhakaName, centerX, titleY, { align: 'center' });
+  titleY += 60;
+
+  // Date section with border
+  const dateBoxY = titleY;
+  const dateBoxWidth = 300;
+  const dateBoxHeight = 60;
+  const dateBoxX = (pdfConfig.pageWidth - dateBoxWidth) / 2;
+  
+  pdf.setDrawColor(...colors.borderLight);
+  pdf.setLineWidth(1);
+  pdf.line(dateBoxX, dateBoxY, dateBoxX + dateBoxWidth, dateBoxY);
+  pdf.line(dateBoxX, dateBoxY + dateBoxHeight, dateBoxX + dateBoxWidth, dateBoxY + dateBoxHeight);
+  
   const currentDate = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
 
-  pdf.setFontSize(14);
+  pdf.setFontSize(12);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(colors.subtleText);
-  pdf.text("Date", centerX, 480, { align: 'center' });
+  pdf.setTextColor(...colors.textMuted);
+  const dateLabel = "D A T E";
+  pdf.text(dateLabel, centerX, dateBoxY + 25, { align: 'center' });
 
   pdf.setFontSize(16);
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(colors.primaryText);
-  pdf.text(currentDate, centerX, 505, { align: 'center' });
+  pdf.setFont("times", "normal");
+  pdf.setTextColor(...colors.textDark);
+  pdf.text(currentDate, centerX, dateBoxY + 45, { align: 'center' });
 
-  // Organization info at bottom
-  pdf.setFontSize(14);
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(colors.darkBrown);
-  pdf.text("Self Realization with Radhikaji", centerX, pdfConfig.pageHeight - 120, { align: 'center' });
+  // Organization name at bottom
+  pdf.setFontSize(15);
+  pdf.setFont("times", "normal");
+  pdf.setTextColor(...colors.primaryPurple);
+  pdf.text("Self Realization with Radhikaji", centerX, pdfConfig.pageHeight - 80, { align: 'center' });
 
-  // Add liability statement page
+  // ===========================
+  // LIABILITY PAGE - Option 2 Design
+  // ===========================
   pdf.addPage();
+  
+  // Cream background
+  pdf.setFillColor(...colors.creamBg);
+  pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'F');
+  
+  // Border
+  pdf.setDrawColor(...colors.borderLight);
+  pdf.setLineWidth(1);
+  pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'S');
+  
   let y = pdfConfig.margin;
 
-  pdf.setFontSize(18);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(colors.headerBlue);
+  // Section header with bottom border
+  pdf.setFontSize(22);
+  pdf.setFont("times", "normal");
+  pdf.setTextColor(...colors.primaryPurple);
   pdf.text("Important Notice", pdfConfig.margin, y);
-  y += 30;
-
-  pdf.setDrawColor(colors.lightGrey);
-  pdf.setLineWidth(1);
+  y += 5;
+  
+  pdf.setDrawColor(...colors.lavenderAccent);
+  pdf.setLineWidth(2.5);
   pdf.line(pdfConfig.margin, y, pdfConfig.pageWidth - pdfConfig.margin, y);
-  y += 20;
+  y += 25;
 
-  // Add liability statement
+
+  // Add liability statement with justified text
   const LIABILITY_STATEMENT = `This document has not been created by a medical doctor or healing practitioner. Therefore, please perform all practices mentioned in this document at your own discretion. 
 
 If you have or have had an injury or acute illness, or if you have doubts about whether yoga practices are appropriate for you, you are responsible for contacting your physician as needed to inquire about your fitness level.
@@ -1750,19 +1839,32 @@ The use of any suggested devices or equipment such as the indoor bike, resistanc
 
 Any cardio training suggested is to be practiced at your own discretion.`;
 
-  pdf.setTextColor(colors.primaryText);
-  pdf.setFontSize(11);
+  pdf.setTextColor(...colors.textDark);
+  pdf.setFontSize(12);
+  pdf.setFont("times", "normal");
   y = addText(pdf, LIABILITY_STATEMENT, pdfConfig.margin, y, {
     ...pdfConfig,
-    size: 11,
-    font: 'helvetica',
+    size: 12,
+    font: 'times',
     style: 'normal',
     maxWidth: contentWidth,
     currentY: y
   });
 
-  // Main Content starts on new page
+  // ===========================
+  // MAIN CONTENT PAGES - Option 2 Design
+  // ===========================
   pdf.addPage();
+  
+  // Cream background for content pages
+  pdf.setFillColor(...colors.creamBg);
+  pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'F');
+  
+  // Border
+  pdf.setDrawColor(...colors.borderLight);
+  pdf.setLineWidth(1);
+  pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'S');
+  
   y = pdfConfig.margin;
 
   const sectionElementsInOrder = Array.from(document.querySelectorAll('.section'));
@@ -1810,28 +1912,38 @@ Any cardio training suggested is to be practiced at your own discretion.`;
 
     if (y + sectionIntroHeightEstimate > pdfConfig.pageHeight - pdfConfig.margin) {
       pdf.addPage();
+      
+      // Apply cream background to new page
+      pdf.setFillColor(...colors.creamBg);
+      pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'F');
+      
+      // Border
+      pdf.setDrawColor(...colors.borderLight);
+      pdf.setLineWidth(1);
+      pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'S');
+      
       y = pdfConfig.margin;
     }
 
-    // Section header
-    pdf.setFontSize(18);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.headerBlue);
+    // Section header - Option 2 style (serif with purple and border-bottom)
+    pdf.setFontSize(22);
+    pdf.setFont("times", "normal");
+    pdf.setTextColor(...colors.primaryPurple);
     pdf.text(category.title, pdfConfig.margin, y);
-    y += 10;
+    y += 5;
 
-    pdf.setDrawColor(colors.lightGrey);
-    pdf.setLineWidth(1);
+    pdf.setDrawColor(...colors.lavenderAccent);
+    pdf.setLineWidth(2.5);
     pdf.line(pdfConfig.margin, y, pdfConfig.pageWidth - pdfConfig.margin, y);
-    y += 20;
+    y += 25;
 
     if (notes) {
-      pdf.setFont("helvetica", "italic");
-      pdf.setTextColor(colors.primaryText);
+      pdf.setFont("times", "italic");
+      pdf.setTextColor(...colors.textDark);
       y = addText(pdf, `Notes: ${notes}`, pdfConfig.margin, y, {
         ...pdfConfig,
         size: 12,
-        font: 'helvetica',
+        font: 'times',
         style: 'italic',
         maxWidth: contentWidth,
         currentY: y
@@ -1840,13 +1952,30 @@ Any cardio training suggested is to be practiced at your own discretion.`;
     }
 
     if (category.type === 'text') {
-      const content = normalizeText(document.getElementById(category.elementId).value);
+      let content = normalizeText(document.getElementById(category.elementId).value);
+      
+      // If content is empty and there's a default text defined, use it
+      if (!content && category.defaultText) {
+        const defaultTextConstantName = category.defaultText;
+        switch(defaultTextConstantName) {
+          case 'DEFAULT_PRAYER_TEXT':
+            content = normalizeText(DEFAULT_PRAYER_TEXT);
+            break;
+          case 'DEFAULT_MEDITATION_TEXT':
+            content = normalizeText(DEFAULT_MEDITATION_TEXT);
+            break;
+          case 'DEFAULT_REFERENCE_BOOKS_TEXT':
+            content = normalizeText(DEFAULT_REFERENCE_BOOKS_TEXT);
+            break;
+        }
+      }
+      
       if (content) {
-        pdf.setTextColor(colors.primaryText);
+        pdf.setTextColor(...colors.textDark);
         y = addText(pdf, content, pdfConfig.margin, y, {
           ...pdfConfig,
           size: 12,
-          font: 'helvetica',
+          font: 'times',
           style: 'normal',
           maxWidth: contentWidth,
           currentY: y
@@ -1870,48 +1999,25 @@ Any cardio training suggested is to be practiced at your own discretion.`;
   const totalPages = pdf.internal.getNumberOfPages();
   pdf.setPage(totalPages);
 
-  // Position copyright at bottom of last page
+  // Position copyright at bottom of last page - Option 2 style
   pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'italic');
-  pdf.setTextColor(colors.subtleText);
+  pdf.setFont('times', 'italic');
+  pdf.setTextColor(...colors.textMuted);
   pdf.text("Copyright Sadhana Software", pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 60, {
     align: 'center'
   });
 
-  // Add page numbers and borders to all pages except title page
-  for (let i = 1; i <= totalPages; i++) {
+  // Add page numbers to all pages (skip title and liability pages)
+  for (let i = 3; i <= totalPages; i++) {
     pdf.setPage(i);
-
-    if (i === 1) {
-      // Title page already has its special border
-      continue;
-    }
-
-    // Standard border for other pages
-    pdf.setDrawColor(colors.lightGrey);
-    pdf.setLineWidth(0.5);
-    pdf.rect(20, 20, pdfConfig.pageWidth - 40, pdfConfig.pageHeight - 40);
-
-    // Add page number (skip title and liability pages)
-    if (i > 2) {
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(colors.subtleText);
-
-      // Add student name in header - with more margin from edge
-      const headerY = 35;
-      pdf.text(sadhakaName, 40, headerY);
-
-      // Add date with proper right alignment and margin
-      const shortDate = new Date().toLocaleDateString('en-GB');
-      const dateWidth = pdf.getStringUnitWidth(shortDate) * 10 / pdf.internal.scaleFactor;
-      pdf.text(shortDate, pdfConfig.pageWidth - 40 - dateWidth, headerY);
-
-      // Page number in footer
-      pdf.text(`Page ${i - 2} of ${totalPages - 2}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, {
-        align: 'center'
-      });
-    }
+    
+    // Page number in footer - Option 2 style
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(...colors.textMuted);
+    pdf.text(`Page ${i - 2} of ${totalPages - 2}`, pdfConfig.pageWidth / 2, pdfConfig.pageHeight - 30, {
+      align: 'center'
+    });
   }
 
   // Generate filename with date
@@ -1980,87 +2086,147 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
       requiredHeight += pdf.splitTextToSize(description, contentWidth).length * 14;
       if (repetitions || specialNotes) requiredHeight += 5;
     }
-    requiredHeight += 25;
+    requiredHeight += 50;  // Extra padding for card
 
     if (y + requiredHeight > pdfConfig.pageHeight - pdfConfig.margin) {
       pdf.addPage();
+      
+      // Apply cream background to new page
+      pdf.setFillColor(...colors.creamBg);
+      pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'F');
+      
+      // Border
+      pdf.setDrawColor(...colors.borderLight);
+      pdf.setLineWidth(1);
+      pdf.rect(0, 0, pdfConfig.pageWidth, pdfConfig.pageHeight, 'S');
+      
       y = pdfConfig.margin;
     }
 
-    // Add Image
+    // ===========================
+    // ASANA CARD - Option 2 Design
+    // ===========================
+    const cardStartY = y;
+    const cardPadding = 25;
+    const cardContentWidth = contentWidth - (2 * cardPadding);
+    
+    // White card background
+    pdf.setFillColor(...colors.cardBg);
+    pdf.setDrawColor(...colors.borderLight);
+    pdf.setLineWidth(1);
+    
+    // We'll draw the card rectangle after we know the height
+    const cardContentStartY = y + cardPadding;
+    let cardY = cardContentStartY;
+
+    // Add Image inside card
     if (asanaData.imageUrl) {
       try {
-        const base64data = await urlToDataUri(asanaData.imageUrl);
-        const imageWidth = 180;
-        const imageHeight = 180;
-        const imageX = (pdfConfig.pageWidth - imageWidth) / 2;
+        let base64data = await urlToDataUri(asanaData.imageUrl);
+        
+        // Fix WebP format
+        if (base64data && base64data.includes('data:image/webp')) {
+          base64data = await convertWebPtoPNG(base64data);
+        }
+        
+        if (base64data) {
+          // Get actual image dimensions to preserve aspect ratio
+          const imgDimensions = await getImageDimensions(base64data);
+          const maxWidth = 160;
+          const maxHeight = 160;
+          
+          // Calculate scaled dimensions while preserving aspect ratio
+          let imageWidth = imgDimensions.width;
+          let imageHeight = imgDimensions.height;
+          
+          // Scale down if needed
+          if (imageWidth > maxWidth || imageHeight > maxHeight) {
+            const widthRatio = maxWidth / imageWidth;
+            const heightRatio = maxHeight / imageHeight;
+            const ratio = Math.min(widthRatio, heightRatio);
+            
+            imageWidth = imageWidth * ratio;
+            imageHeight = imageHeight * ratio;
+          }
+          
+          const imageX = (pdfConfig.pageWidth - imageWidth) / 2;
 
-        pdf.setDrawColor(colors.lightGrey);
-        pdf.setLineWidth(1);
-        pdf.setFillColor(240, 240, 240);
-        pdf.rect(imageX + 3, y + 3, imageWidth, imageHeight, 'F');
-        pdf.addImage(base64data, 'PNG', imageX, y, imageWidth, imageHeight);
-        pdf.rect(imageX, y, imageWidth, imageHeight, 'S');
+          // Light background for image
+          pdf.setFillColor(245, 240, 247);  // Very light lavender
+          pdf.setDrawColor(...colors.borderLight);
+          pdf.rect(imageX, cardY, imageWidth, imageHeight, 'FD');
+          
+          // Add image
+          const format = base64data.includes('data:image/png') ? 'PNG' : 'JPEG';
+          pdf.addImage(base64data, format, imageX, cardY, imageWidth, imageHeight);
 
-        y += imageHeight + 20;
+          cardY += imageHeight + 20;
+        }
       } catch (e) {
         console.error("Error adding image:", e);
       }
     }
 
-    // Asana Display Name
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.primaryText);
-    y = addText(pdf, displayName, pdfConfig.margin, y, {
-      ...pdfConfig,
-      size: 14,
-      style: 'bold',
-      maxWidth: contentWidth,
-      currentY: y
-    });
-    y += 10;
+    // Asana Display Name - centered, italic serif
+    pdf.setFontSize(17);
+    pdf.setFont("times", "italic");
+    pdf.setTextColor(...colors.primaryPurple);
+    pdf.text(displayName, pdfConfig.pageWidth / 2, cardY, { align: 'center' });
+    cardY += 20;
 
-    // Repetitions and Special Notes
-    pdf.setFontSize(12);
-    pdf.setTextColor(colors.primaryText);
-
+    // Content section inside card
+    const detailsStartX = pdfConfig.margin + cardPadding;
+    
     if (repetitions) {
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Repetitions:", pdfConfig.margin, y);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(repetitions, pdfConfig.margin + 70, y);
-      y += 20;
+      pdf.setFontSize(11);
+      pdf.setFont("times", "bold");
+      pdf.setTextColor(...colors.primaryPurple);
+      pdf.text("Repetitions: ", detailsStartX, cardY);
+      
+      pdf.setFont("times", "normal");
+      pdf.setTextColor(...colors.textDark);
+      pdf.text(repetitions, detailsStartX + 65, cardY);
+      cardY += 16;
     }
 
     if (specialNotes) {
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Special Notes:", pdfConfig.margin, y);
-      pdf.setFont("helvetica", "italic");
-      y = addText(pdf, specialNotes, pdfConfig.margin + 85, y, {
-        ...pdfConfig,
-        size: 12,
-        style: 'italic',
-        maxWidth: contentWidth - 85,
-        currentY: y
-      });
-      y += 10;
+      pdf.setFontSize(11);
+      pdf.setFont("times", "bold");
+      pdf.setTextColor(...colors.primaryPurple);
+      pdf.text("Special Notes: ", detailsStartX, cardY);
+      
+      pdf.setFont("times", "normal");
+      pdf.setTextColor(...colors.textDark);
+      const noteLines = pdf.splitTextToSize(specialNotes, cardContentWidth - 85);
+      pdf.text(noteLines, detailsStartX + 85, cardY);
+      cardY += (noteLines.length * 13) + 8;
     }
 
     // Description
     if (description) {
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(colors.primaryText);
-      y = addText(pdf, description, pdfConfig.margin, y, {
-        ...pdfConfig,
-        size: 12,
-        style: 'normal',
-        maxWidth: contentWidth,
-        currentY: y
-      });
+      pdf.setFont("times", "normal");
+      pdf.setTextColor(...colors.textDark);
+      pdf.setFontSize(11);
+      const descLines = pdf.splitTextToSize(description, cardContentWidth);
+      pdf.text(descLines, detailsStartX, cardY);
+      cardY += descLines.length * 13;
     }
 
-    return y + 25;
+    cardY += cardPadding;
+    const cardHeight = cardY - cardStartY;
+
+    // Draw the card border
+    pdf.setFillColor(...colors.cardBg);
+    pdf.setDrawColor(...colors.borderLight);
+    pdf.setLineWidth(1);
+    pdf.rect(pdfConfig.margin, cardStartY, contentWidth, cardHeight, 'S');
+    
+    // Add subtle shadow effect (optional - can be removed if not visible)
+    pdf.setDrawColor(200, 200, 200, 0.3);
+    pdf.setLineWidth(0.5);
+    pdf.line(pdfConfig.margin + 2, cardStartY + cardHeight + 2, pdfConfig.margin + contentWidth + 2, cardStartY + cardHeight + 2);
+
+    return cardY + 15;
   } catch (error) {
     console.error("Error in addAsanaContent:", error);
     return y;
@@ -2072,34 +2238,63 @@ function normalizeText(text) {
     return '';
   }
 
-  let processedText = text.trim().replace(/\r\n/g, '\n').replace(/(\n\s*){2,}/g, '\n\n');
-  const paragraphs = processedText.split('\n\n');
-  const cleanedParagraphs = paragraphs.map(paragraph => {
-    return paragraph.replace(/\n/g, ' ').replace(/\s+/g, ' ');
-  });
+  let processedText = text.trim()
+    .replace(/\r\n/g, '\n');  // Normalize all line endings to \n
 
-  return cleanedParagraphs.join('\n');
+  // Preserve paragraph breaks (\n\n or \n \n etc.) by replacing them with a unique token
+  const paragraphToken = '||PARAGRAPH_BREAK||';
+  processedText = processedText.replace(/\n\s*\n+/g, paragraphToken);
+
+  // Replace all remaining single newlines (which are not paragraph breaks) with a space
+  processedText = processedText.replace(/\n/g, ' ');
+
+  // Restore the paragraph breaks
+  processedText = processedText.replace(new RegExp(paragraphToken.replace(/\|/g, '\\|'), 'g'), '\n\n');
+  
+  // Clean up excessive whitespace
+  processedText = processedText.replace(/[ \t]+/g, ' ');
+  
+  // Ensure paragraphs are properly spaced
+  return processedText.split('\n\n').map(p => p.trim()).filter(p => p.length > 0).join('\n\n');
 }
 
 function addText(pdf, text, x, y, options) {
-  const { maxWidth, font, size, style } = options;
-  const lineHeight = size * 1.2;
+  const { maxWidth, font, size, style, margin = 60 } = options;
+  const lineHeight = size * 1.6;  // Increased for Option 2 elegance
+  const paragraphSpacing = size * 1.0;  // Extra space between paragraphs
   const pageHeight = pdf.internal.pageSize.height;
-  const margin = 40;
 
   pdf.setFont(font, style);
   pdf.setFontSize(size);
 
-  const lines = pdf.splitTextToSize(text, maxWidth);
-  const blockHeight = lines.length * lineHeight;
-
-  if (y + blockHeight > pageHeight - margin) {
-    pdf.addPage();
-    y = margin;
+  // Split text into paragraphs
+  const paragraphs = text.split('\n\n');
+  
+  for (let i = 0; i < paragraphs.length; i++) {
+    const paragraph = paragraphs[i];
+    if (!paragraph.trim()) continue;
+    
+    // Split paragraph into lines (for bullet points, etc.)
+    const lines = pdf.splitTextToSize(paragraph, maxWidth);
+    const blockHeight = lines.length * lineHeight;
+    
+    // Check if we need a new page
+    if (y + blockHeight > pageHeight - margin) {
+      pdf.addPage();
+      y = margin;
+    }
+    
+    // Add the paragraph
+    pdf.text(lines, x, y);
+    y += blockHeight;
+    
+    // Add extra spacing between paragraphs (but not after the last one)
+    if (i < paragraphs.length - 1) {
+      y += paragraphSpacing;
+    }
   }
-
-  pdf.text(lines, x, y);
-  return y + blockHeight;
+  
+  return y;
 }
 
 function urlToDataUri(url) {
@@ -2122,6 +2317,49 @@ function urlToDataUri(url) {
       console.error('Error fetching image:', error);
       return null;
     });
+}
+
+function getImageDimensions(base64data) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({
+        width: img.width,
+        height: img.height
+      });
+    };
+    img.onerror = (error) => {
+      console.error('Error loading image for dimensions:', error);
+      // Return default dimensions if image fails to load
+      resolve({ width: 180, height: 180 });
+    };
+    img.src = base64data;
+  });
+}
+
+async function convertWebPtoPNG(webpDataUri) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Draw image to canvas
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      
+      // Convert to PNG
+      const pngDataUri = canvas.toDataURL('image/png');
+      resolve(pngDataUri);
+    };
+    img.onerror = (error) => {
+      console.error('Error converting WebP to PNG:', error);
+      resolve(webpDataUri);  // Return original if conversion fails
+    };
+    img.src = webpDataUri;
+  });
 }
 
 // ===========================
