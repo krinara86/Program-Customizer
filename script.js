@@ -1652,13 +1652,13 @@ async function saveSadhakaReportAsPdf() {
   const sadhakaName = document.getElementById('sadhakaName').value;
 
   const colors = {
-    primaryPurple: [76, 57, 99],      // #4C3963 (Darker, richer purple)
-    lavenderAccent: [170, 150, 190],   // #AA96BE (More saturated lavender)
-    textDark: [58, 58, 58],            // #3A3A3A
-    textMuted: [139, 124, 153],        // #8B7C99
-    creamBg: [247, 247, 249],          // #F7F7F9 (A very light, cool grey)
-    borderLight: [229, 217, 235],      // #e5d9eb
-    cardBg: [255, 255, 255]            // #FFFFFF
+    primaryPurple: [122, 149, 168],    // #7A95A8 (Deep blue variant for headers)
+    lavenderAccent: [187, 201, 210],   // #BBC9D2 (Your blue for accents)
+    textDark: [58, 58, 58],            // #3A3A3A (Charcoal for body text)
+    textMuted: [116, 138, 153],        // #748A99 (Soft gray-blue for subtitles)
+    creamBg: [231, 217, 203],          // #E7D9CB (Your beige for backgrounds)
+    borderLight: [187, 201, 210],      // #BBC9D2 (Your blue for borders)
+    cardBg: [255, 255, 255]            // #FFFFFF (White for content cards)
   };
 
   const pdfConfig = {
