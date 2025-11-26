@@ -14,7 +14,16 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
   <link href="styles.css" rel="stylesheet">
-  <script src="script.js" defer></script>
+  
+  <!-- Modular JavaScript Files -->
+  <script src="config.js"></script>
+  <script src="auth.js" defer></script>
+  <script src="database.js" defer></script>
+  <script src="sadhaka.js" defer></script>
+  <script src="asana.js" defer></script>
+  <script src="pdf.js" defer></script>
+  <script src="ui.js" defer></script>
+  <script src="main.js" defer></script>
 </head>
 
 <body>
@@ -132,16 +141,83 @@
     </div>
   </div>
 
+  <!-- Default Texts Management Modal -->
+  <div id="defaultTextsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+      <span class="close" onclick="closeDefaultTextsModal()">&times;</span>
+      <h2>Edit Default Texts</h2>
+      <p style="color: #666; margin-bottom: 20px;">Edit the default texts that are used for new sadhakas. Changes will apply to all new practice plans.</p>
+      
+      <div style="max-height: calc(90vh - 200px); overflow-y: auto;">
+        <!-- Prayer Default Text -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #7A95A8;">
+          <h3 style="margin-top: 0; color: #7A95A8;">Prayer</h3>
+          <textarea id="defaultPrayerText" rows="8" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+
+        <!-- Meditation Default Text -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #7A95A8;">
+          <h3 style="margin-top: 0; color: #7A95A8;">Meditation Practice</h3>
+          <textarea id="defaultMeditationText" rows="8" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+
+        <!-- Recommended Reading Default Text -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #7A95A8;">
+          <h3 style="margin-top: 0; color: #7A95A8;">Recommended Reading</h3>
+          <textarea id="defaultReferenceBooksText" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+
+        <!-- Diet Default Text -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #7A95A8;">
+          <h3 style="margin-top: 0; color: #7A95A8;">Dietary Recommendations</h3>
+          <textarea id="defaultDietText" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+
+        <!-- Routine Default Text -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #7A95A8;">
+          <h3 style="margin-top: 0; color: #7A95A8;">Routine</h3>
+          <textarea id="defaultRoutineText" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+
+        <!-- Liability Default Text -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #7A95A8;">
+          <h3 style="margin-top: 0; color: #7A95A8;">Liability Clause</h3>
+          <textarea id="defaultLiabilityText" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
+        <button onclick="closeDefaultTextsModal()"
+          style="padding: 10px 20px; background-color: #ccc; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Cancel
+        </button>
+        <button onclick="saveDefaultTexts()"
+          style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Save Default Texts
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Admin Controls -->
-  <div id="adminControls" style="margin: 10px; display: none;">
-    <button onclick="showUserManagement()">Manage Users</button>
-    <button onclick="showDatabaseBackupModal()" style="margin-left: 10px;">Backup/Restore Database</button>
+  <div id="adminControls" class="admin-tabs-container" style="display: none;">
+    <div class="admin-tabs">
+      <div class="admin-tab" onclick="showUserManagement()">
+        <span>Manage Users</span>
+      </div>
+      <div class="admin-tab" onclick="showDatabaseBackupModal()">
+        <span>Backup/Restore</span>
+      </div>
+      <div class="admin-tab" onclick="showDefaultTextsModal()">
+        <span>Edit Defaults</span>
+      </div>
+    </div>
   </div>
 
   <!-- Main Content -->
   <div class="logo-title-container">
     <img
-      src="logo.png"
+      src="logo.jpg"
       alt="Logo" class="logo">
     <h1>Self realization with Radhikaji - Sadhaka personal practice customizer</h1>
   </div>
@@ -165,6 +241,7 @@
     <h2>Prayer</h2>
     <div class="customizable-hint">
       ✏️ Customizable - Leave blank to use default text
+      <a href="#" class="reset-to-default-link" onclick="resetToDefault('prayerText', 'prayer'); return false;">↺ Reset to Default</a>
     </div>
     <textarea id="prayerText" class="customizable-field" placeholder="Enter custom prayer text, or leave blank to use default..." rows="4"></textarea>
     <div class="field-helper">
@@ -177,16 +254,15 @@
     <textarea id="jointsAndGlandsNotes" placeholder="Special notes for Joints and Glands" rows="4"
       class="category-notes"></textarea>
     <div id="jointsAndGlandsDiv" class="asana-div sadhakaDiv"></div>
-    <button onclick="addAsana('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Joints and Glands
-      Asana</button>
+    <button onclick="addAsana('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Joints and
+      Glands</button>
     <button onclick="showMultiAsanaModal('jointsAndGlandsDiv', 'Joints and Glands')" class="asana-button">Add Multiple
-      Joints and Glands Asanas</button>
+      Joints and Glands</button>
   </div>
 
-  <!-- New Cardio Training Section -->
   <div id="cardioTrainingSection" class="section">
     <h2>Cardio Training</h2>
-    <textarea id="cardioTrainingText" placeholder="Cardio training notes" rows="4"></textarea>
+    <textarea id="cardioTrainingText" placeholder="Cardio Training" rows="4"></textarea>
   </div>
 
   <div id="cardioSection" class="section">
@@ -248,15 +324,20 @@
       Pranayama</button>
   </div>
 
-  <div id="meditationSection" class="section">
-    <h2>Meditation</h2>
+  <div id="meditationTextSection" class="section">
+    <h2>Meditation Practice</h2>
     <div class="customizable-hint">
       ✏️ Customizable - Leave blank to use default text
+      <a href="#" class="reset-to-default-link" onclick="resetToDefault('meditationText', 'meditation'); return false;">↺ Reset to Default</a>
     </div>
     <textarea id="meditationText" class="customizable-field" placeholder="Enter custom meditation instructions, or leave blank to use default..." rows="4"></textarea>
     <div class="field-helper">
       💡 Tip: Default text will be used if left empty
     </div>
+  </div>
+
+  <div id="meditationSection" class="section">
+    <h2>Meditation Exercises</h2>
     <textarea id="meditationNotes" placeholder="Special notes for Meditation" rows="4"
       class="category-notes"></textarea>
     <div id="meditationDiv" class="asana-div sadhakaDiv"></div>
@@ -273,14 +354,22 @@
 
   <div id="routineSection" class="section">
     <h2>Routine</h2>
-    <textarea id="routineText" placeholder="Routine" rows="20"></textarea>
+    <div class="customizable-hint">
+      ✏️ Customizable - Leave blank to use default text
+      <a href="#" class="reset-to-default-link" onclick="resetToDefault('routineText', 'routine'); return false;">↺ Reset to Default</a>
+    </div>
+    <textarea id="routineText" class="customizable-field" placeholder="Routine" rows="20"></textarea>
   </div>
 
   <div id="asanaDescription" class="asana-description"></div>
 
   <div id="dietAndAdditionalNotesSection" class="section">
     <h2>Dietary recommendations</h2>
-    <textarea id="dietAndAdditionalNotes" placeholder="Dietery recommendations" rows="20"></textarea>
+    <div class="customizable-hint">
+      ✏️ Customizable - Leave blank to use default text
+      <a href="#" class="reset-to-default-link" onclick="resetToDefault('dietAndAdditionalNotes', 'diet'); return false;">↺ Reset to Default</a>
+    </div>
+    <textarea id="dietAndAdditionalNotes" class="customizable-field" placeholder="Dietary recommendations" rows="20"></textarea>
   </div>
 
   <div id="advisorySection" class="section">
@@ -291,7 +380,11 @@
   <!-- New Liability Clause Section -->
   <div id="liabilityClauseSection" class="section">
     <h2>Liability Clause</h2>
-    <textarea id="liabilityClauseText" placeholder="Liability clause" rows="10"></textarea>
+    <div class="customizable-hint">
+      ✏️ Customizable - Leave blank to use default text
+      <a href="#" class="reset-to-default-link" onclick="resetToDefault('liabilityClauseText', 'liability'); return false;">↺ Reset to Default</a>
+    </div>
+    <textarea id="liabilityClauseText" class="customizable-field" placeholder="Liability clause" rows="10"></textarea>
   </div>
 
   <!-- Recommended Reading Section -->
@@ -299,6 +392,7 @@
     <h2>Recommended Reading</h2>
     <div class="customizable-hint">
       ✏️ Customizable - Leave blank to use default text
+      <a href="#" class="reset-to-default-link" onclick="resetToDefault('referenceBooksText', 'referenceBooks'); return false;">↺ Reset to Default</a>
     </div>
     <textarea id="referenceBooksText" class="customizable-field" placeholder="Enter recommended books, or leave blank to use default..." rows="6"></textarea>
     <div class="field-helper">
