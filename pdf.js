@@ -480,12 +480,16 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     if (asanaData.imageUrl) {
       try {
         let base64data = await urlToDataUri(asanaData.imageUrl);
-        
-        // Fix WebP format
+
+        // Fix WebP format - jsPDF only supports PNG and JPEG
         if (base64data && base64data.includes('data:image/webp')) {
           base64data = await convertWebPtoPNG(base64data);
         }
-        
+
+        if (!base64data) {
+          console.warn(`Image failed to load for asana: ${displayName} (url: ${asanaData.imageUrl})`);
+        }
+
         if (base64data) {
           // Get actual image dimensions to preserve aspect ratio
           const imgDimensions = await getImageDimensions(base64data);
@@ -520,7 +524,7 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
           cardY += imageHeight + 20;
         }
       } catch (e) {
-        console.error("Error adding image:", e);
+        console.error(`Error adding image for asana "${displayName}":`, e);
       }
     }
 
@@ -662,26 +666,35 @@ function addText(pdf, text, x, y, options) {
   return y;
 }
 
-function urlToDataUri(url) {
-  return fetch(url)
-    .then(response => {
+async function urlToDataUri(url, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP ${response.status}`);
       }
-      return response.blob();
-    })
-    .then(blob => {
-      return new Promise((resolve, reject) => {
+
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
-    })
-    .catch(error => {
-      console.error('Error fetching image:', error);
-      return null;
-    });
+    } catch (error) {
+      console.error(`Image fetch attempt ${attempt}/${retries} failed for ${url}:`, error.message);
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 1000 * attempt));
+      }
+    }
+  }
+  console.error(`All ${retries} attempts failed for image: ${url}`);
+  return null;
 }
 
 function getImageDimensions(base64data) {
@@ -703,25 +716,25 @@ function getImageDimensions(base64data) {
 }
 
 async function convertWebPtoPNG(webpDataUri) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      // Create canvas
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      // Draw image to canvas
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      
-      // Convert to PNG
-      const pngDataUri = canvas.toDataURL('image/png');
-      resolve(pngDataUri);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const pngDataUri = canvas.toDataURL('image/png');
+        resolve(pngDataUri);
+      } catch (e) {
+        console.error('Canvas conversion failed:', e);
+        resolve(null);  // Return null so caller skips this image rather than passing invalid data
+      }
     };
     img.onerror = (error) => {
-      console.error('Error converting WebP to PNG:', error);
-      resolve(webpDataUri);  // Return original if conversion fails
+      console.error('Error loading WebP image for conversion:', error);
+      resolve(null);  // Return null instead of unusable WebP data URI
     };
     img.src = webpDataUri;
   });
