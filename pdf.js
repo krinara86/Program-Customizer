@@ -739,3 +739,7 @@ async function convertWebPtoPNG(webpDataUri) {
     img.src = webpDataUri;
   });
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { urlToDataUri, convertWebPtoPNG, getImageDimensions };
+}
