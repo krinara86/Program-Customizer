@@ -4,6 +4,7 @@
 
 async function saveSadhakaReportAsPdf() {
   const asanasMap = await loadAsanasForPdf();
+  const imageCache = await prefetchAllImages(asanasMap);
   const pdf = new jspdf.jsPDF('p', 'pt', 'a4');
   const sadhakaName = document.getElementById('sadhakaName').value;
 
@@ -350,7 +351,7 @@ Any cardio training suggested is to be practiced at your own discretion.`;
           y = await addAsanaContent(pdf, containerDiv.children[i], {
             ...pdfConfig,
             y: y
-          }, asanasMap, colors);
+          }, asanasMap, colors, imageCache);
         }
       }
     }
@@ -394,10 +395,16 @@ async function loadAsanasForPdf() {
     const querySnapshot = await db.collection('asanas').get();
     querySnapshot.forEach((doc) => {
       const asana = doc.data();
-      returnAsanas.set(asana.name, asana.description);
+      // Store the full asana data so we don't need per-asana queries later
+      returnAsanas.set(asana.name, {
+        description: asana.description,
+        displayName: asana.displayName,
+        imageUrl: asana.imageUrl || null,
+        name: asana.name
+      });
     });
 
-    console.log("Fetched Asana descriptions for PDF generation.");
+    console.log("Fetched Asana data for PDF generation.");
     return returnAsanas;
   } catch (error) {
     console.log("Error fetching Asanas:", error);
@@ -405,7 +412,53 @@ async function loadAsanasForPdf() {
   }
 }
 
-async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
+// Pre-fetch all images in parallel so PDF assembly doesn't depend on sequential network calls.
+// Returns a Map<imageUrl, base64DataUri | null>.
+async function prefetchAllImages(asanasMap) {
+  const imageCache = new Map();
+  const fetchTasks = [];
+
+  for (const [name, asanaData] of asanasMap) {
+    if (asanaData.imageUrl && !imageCache.has(asanaData.imageUrl)) {
+      // Mark as in-flight so we don't duplicate
+      imageCache.set(asanaData.imageUrl, null);
+      fetchTasks.push(
+        fetchAndConvertImage(asanaData.imageUrl).then(base64 => {
+          imageCache.set(asanaData.imageUrl, base64);
+        })
+      );
+    }
+  }
+
+  // Wait for ALL image fetches to settle (don't let one failure block others)
+  await Promise.allSettled(fetchTasks);
+
+  const successCount = Array.from(imageCache.values()).filter(v => v !== null).length;
+  const failCount = imageCache.size - successCount;
+  console.log(`Image pre-fetch complete: ${successCount} succeeded, ${failCount} failed out of ${imageCache.size} total.`);
+
+  return imageCache;
+}
+
+// Fetch a single image URL and convert WebP to PNG if needed.
+// Returns base64 data URI or null on failure.
+async function fetchAndConvertImage(url) {
+  try {
+    let base64data = await urlToDataUri(url);
+
+    // jsPDF only supports PNG and JPEG — convert WebP
+    if (base64data && base64data.includes('data:image/webp')) {
+      base64data = await convertWebPtoPNG(base64data);
+    }
+
+    return base64data;
+  } catch (e) {
+    console.error(`Failed to fetch/convert image: ${url}`, e);
+    return null;
+  }
+}
+
+async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors, imageCache) {
   const asanaNameSelect = asanaDiv.querySelector('.asanaNameSelect');
   if (!asanaNameSelect || !asanaNameSelect.value) {
     return pdfConfig.y;
@@ -418,21 +471,27 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
   const contentWidth = pdfConfig.pageWidth - (2 * pdfConfig.margin);
 
   try {
-    const asanaDoc = await db.collection('asanas').where("name", "==", asanaName).get();
-    if (asanaDoc.empty) return y;
-
-    const asanaData = asanaDoc.docs[0].data();
+    // Use the pre-loaded asanasMap instead of querying Firestore per asana
+    const asanaData = asanasMap.get(asanaName);
+    if (!asanaData) {
+      console.warn(`Asana "${asanaName}" not found in pre-loaded data, skipping.`);
+      return y;
+    }
 
     const displayName = normalizeText(asanaData.displayName || asanaData.name);
     const repetitions = repetitionsInput ? normalizeText(repetitionsInput.value) : '';
     const specialNotes = specialNotesTextarea ? normalizeText(specialNotesTextarea.value) : '';
-    const description = normalizeText(asanasMap.get(asanaName));
+    const description = normalizeText(asanaData.description);
+
+    // Look up the pre-fetched image from the cache (no network call here)
+    const base64data = asanaData.imageUrl ? (imageCache.get(asanaData.imageUrl) || null) : null;
 
     // Calculate required height
     let requiredHeight = 0;
     requiredHeight += pdf.splitTextToSize(displayName, contentWidth).length * 14;
     requiredHeight += 10;
 
+    // Always reserve space for image area if imageUrl exists (even if fetch failed — we show a placeholder)
     if (asanaData.imageUrl) {
       requiredHeight += 200;
     }
@@ -476,21 +535,10 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     const cardContentStartY = y + cardPadding;
     let cardY = cardContentStartY;
 
-    // Add Image inside card
+    // Add Image inside card (from pre-fetched cache)
     if (asanaData.imageUrl) {
-      try {
-        let base64data = await urlToDataUri(asanaData.imageUrl);
-
-        // Fix WebP format - jsPDF only supports PNG and JPEG
-        if (base64data && base64data.includes('data:image/webp')) {
-          base64data = await convertWebPtoPNG(base64data);
-        }
-
-        if (!base64data) {
-          console.warn(`Image failed to load for asana: ${displayName} (url: ${asanaData.imageUrl})`);
-        }
-
-        if (base64data) {
+      if (base64data) {
+        try {
           // Get actual image dimensions to preserve aspect ratio
           const imgDimensions = await getImageDimensions(base64data);
           const maxWidth = 160;
@@ -522,9 +570,15 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
           pdf.addImage(base64data, format, imageX, cardY, imageWidth, imageHeight);
 
           cardY += imageHeight + 20;
+        } catch (e) {
+          console.error(`Error adding image for asana "${displayName}":`, e);
+          // Fall through to placeholder below
+          cardY = addImagePlaceholder(pdf, pdfConfig, cardY, displayName, colors);
         }
-      } catch (e) {
-        console.error(`Error adding image for asana "${displayName}":`, e);
+      } else {
+        // Image URL existed but fetch failed — draw a visible placeholder
+        console.warn(`Image failed to load for asana: ${displayName} (url: ${asanaData.imageUrl})`);
+        cardY = addImagePlaceholder(pdf, pdfConfig, cardY, displayName, colors);
       }
     }
 
@@ -587,6 +641,28 @@ async function addAsanaContent(pdf, asanaDiv, pdfConfig, asanasMap, colors) {
     console.error("Error in addAsanaContent:", error);
     return y;
   }
+}
+
+// Draw a visible placeholder rectangle when an image fails to load,
+// so the user sees a clear indicator instead of a silently missing image.
+function addImagePlaceholder(pdf, pdfConfig, cardY, displayName, colors) {
+  const placeholderWidth = 160;
+  const placeholderHeight = 100;
+  const imageX = (pdfConfig.pageWidth - placeholderWidth) / 2;
+
+  // Light gray placeholder box
+  pdf.setFillColor(240, 240, 240);
+  pdf.setDrawColor(...colors.borderBeige);
+  pdf.setLineWidth(1);
+  pdf.rect(imageX, cardY, placeholderWidth, placeholderHeight, 'FD');
+
+  // "Image unavailable" text centered in the placeholder
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "italic");
+  pdf.setTextColor(160, 160, 160);
+  pdf.text("Image unavailable", pdfConfig.pageWidth / 2, cardY + placeholderHeight / 2, { align: 'center' });
+
+  return cardY + placeholderHeight + 20;
 }
 
 function normalizeText(text) {
@@ -670,7 +746,7 @@ async function urlToDataUri(url, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
@@ -741,5 +817,16 @@ async function convertWebPtoPNG(webpDataUri) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { urlToDataUri, convertWebPtoPNG, getImageDimensions };
+  module.exports = {
+    urlToDataUri,
+    convertWebPtoPNG,
+    getImageDimensions,
+    prefetchAllImages,
+    fetchAndConvertImage,
+    addImagePlaceholder,
+    normalizeText,
+    loadAsanasForPdf,
+    addAsanaContent,
+    addText
+  };
 }

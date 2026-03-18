@@ -5,7 +5,11 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "vitest": "^3.0.0",
-    "jsdom": "^26.0.0"
+    "jsdom": "^26.0.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.7.0",
+    "sharp": "^0.34.5"
   }
 }
