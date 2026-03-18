@@ -184,7 +184,7 @@ async function callHuggingFace(userMessage) {
   const systemPrompt = buildSystemPrompt();
 
   const response = await fetch(
-    'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions',
+    'https://router.huggingface.co/v1/chat/completions',
     {
       method: 'POST',
       headers: {
@@ -192,7 +192,7 @@ async function callHuggingFace(userMessage) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mistralai/Mistral-7B-Instruct-v0.3',
+        model: 'Qwen/Qwen2.5-7B-Instruct',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }
