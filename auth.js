@@ -63,6 +63,10 @@ async function login() {
         // Show save buttons
         document.querySelector('button[onclick="saveSadhakaWithCategory()"]').style.display = 'inline-block';
         document.querySelector('button[onclick="saveSadhakaReportAsPdf()"]').style.display = 'inline-block';
+
+        // Show AI chat button
+        const chatBtn = document.getElementById('chatButton');
+        if (chatBtn) chatBtn.style.display = 'flex';
       }, 500);
 
       await initializeDefaultUsers();
