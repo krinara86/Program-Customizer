@@ -210,6 +210,7 @@
       style="max-width: 200px; max-height: 200px; display: none; margin-top: 10px; border-radius: 5px;">
   </div>
   <button id="saveButton">Save</button>
+  <button id="deleteButton" class="delete-button" style="display: none;">Delete Asana</button>
   <button id="openDisplayNameEditor">Edit Display Name and Category</button>
 
   <div id="displayNameModal" class="modal">
@@ -222,6 +223,7 @@
             <th>Asana Name</th>
             <th>Display Name</th>
             <th>Category</th>
+            <th>Delete</th>
           </tr>
         </thead>
         <tbody id="displayNameTableBody">
@@ -246,12 +248,67 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+    // ───────────────────────────────────────────────────────────────────────
+    // Asana deletion helpers.
+    // NOTE: These are kept in sync with asana-delete.js, which is the canonical
+    // copy covered by asana-delete.test.js. They are inlined here so the page
+    // works regardless of how it is served (some deploys don't serve the
+    // sibling .js file). If you change one, change both.
+    // ───────────────────────────────────────────────────────────────────────
+
+    // Fields on a sadhaka document that hold arrays of asana references
+    // (mirrors the asana-type sections in config.js / CATEGORIES).
+    const ASANA_ARRAY_FIELDS = [
+      'jointsAndGlandsDiv',
+      'cardioDiv',
+      'nonCardioDiv',
+      'relaxationDiv',
+      'meditativeDiv',
+      'breathingDiv',
+      'pranayamaDiv',
+      'meditationDiv',
+    ];
+
+    // Return the names of sadhakas that reference the given asana name.
+    function findSadhakasUsingAsana(asanaName, sadhakaDocs, fields = ASANA_ARRAY_FIELDS) {
+      if (!asanaName || !Array.isArray(sadhakaDocs)) return [];
+
+      const users = [];
+      for (const doc of sadhakaDocs) {
+        const data = doc && typeof doc.data === 'function' ? doc.data() : doc;
+        if (!data) continue;
+
+        const sadhakaName = data.name || (doc && doc.id) || '(unnamed)';
+        const usesAsana = fields.some(field => {
+          const arr = data[field];
+          return Array.isArray(arr) && arr.some(entry => entry && entry.asanaName === asanaName);
+        });
+
+        if (usesAsana) users.push(sadhakaName);
+      }
+      return users;
+    }
+
+    // Build the confirmation message shown before deleting an asana.
+    function buildDeleteConfirmationMessage(asanaName, users) {
+      if (users && users.length > 0) {
+        const list = users.join(', ');
+        return (
+          `⚠️ "${asanaName}" is used by ${users.length} Sadhaka(s): ${list}.\n\n` +
+          `Deleting it will leave broken references in their programs. ` +
+          `Those Sadhakas will NOT be modified.\n\nDelete anyway?`
+        );
+      }
+      return `Are you sure you want to delete "${asanaName}"? This cannot be undone.`;
+    }
+
     const nameInput = document.getElementById("name");
     const searchResults = document.getElementById("searchResults");
     const descriptionInput = document.getElementById("description");
     const imageInput = document.getElementById("image");
     const imagePreview = document.getElementById("imagePreview");
     const saveButton = document.getElementById("saveButton");
+    const deleteButton = document.getElementById("deleteButton");
     const modal = document.getElementById("displayNameModal");
     const openModalBtn = document.getElementById("openDisplayNameEditor");
     const closeModalSpan = document.getElementsByClassName("close")[0];
@@ -317,6 +374,9 @@
         imagePreview.style.display = "none";
       }
 
+      // An existing asana is now selected, so deletion is possible.
+      deleteButton.style.display = "inline-block";
+
       searchResults.style.display = "none";
     }
 
@@ -376,10 +436,57 @@
         imagePreview.style.display = "none";
         imagePreview.src = "";
         selectedAsana = null;
+        deleteButton.style.display = "none";
 
       } catch (error) {
         console.error("Error saving asana:", error);
         alert("An error occurred while saving the asana. Please try again.");
+      }
+    });
+
+    function resetAsanaForm() {
+      nameInput.value = "";
+      descriptionInput.value = "";
+      imageInput.value = "";
+      imagePreview.style.display = "none";
+      imagePreview.src = "";
+      selectedAsana = null;
+      deleteButton.style.display = "none";
+    }
+
+    // Shared delete routine: scans sadhakas, warns if the asana is in use, and
+    // deletes only the asana document (sadhaka records are left untouched).
+    // Returns true if the asana was deleted, false if the user cancelled.
+    async function deleteAsanaWithWarning(docRef, asanaName) {
+      const sadhakasSnapshot = await db.collection("sadhakas").get();
+      const users = findSadhakasUsingAsana(asanaName, sadhakasSnapshot.docs);
+      const message = buildDeleteConfirmationMessage(asanaName, users);
+
+      if (!confirm(message)) {
+        return false;
+      }
+
+      await docRef.delete();
+      return true;
+    }
+
+    deleteButton.addEventListener("click", async () => {
+      if (!selectedAsana) {
+        alert("Please select an existing asana to delete.");
+        return;
+      }
+
+      const asanaName = selectedAsana.data().name;
+
+      try {
+        const deleted = await deleteAsanaWithWarning(selectedAsana.ref, asanaName);
+        if (!deleted) return;
+
+        alert(`Asana "${asanaName}" deleted successfully.`);
+        resetAsanaForm();
+      } catch (error) {
+        console.error("Error deleting asana:", error);
+        alert("An error occurred while deleting the asana: " + (error && error.message ? error.message : error));
       }
     });
 
@@ -430,7 +537,7 @@
         const headerRow = displayNameTableBody.insertRow();
         headerRow.className = 'category-header';
         const headerCell = headerRow.insertCell(0);
-        headerCell.colSpan = 3;
+        headerCell.colSpan = 4;
         headerCell.textContent = category;
 
         // Add asana rows for this category
@@ -439,6 +546,7 @@
           const cell1 = row.insertCell(0);
           const cell2 = row.insertCell(1);
           const cell3 = row.insertCell(2);
+          const cell4 = row.insertCell(3);
 
           cell1.textContent = asana.name;
 
@@ -465,6 +573,30 @@
           });
           categorySelect.value = asana.category || "";
           cell3.appendChild(categorySelect);
+
+          const rowDeleteButton = document.createElement("button");
+          rowDeleteButton.textContent = "Delete";
+          rowDeleteButton.className = "delete-button";
+          rowDeleteButton.style.margin = "0";
+          rowDeleteButton.style.padding = "5px 12px";
+          rowDeleteButton.onclick = async () => {
+            try {
+              const docRef = db.collection("asanas").doc(asana.id);
+              const deleted = await deleteAsanaWithWarning(docRef, asana.name);
+              if (!deleted) return;
+
+              row.remove();
+
+              // If this asana is also loaded in the main form, clear it.
+              if (selectedAsana && selectedAsana.id === asana.id) {
+                resetAsanaForm();
+              }
+            } catch (error) {
+              console.error("Error deleting asana:", error);
+              alert("An error occurred while deleting the asana: " + (error && error.message ? error.message : error));
+            }
+          };
+          cell4.appendChild(rowDeleteButton);
         });
       });
     }
